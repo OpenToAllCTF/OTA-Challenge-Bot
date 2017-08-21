@@ -1,2 +1,53 @@
-# OTA-Challenge-Bot
-Slack bot for challenge management
+# OTA Challenge Bot
+
+The OTA challenge bot is a helper tool to be used during CTF events.
+
+## Features
+The bot allows members to :
+ - Keep track of which challenges other members are working on
+ - Keep track of solved/unsolved challenges
+
+When members begin working on new challenges, the OTA bot will
+automatically create a slack channel for a given challenge, as well
+as invite players to the relevant channel.
+
+Other interesting features include :
+ - Creating an IRC bridge for a given CTF
+ - Automatic @channel notifications before a CTF begins and ends.
+
+## Usage
+
+```
+# Create a defcon-25-quals channel
+@ota_bot add ctf "defcon 25 quals"
+
+# Create a web-100 channel
+@ota_bot add challenge "web 100" to "defcon 25 quals"
+
+# Kick member from other ctf challenge channels and invite the member to the web 100 channel
+@ota_bot working "web 100"
+
+# View status of members
+@ota_bot status
+
+# Add IRC bridge channel "defcon-25-quals-irc"
+@ota_bot add irc "#defcon-quals" to "defcon 25 quals"
+```
+
+The status response looks like the following :
+```
+ota_bot :
+=== Defcon 25 Quals ===
+web 100 (4) => Lyla, Edward, Eric, Theodore
+pwn 200 (0)
+pwn 400 (1) => 3p1c_h4x0r
+
+=== OTA CTF 2017 ===
+web 100 (1) => Johnny
+rev 200 (0)
+```
+
+Notifications :
+```
+ota_bot: Defcon 25 Quals ends in 2 hours!
+```
