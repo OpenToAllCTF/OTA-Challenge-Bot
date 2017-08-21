@@ -62,8 +62,7 @@ class ChallengeHandler:
 
     except InvalidCommand as e:
       self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=e.message,
-        as_user=True)
+        channel=channel, text=e.message)
 
     if command:
       command.execute(self.slack_client)
