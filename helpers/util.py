@@ -14,6 +14,13 @@ def invite_user(slack_client, user, channel):
               user=user)
   return response
 
+def kick_user(slack_client, user_id, channel_id):
+  response = slack_client.api_call("channels.kick",
+              channel=channel_id,
+              user=user_id)
+  return response
+
+
 def set_purpose(slack_client, channel, purpose):
   """
     Set the purpose of a given channel
@@ -21,6 +28,20 @@ def set_purpose(slack_client, channel, purpose):
   response = slack_client.api_call("channels.setPurpose",
     purpose=purpose, channel=channel)
 
+  return response
+
+def get_members(slack_client):
+  """
+    Get a list of all members
+  """
+  response = slack_client.api_call("users.list", presence=True)
+  return response
+
+def get_member(slack_client, user_id):
+  """
+    Get a member for a given user_id
+  """
+  response = slack_client.api_call("users.info", user=user_id)
   return response
 
 def create_channel(slack_client, name):
@@ -41,14 +62,6 @@ def get_channel_info(slack_client, channel_id):
 
   return response
 
-def get_channel_info_from_name(slack_client, channel_name):
-  response = slack_client.api_call("channels.list")
-  for channel in response['channels']:
-    purpose = load_json(channel['purpose']['value'])
-    if purpose and purpose['name'] == channel_name:
-      return channel
-
-  return False
 
 #######
 # Helper functions
@@ -68,9 +81,9 @@ def load_json(string):
 #######
 # Database manipulation
 #######
-def is_ctf_channel(database, channel_id):
+def get_ctf_by_channel_id(database, channel_id):
   """
-    Check the database if the channel_id is a CTF channel exists"
+    Fetch a CTF object in the database with a given channel ID
     If true, a CTF object is returned.
     Else, the function returns False
   """
@@ -80,4 +93,38 @@ def is_ctf_channel(database, channel_id):
       return ctf
 
   return False
+
+def get_challenge_by_name(database, challenge_name, ctf_channel_id):
+  """
+    Fetch a Challenge object in the database with a given name and ctf channel ID
+    If true, a Challenge object
+    Else, the function returns False
+  """
+  ctfs = pickle.load(open(database, "rb"))
+  for ctf in ctfs:
+    if ctf.channel_id == ctf_channel_id:
+      for challenge in ctf.challenges:
+        if challenge.name == challenge_name:
+          return challenge
+
+  return False
+
+def get_challenges_for_user_id(database, user_id, ctf_channel_id):
+  """
+    Fetch a list of all challenges a user is working on for
+    a given CTF.
+    This should technically only return 0 or 1 challenge, as a user
+    can only work on 1 challenge at a time.
+  """
+
+  ctfs = pickle.load(open(database, "rb"))
+  ctf = list(filter(lambda ctf: ctf.channel_id == ctf_channel_id, ctfs))[0]
+
+  challenges = []
+  for challenge in ctf.challenges:
+    for player in challenge.players:
+      if player.user_id == user_id:
+        challenges.append(challenge)
+
+  return challenges
 

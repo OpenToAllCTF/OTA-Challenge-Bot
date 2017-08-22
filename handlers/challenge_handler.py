@@ -22,7 +22,7 @@ class AddCTFCommand(Command):
       raise InvalidCommand("Usage : add ctf <ctf_name>")
 
     self.name = args[0]
-    self.user = user
+    self.user_id = user
 
   def execute(self, slack_client):
 
@@ -41,7 +41,7 @@ class AddCTFCommand(Command):
     set_purpose(slack_client, channel, purpose)
 
     # Invite user
-    invite_user(slack_client, self.user, channel)
+    invite_user(slack_client, self.user_id, channel)
 
     # New CTF object
     ctf = CTF(channel, self.name)
@@ -56,18 +56,18 @@ class AddChallengeCommand(Command):
     Add and keep track of a new challenge for a given CTF
   """
 
-  def __init__(self, args, channel_id, user):
+  def __init__(self, args, channel_id, user_id):
     if len(args) < 1:
       raise InvalidCommand("Usage : add challenge <challenge_name>")
 
     self.name = args[0]
     self.ctf_channel_id = channel_id
-    self.user = user
+    self.user_id = user_id
 
   def execute(self, slack_client):
 
     # Validate that the user is in a CTF channel
-    ctf = is_ctf_channel(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
@@ -88,14 +88,16 @@ class AddChallengeCommand(Command):
     set_purpose(slack_client, channel_id, purpose)
 
     # Invite user
-    invite_user(slack_client, self.user, channel_id)
+    invite_user(slack_client, self.user_id, channel_id)
 
-    # New Challenge object
+    # New Challenge and player object
     challenge = Challenge(channel_id, self.name)
+    player = Player(self.user_id)
 
-    # Update list of CTFs
+    # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
     ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
+    challenge.add_player(player)
     ctf.add_challenge(challenge)
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
@@ -109,16 +111,26 @@ class StatusCommand(Command):
 
   def execute(self, slack_client):
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-
+    members = get_members(slack_client)['members']
     response = ""
     for ctf in ctfs:
       response += "*============= %s =============*\n" % ctf.name
       for challenge in ctf.challenges:
-        response += "*%s*\n" % challenge.name
+        response += "*%s* (Total : %d) " % (challenge.name, len(challenge.players))
+        players = []
+        if not challenge.is_solved:
+          response += "Active : "
+          for player in challenge.players:
+            player_name = list(filter(lambda m: m['id'] == player.user_id and m['presence'] == 'active', members))[0]['name']
+            players.append(player_name)
+          response += ', '.join(players) + "\n"
+        else:
+          player_name = list(filter(lambda m: m['id'] == challenge.solver and m['presence'] == 'active', members))[0]['name']
+          response += "Solved by %s : :tada:" % player_name
+      response += "\n"
 
-    response = response.strip()
     slack_client.api_call("chat.postMessage",
-        channel=self.channel, text=response)
+        channel=self.channel, text=response.strip())
 
 class WorkingCommand(Command):
   """
@@ -137,18 +149,77 @@ class WorkingCommand(Command):
   def execute(self, slack_client):
 
     # Validate that current channel is a CTF channel
-    ctf = is_ctf_channel(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
-    # Get channel for challenge name
-    channel_info = get_channel_info_from_name(slack_client, self.challenge_name)
+    # Get challenge object for challenge name
+    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, ctf.channel_id)
 
-    if not channel_info:
+    if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Invite user to challenge channel
-    invite_user(slack_client, self.user_id, channel_info['id'])
+    invite_user(slack_client, self.user_id, challenge.channel_id)
+
+    # Update database
+    ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+    ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
+    for c in ctf.challenges:
+      if c.channel_id == challenge.channel_id:
+        c.add_player(Player(self.user_id))
+    pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+class SolveCommand(Command):
+  """
+    Mark a challenge as solved.
+  """
+
+  def __init__(self, args, ctf_channel_id, user_id):
+    if len(args) < 1:
+      raise InvalidCommand("Usage : @ota_bot solved <challenge_name>")
+
+    self.user_id = user_id
+    self.challenge_name = args[0]
+    self.ctf_channel_id = ctf_channel_id
+
+  def execute(self, slack_client):
+    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.ctf_channel_id)
+
+    if not challenge:
+      raise InvalidCommand("This challenge does not exist.")
+
+    # Update database
+    ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+    ctf = list(filter(lambda x : x.channel_id == self.ctf_channel_id, ctfs))[0]
+    challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
+    challenge.mark_as_solved(self.user_id)
+    pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+    # Announce the CTF channel
+    member = get_member(slack_client, self.user_id)
+    message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
+    message += "."
+
+    slack_client.api_call("chat.postMessage",
+      channel=self.ctf_channel_id, text=message, as_user=True)
+
+class HelpCommand(Command):
+    """
+      Displays a help menu
+    """
+
+    def execute(self, slack_client):
+      message = "Available Commands : "
+      message += "```"
+      message += "@ota_bot add ctf <ctf_name>\n"
+      message += "@ota_bot add challenge <challenge_name>\n"
+      message += "@ota_bot working <challenge_name>\n"
+      message += "@ota_bot solved <challenge_name>\n"
+      message += "@ota_bot status\n"
+      message += "```"
+
+      raise InvalidCommand(message)
 
 class ChallengeHandler:
   """
@@ -182,7 +253,7 @@ class ChallengeHandler:
     "type" : "CHALLENGE"
   }
 
-  def __init__(self, slack_client):
+  def __init__(self, slack_client, bot_id):
 
     # Find channels generated by challenge_handler
     database = []
@@ -204,6 +275,9 @@ class ChallengeHandler:
         challenge = Challenge(channel['id'], purpose["name"])
         ctf_channel_id = purpose["ctf_id"]
         ctf = list(filter(lambda ctf : ctf.channel_id == ctf_channel_id, database))[0]
+        for member_id in channel['members']:
+          if member_id != bot_id:
+            challenge.add_player(Player(member_id))
         ctf.add_challenge(challenge)
 
     # Create the database accordingly
@@ -211,9 +285,15 @@ class ChallengeHandler:
     self.slack_client = slack_client
 
   def process(self, command, channel, user):
-    command_line = unidecode(command.lower())
-    args = shlex.split(command_line)
-    command = None
+    try:
+      command_line = unidecode(command.lower())
+      args = shlex.split(command_line)
+      command = None
+    except:
+      message = "Command failed : Malformed input."
+      self.slack_client.api_call("chat.postMessage",
+        channel=channel, text=message, as_user=True)
+      return
 
     try:
       # Add CTF command
@@ -231,10 +311,16 @@ class ChallengeHandler:
       elif args[:1] == ["status"]:
         command = StatusCommand(channel)
 
+      elif args[:1] == ["solved"]:
+        command = SolveCommand(args[1:], channel, user)
+
+      else:
+        command = HelpCommand()
+
       if command:
         command.execute(self.slack_client)
 
     except InvalidCommand as e:
       self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=e.message)
+        channel=channel, text=e.message, as_user=True)
 
