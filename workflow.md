@@ -1,7 +1,7 @@
 # CTF Team Workflow
 
 The goal of the OTA bot is to coordinate team members in solving CTF challenges efficiently
-through Slack. For this bot to work as intended, I suggest reading the following guide on how OTA operates
+through Slack. For this bot to work as intended, I suggest reading the following guide on how the OTA bot operates
 during CTFs.
 
 ### Bot Usage

@@ -17,12 +17,13 @@ class AddCTFCommand(Command):
     Add and keep track of a new CTF.
   """
 
-  def __init__(self, args, user):
+  def __init__(self, args, user, channel):
     if len(args) < 1:
       raise InvalidCommand("Usage : add ctf <ctf_name>")
 
     self.name = args[0]
     self.user_id = user
+    self.channel_id = channel
 
   def execute(self, slack_client):
 
@@ -50,6 +51,12 @@ class AddCTFCommand(Command):
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
     ctfs.append(ctf)
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+    # Notify people of new channel
+    message = "Created channel #%s" % response['channel']['name']
+    slack_client.api_call("chat.postMessage",
+        channel=self.channel_id, text=message.strip(), as_user=True, parse="full")
+
 
 class AddChallengeCommand(Command):
   """
@@ -130,7 +137,7 @@ class StatusCommand(Command):
       response += "\n"
 
     slack_client.api_call("chat.postMessage",
-        channel=self.channel, text=response.strip())
+        channel=self.channel, text=response.strip(), as_user=True)
 
 class WorkingCommand(Command):
   """
@@ -298,7 +305,7 @@ class ChallengeHandler:
     try:
       # Add CTF command
       if args[:2] == ["add", "ctf"]:
-        command = AddCTFCommand(args[2:], user)
+        command = AddCTFCommand(args[2:], user, channel)
 
       # Add challenge command
       elif args[:2] == ["add", "challenge"]:
