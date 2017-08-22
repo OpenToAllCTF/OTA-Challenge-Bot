@@ -21,13 +21,19 @@ Other interesting features include :
 # Create a defcon-25-quals channel
 @ota_bot add ctf "defcon 25 quals"
 
-# Create a web-100 channel
-@ota_bot add challenge "web 100" to "defcon 25 quals"
+# Create a defcon-25-quals-web-100 channel (the ctf name is prepended based on the channel where you run the command)
+@ota_bot add challenge "web 100"
 
-# Kick member from other ctf challenge channels and invite the member to the web 100 channel
+# Invite the member to the web 100 channel
 @ota_bot working "web 100"
 
-# View status of members
+# Set a challenge as solved and notify the channel.
+@ota_bot solved "web 100"
+
+# Unsolve a challenge and notify the channel
+@ota_bot unsolve "web 100"
+
+# View status of members/solves
 @ota_bot status
 
 # Add IRC bridge channel "defcon-25-quals-irc"
