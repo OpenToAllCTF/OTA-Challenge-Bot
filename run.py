@@ -16,9 +16,10 @@ def parse_slack_output(slack_rtm_output):
       for output in output_list:
           if output and 'text' in output and AT_BOT in output['text']:
               # return text after the @ mention, whitespace removed
-              return output['text'].split(AT_BOT)[1].strip().lower(), \
-                     output['channel']
-  return None, None
+              return (output['text'].split(AT_BOT)[1].strip().lower(),
+                     output['channel'],
+                     output['user'])
+  return None, None, None
 
 def get_bot_id(name):
   """
@@ -62,9 +63,9 @@ if __name__ == "__main__":
 
       # Main loop
       while True:
-          command, channel = parse_slack_output(slack_client.rtm_read())
+          command, channel, user = parse_slack_output(slack_client.rtm_read())
           if command and channel:
-            [handler.process(command, channel) for handler in handlers]
+            [handler.process(command, channel, user) for handler in handlers]
 
           time.sleep(READ_WEBSOCKET_DELAY)
   else:
