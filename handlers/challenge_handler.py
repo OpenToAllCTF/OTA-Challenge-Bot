@@ -281,11 +281,13 @@ class ChallengeHandler:
       if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
         challenge = Challenge(channel['id'], purpose["name"])
         ctf_channel_id = purpose["ctf_id"]
-        ctf = list(filter(lambda ctf : ctf.channel_id == ctf_channel_id, database))[0]
-        for member_id in channel['members']:
-          if member_id != bot_id:
-            challenge.add_player(Player(member_id))
-        ctf.add_challenge(challenge)
+        l = list(filter(lambda ctf : ctf.channel_id == ctf_channel_id, database))
+        ctf = l[0] if l else None
+        if ctf:
+          for member_id in channel['members']:
+            if member_id != bot_id:
+              challenge.add_player(Player(member_id))
+          ctf.add_challenge(challenge)
 
     # Create the database accordingly
     pickle.dump(database, open(self.DB, "wb+"))
