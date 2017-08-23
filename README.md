@@ -57,3 +57,10 @@ Notifications :
 ```
 ota_bot: Defcon 25 Quals ends in 2 hours!
 ```
+
+## Installation
+
+1. Copy `config.json.template` to `config.json`
+2. Fill the APi token and bot name in the config file.
+3. `docker build -t ota-challenge-bot .`
+4. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
