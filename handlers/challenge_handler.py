@@ -323,7 +323,7 @@ class ChallengeHandler:
       elif args[:1] == ["solved"]:
         command = SolveCommand(args[1:], channel, user)
 
-      else:
+      elif args[:1] == ["help"]:
         command = HelpCommand()
 
       if command:

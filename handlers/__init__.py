@@ -1,4 +1,5 @@
 __all__ = [
-  "challenge_handler"
+  "challenge_handler",
+  "ping_handler"
 ]
 
