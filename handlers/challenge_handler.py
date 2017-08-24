@@ -144,24 +144,24 @@ class WorkingCommand(Command):
     Mark a player as "working" on a challenge.
   """
 
-  def __init__(self, args, user_id, ctf_channel_id):
-
-    if len(args) < 1:
-      raise InvalidCommand("Usage : working <challenge_name>")
-
-    self.challenge_name = args[0]
+  def __init__(self, args, user_id, channel_id):
+    self.challenge_name = args[0] if args else None
     self.user_id = user_id
-    self.ctf_channel_id = ctf_channel_id
+    self.channel_id = channel_id
 
   def execute(self, slack_client):
 
     # Validate that current channel is a CTF channel
-    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.channel_id)
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
-    # Get challenge object for challenge name
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, ctf.channel_id)
+    # Get challenge object for challenge name or channel id
+    challenge = ""
+    if self.challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, self.channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
@@ -171,10 +171,10 @@ class WorkingCommand(Command):
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
-    for c in ctf.challenges:
-      if c.channel_id == challenge.channel_id:
-        c.add_player(Player(self.user_id))
+    for ctf in ctfs:
+      for c in ctf.challenges:
+        if c.channel_id == challenge.channel_id:
+          c.add_player(Player(self.user_id))
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
 class SolveCommand(Command):
@@ -182,34 +182,38 @@ class SolveCommand(Command):
     Mark a challenge as solved.
   """
 
-  def __init__(self, args, ctf_channel_id, user_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage : @ota_bot solved <challenge_name>")
-
+  def __init__(self, args, channel_id, user_id):
     self.user_id = user_id
-    self.challenge_name = args[0]
-    self.ctf_channel_id = ctf_channel_id
+    self.challenge_name = args[0] if args else None
+    self.channel_id = channel_id
 
   def execute(self, slack_client):
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.ctf_channel_id)
+    challenge = ""
+    if self.challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, self.channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == self.ctf_channel_id, ctfs))[0]
-    challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
-    challenge.mark_as_solved(self.user_id)
-    pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+    for ctf in ctfs:
+      for c in ctf.challenges:
+          if c.channel_id == challenge.channel_id:
+            c.mark_as_solved(self.user_id)
 
-    # Announce the CTF channel
-    member = get_member(slack_client, self.user_id)
-    message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
-    message += "."
+      pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-    slack_client.api_call("chat.postMessage",
-      channel=self.ctf_channel_id, text=message, as_user=True)
+      # Announce the CTF channel
+      member = get_member(slack_client, self.user_id)
+      message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
+      message += "."
+
+      slack_client.api_call("chat.postMessage",
+        channel=ctf.channel_id, text=message, as_user=True)
+      break
 
 class HelpCommand(Command):
     """
