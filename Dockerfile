@@ -5,6 +5,6 @@ COPY . /src/
 WORKDIR /src/
 
 # Install requirements
-RUN pip install --no-cache-dir -r /src/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "/src/run.py"]
+CMD ["python", "run.py"]
