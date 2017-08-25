@@ -224,9 +224,7 @@ class SolveCommand(Command):
 
       slack_client.api_call("chat.postMessage",
         channel=self.ctf_channel_id, text=message, as_user=True)
-    else:
-      print ("Challenge was already marked as solved. Ignore this")
-
+    
 class HelpCommand(Command):
     """
       Displays a help menu
