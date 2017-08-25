@@ -221,9 +221,14 @@ class HelpCommand(Command):
       message += "```"
       message += "@ota_bot add ctf <ctf_name>\n"
       message += "@ota_bot add challenge <challenge_name>\n"
-      message += "@ota_bot working <challenge_name>\n"
-      message += "@ota_bot solved <challenge_name>\n"
+      message += "@ota_bot working [challenge_name]\n"
+      message += "@ota_bot solved [challenge_name]\n"
       message += "@ota_bot status\n"
+      message += "!add ctf <ctf_name>\n"
+      message += "!add challenge <challenge_name>\n"
+      message += "!working [challenge_name]\n"
+      message += "!solved [challenge_name]\n"
+      message += "!status\n"
       message += "```"
 
       raise InvalidCommand(message)
