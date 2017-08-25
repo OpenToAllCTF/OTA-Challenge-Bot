@@ -17,7 +17,7 @@ class Challenge:
   def mark_as_solved(self, solver_list):
     """
       Mark a challenge as solved.
-      user_id : The slack user identifier for the solver.
+      solver_list : List of usernames, that solved the challenge.
     """
     self.is_solved = True
     self.solver = solver_list
