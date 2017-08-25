@@ -187,7 +187,7 @@ class SolveCommand(Command):
 
   def __init__(self, args, ctf_channel_id, user_id):
     if len(args) < 1:
-      raise InvalidCommand("Usage : @ota_bot solved <challenge_name> [username]")
+      raise InvalidCommand("Usage : @ota_bot solved <challenge_name> [support_member]")
 
     self.user_id = user_id
     self.challenge_name = args[0]
@@ -310,9 +310,8 @@ class ChallengeHandler:
         ctf = l[0] if l else None
 
         # Mark solved challenges
-        if challenge_solved:                 
-          if challenge_solved:
-            challenge.mark_as_solved(challenge_solved)
+        if challenge_solved:                           
+          challenge.mark_as_solved(challenge_solved)
 
         if ctf:
           for member_id in channel['members']:
