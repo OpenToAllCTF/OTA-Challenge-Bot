@@ -196,20 +196,36 @@ class SolveCommand(Command):
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
+
+
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
     ctf = list(filter(lambda x : x.channel_id == self.ctf_channel_id, ctfs))[0]
     challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
-    challenge.mark_as_solved(self.user_id)
-    pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-    # Announce the CTF channel
-    member = get_member(slack_client, self.user_id)
-    message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
-    message += "."
+    if not challenge.is_solved:
+      challenge.mark_as_solved(self.user_id)
+      pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-    slack_client.api_call("chat.postMessage",
-      channel=self.ctf_channel_id, text=message, as_user=True)
+      member = get_member(slack_client, self.user_id)
+
+      # Update channel purpose
+      purpose = dict(ChallengeHandler.CHALL_PURPOSE)
+      purpose['name'] = self.challenge_name
+      purpose['ctf_id'] = self.ctf_channel_id    
+      purpose['solved'] = member['user']['name']
+      purpose = json.dumps(purpose)
+      set_purpose(slack_client, challenge.channel_id, purpose)
+
+      # Announce the CTF channel
+    
+      message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
+      message += "."
+
+      slack_client.api_call("chat.postMessage",
+        channel=self.ctf_channel_id, text=message, as_user=True)
+    else:
+      print ("Challenge was already marked as solved. Ignore this")
 
 class HelpCommand(Command):
     """
@@ -257,7 +273,8 @@ class ChallengeHandler:
     "ota_bot" : "DO_NOT_DELETE_THIS",
     "ctf_id" : "",
     "name" : "",
-    "type" : "CHALLENGE"
+    "solved" : "",
+    "type" : "CHALLENGE",
   }
 
   def __init__(self, slack_client, bot_id):
@@ -281,12 +298,23 @@ class ChallengeHandler:
       if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
         challenge = Challenge(channel['id'], purpose["name"])
         ctf_channel_id = purpose["ctf_id"]
+        challenge_solved = purpose["solved"]
+
         l = list(filter(lambda ctf : ctf.channel_id == ctf_channel_id, database))
         ctf = l[0] if l else None
+
+        # Mark solved challenges
+        if challenge_solved:          
+          solve_member = get_member_by_name(slack_client, challenge_solved)
+        
+          if solve_member:
+            challenge.mark_as_solved(solve_member['id'])
+
         if ctf:
           for member_id in channel['members']:
             if member_id != bot_id:
               challenge.add_player(Player(member_id))
+
           ctf.add_challenge(challenge)
 
     # Create the database accordingly
