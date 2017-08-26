@@ -13,6 +13,9 @@ class SyscallTable:
 		entry = collections.OrderedDict()
 
 		for i in range(len(parts)):
+			if identifiers[i] == "Definition":
+				parts[i] = parts[i].split(":")[0]
+				
 			entry[identifiers[i]] = parts[i]
 
 		return entry
