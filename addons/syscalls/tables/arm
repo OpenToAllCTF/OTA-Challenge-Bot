@@ -9,7 +9,7 @@
 9437192	creat	0x900008	const char *pathname	umode_t mode	-	-	-	-	fs/open.c:1079
 9437193	link	0x900009	const char *oldname	const char *newname	-	-	-	-	fs/namei.c:3152
 9437194	unlink	0x90000a	const char *pathname	-	-	-	-	-	fs/namei.c:2979
-9437195	execve	0x90000b	const char *filenamei	const char *const *argv	const char *const *envp	-	-	-	arch/arm/kernel/sys_arm.c:65
+9437195	execve	0x90000b	const char *filename	const char *const *argv	const char *const *envp	-	-	-	arch/arm/kernel/sys_arm.c:65
 9437196	chdir	0x90000c	const char *filename	-	-	-	-	-	fs/open.c:375
 9437197	time	0x90000d	time_t *tloc	-	-	-	-	-	kernel/time.c:62
 9437198	mknod	0x90000e	const char *filename	umode_t mode	unsigned dev	-	-	-	fs/namei.c:2693
