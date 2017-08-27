@@ -91,6 +91,9 @@ def get_ctf_by_channel_id(database, channel_id):
   for ctf in ctfs:
     if ctf.channel_id == channel_id:
       return ctf
+    for challenge in ctf.challenges:
+      if challenge.channel_id == channel_id:
+        return ctf
 
   return False
 
@@ -105,6 +108,20 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
     if ctf.channel_id == ctf_channel_id:
       for challenge in ctf.challenges:
         if challenge.name == challenge_name:
+          return challenge
+
+  return False
+
+def get_challenge_by_channel_id(database, challenge_channel_id):
+  """
+    Fetch a Challenge object in the database with a given channel ID
+    If true, a Challenge object
+    Else, the function returns False
+  """
+  ctfs = pickle.load(open(database, "rb"))
+  for ctf in ctfs:
+      for challenge in ctf.challenges:
+        if challenge.channel_id == challenge_channel_id:
           return challenge
 
   return False
