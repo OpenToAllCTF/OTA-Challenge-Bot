@@ -76,6 +76,19 @@ def create_channel(slack_client, name):
     return response
 
 
+def rename_channel(slack_client, old_name, new_name):
+    """
+    Rename an existing channel.
+    """
+
+    print("Renaming channel %s to %s" % (old_name, new_name))
+
+    response = slack_client.api_call("channels.rename",
+            channel=old_name, name=new_name, validate=False)
+
+    return response
+
+
 def get_channel_info(slack_client, channel_id):
     """
     Return the channel info of a given channel ID.

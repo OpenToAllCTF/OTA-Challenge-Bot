@@ -100,7 +100,6 @@ class AddChallengeCommand(Command):
         slack_client.api_call("chat.postMessage",
                               channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), as_user=True)
 
-
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
