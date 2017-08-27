@@ -13,13 +13,13 @@ Didn't get 'log' available for other modules...
 """
 
 log = logging.getLogger("log")
-	
+
 log.setLevel(logging.DEBUG)
 
 # Error log file
 if not os.path.exists(LOGDIR):
-	os.makedirs(LOGDIR)
-	
+    os.makedirs(LOGDIR)
+
 elog = logging.FileHandler(os.path.join(LOGDIR, "%s_error.log" % LOGPREFIX))
 elog.setLevel(logging.ERROR)
 
