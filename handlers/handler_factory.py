@@ -1,7 +1,8 @@
 #!/usr/bin/python
-from util.loghandler import *
 import shlex
 from unidecode import unidecode
+from util.loghandler import *
+from bottypes.invalid_command import *
 
 """
 	Every handler should initialize the `commands` dictionary with the commands he can handle and the corresponding command class
@@ -15,6 +16,7 @@ class HandlerFactory():
 		log.info("Registering new handler: %s (%s)" % (handler_name, handler.__class__.__name__))
 
 		HandlerFactory.handlers[handler_name] = handler
+		handler.handler_name = handler_name
 
 	"""
 		Initializes all handler with common information.
@@ -46,18 +48,20 @@ class HandlerFactory():
 			handler_name = args[0]
 	
 			processed = False
+
+			processMsg = ""
 	
 			if handler_name in HandlerFactory.handlers:
 				# Call a specific handler with this command
 				handler = HandlerFactory.getHandler(handler_name)
 	
-				if len(args) < 2:
-					# Try to call help command for specified handler				
-					handler.process(slack_client, "help", "", channel, user)
+				if (len(args) < 2) or (args[1] == "help"):
+					# Generic help handling
+					processMsg += handler.getHandlerUsage(slack_client)
 					processed = True
 				else:
 					command = args[1]
-	
+						
 					if handler.canHandle(command):					
 						handler.process(slack_client, command, args[2:], channel, user)
 						processed = True
@@ -65,14 +69,25 @@ class HandlerFactory():
 				# Pass the command to every available handler
 				command = args[0]
 					
-				for handler in HandlerFactory.handlers.values():		
-					if handler.canHandle(command):
+				for handler_name in HandlerFactory.handlers:		
+					handler = HandlerFactory.handlers[handler_name]
+
+					if command == "help":						
+						processMsg += handler.getHandlerUsage(slack_client)
 						processed = True
+					elif handler.canHandle(command):						
 						handler.process(slack_client, command, args[1:], channel, user)
+						processed = True
 	
 			if not processed:
 				msg = "Unknown handler or command : `%s`" % msg
 				slack_client.api_call("chat.postMessage", channel=channel, text=msg, as_user=True)
+
+			if processMsg:
+				raise InvalidCommand(processMsg)
+
+		except InvalidCommand as e:
+			slack_client.api_call("chat.postMessage", channel=channel, text=e.message, as_user=True)
 		except Exception as ex:
 			log.error("An error has occured while processing a command: %s" % ex)
 						

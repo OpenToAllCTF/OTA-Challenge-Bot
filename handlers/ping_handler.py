@@ -5,6 +5,7 @@ import re
 import json
 from unidecode import unidecode
 from bottypes.command import *
+from bottypes.command_descriptor import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
 
@@ -18,26 +19,13 @@ class PingCommand(Command):
 
     slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
-class PingHelpCommand(Command):
-    """
-      Displays a help menu
-    """
-
-    def execute(self, slack_client, args, channel, user):      
-      message = "```"
-      message += "!ping ping\n"
-      message += "```"
-
-      raise InvalidCommand(message)
-
 class PingHandler(BaseHandler):
   """
     Ping this server to check for uptime
   """
   def __init__(self):
     self.commands = {
-        "ping" : PingCommand,      
-        "help" : PingHelpCommand
+        "ping" : CommandDesc(PingCommand, "Ping the bot", None, None)
     }     
 
 HandlerFactory.registerHandler("ping", PingHandler())

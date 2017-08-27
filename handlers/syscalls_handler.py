@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from bottypes.command import *
+from bottypes.command_descriptor import *
 from bottypes.invalid_command import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
@@ -42,9 +43,6 @@ class ShowSyscallCommand(Command):
     return msg.strip() + "```"  
 
   def execute(self, slack_client, args, channel_id, user_id):    
-    if len(args)<2:
-      raise InvalidCommand("Usage: `!syscalls show <arch> <syscall name/syscall id>`")
-
     archObj = SyscallsHandler.syscallInfo.getArch(args[0])
 
     if archObj:
@@ -64,19 +62,6 @@ class ShowSyscallCommand(Command):
         self.sendMessage(slack_client, channel_id, user_id, "Specified syscall not found: `%s (Arch: %s)`" % (args[1], args[0]))
     else:
       self.sendMessage(slack_client, channel_id, user_id, "Specified architecture not available: `%s`" % args[0])
-
-class SyscallHelpCommand(Command):
-    """
-      Displays a help menu
-    """
-
-    def execute(self, slack_client, args, channel, user):
-      message = "```"
-      message += "!syscalls available\n"
-      message += "!syscalls show <arch> <syscall name/syscall id>\n"
-      message += "```"
-
-      raise InvalidCommand(message)
 
 class SyscallsHandler(BaseHandler):
   """
@@ -103,9 +88,8 @@ class SyscallsHandler(BaseHandler):
     SyscallsHandler.syscallInfo = SyscallInfo(SyscallsHandler.BASEDIR)
 
     self.commands = {
-        "available" : ShowAvailableArchCommand,
-        "show" : ShowSyscallCommand,
-        "help" : SyscallHelpCommand 
+        "available" : CommandDesc(ShowAvailableArchCommand, "Shows the available syscall architectures", None, None),
+        "show" : CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),        
     }     
 
 HandlerFactory.registerHandler("syscalls", SyscallsHandler())

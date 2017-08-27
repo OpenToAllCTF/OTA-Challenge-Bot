@@ -4,6 +4,7 @@ import re
 from bottypes.ctf import *
 from bottypes.challenge import *
 from bottypes.player import *
+from bottypes.command_descriptor import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
 from util.util import *
@@ -12,10 +13,7 @@ class AddCTFCommand(Command):
   """
     Add and keep track of a new CTF.
   """    
-  def execute(self, slack_client, args, user_id, channel_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage: `!ctf addctf <ctf_name>`")
-
+  def execute(self, slack_client, args, user_id, channel_id):    
     name = args[0]
     
     # Create the channel
@@ -52,8 +50,6 @@ class AddChallengeCommand(Command):
     Add and keep track of a new challenge for a given CTF
   """
   def execute(self, slack_client, args, channel_id, user_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage: `!ctf addchallenge <challenge_name>`")
     name = args[0]
 
     # Validate that the user is in a CTF channel
@@ -126,8 +122,6 @@ class WorkingCommand(Command):
   """
 
   def execute(self, slack_client, args, channel_id, user_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage: `working <challenge_name>`")
     challenge_name = args[0]
 
     # Validate that current channel is a CTF channel
@@ -159,9 +153,6 @@ class SolveCommand(Command):
   """
 
   def execute(self, slack_client, args, channel_id, user_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage: `!ctf solved <challenge_name>`")
-
     challenge_name = args[0]
     
     challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
@@ -182,22 +173,6 @@ class SolveCommand(Command):
     message += "."
 
     slack_client.api_call("chat.postMessage", channel=channel_id, text=message, as_user=True)
-
-class HelpCommand(Command):
-    """
-      Displays a help menu
-    """
-
-    def execute(self, slack_client, args, channel_id, user_id):      
-      message = "```"
-      message += "!ctf addctf <ctf_name>\n"
-      message += "!ctf addchallenge <challenge_name>\n"
-      message += "!ctf working <challenge_name>\n"
-      message += "!ctf solved <challenge_name>\n"
-      message += "!ctf status\n"
-      message += "```"
-
-      raise InvalidCommand(message)
 
 class ChallengeHandler(BaseHandler):
   """
@@ -233,12 +208,11 @@ class ChallengeHandler(BaseHandler):
   
   def __init__(self):    
     self.commands = {
-      "addctf" : AddCTFCommand,
-      "addchallenge" : AddChallengeCommand,
-      "working" : WorkingCommand,
-      "status" : StatusCommand,
-      "solved" : SolveCommand,
-      "help" : HelpCommand
+      "addctf" : CommandDesc(AddCTFCommand, "Adds a new ctf",  ["ctf_name"], None),
+      "addchallenge" : CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], None),
+      "working" : CommandDesc(WorkingCommand, "Show that you're working on a challenge", ["challenge_name"], None),
+      "status" : CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
+      "solved" : CommandDesc(SolveCommand, "Mark a challenge as solved", ["challenge_name"], ["support_member"]),      
     }  
 
   """
