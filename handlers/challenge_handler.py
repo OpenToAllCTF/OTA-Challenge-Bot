@@ -102,7 +102,7 @@ class StatusCommand(Command):
 
     def execute(self, slack_client, args, channel_id, user_id):
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        members = [m["id"]: m["name"] for m in get_members(slack_client)['members'] if m["presence"] == "active"]
+        members = {m["id"]: m["name"] for m in get_members(slack_client)['members'] if m["presence"] == "active"}
         response = ""
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name
