@@ -147,24 +147,24 @@ class WorkingCommand(Command):
     Mark a player as "working" on a challenge.
   """
 
-  def __init__(self, args, user_id, ctf_channel_id):
-
-    if len(args) < 1:
-      raise InvalidCommand("Usage : working <challenge_name>")
-
-    self.challenge_name = args[0]
+  def __init__(self, args, user_id, channel_id):
+    self.challenge_name = args[0] if args else None
     self.user_id = user_id
-    self.ctf_channel_id = ctf_channel_id
+    self.channel_id = channel_id
 
   def execute(self, slack_client):
 
     # Validate that current channel is a CTF channel
-    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.channel_id)
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
-    # Get challenge object for challenge name
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, ctf.channel_id)
+    # Get challenge object for challenge name or channel id
+    challenge = ""
+    if self.challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, self.channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
@@ -174,10 +174,10 @@ class WorkingCommand(Command):
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
-    for c in ctf.challenges:
-      if c.channel_id == challenge.channel_id:
-        c.add_player(Player(self.user_id))
+    for ctf in ctfs:
+      for c in ctf.challenges:
+        if c.channel_id == challenge.channel_id:
+          c.add_player(Player(self.user_id))
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
 class SolveCommand(Command):
@@ -185,53 +185,57 @@ class SolveCommand(Command):
     Mark a challenge as solved.
   """
 
-  def __init__(self, args, ctf_channel_id, user_id):
-    if len(args) < 1:
-      raise InvalidCommand("Usage : @ota_bot solved <challenge_name> [support_member]")
-
+  def __init__(self, args, channel_id, user_id):
     self.user_id = user_id
-    self.challenge_name = args[0]
-    self.ctf_channel_id = ctf_channel_id
-    self.additional_solver = args[1:] if len(args)>1 else []
-
+    self.challenge_name = args[0] if args else None
+    self.channel_id = channel_id
+    self.additional_solver = args[1:] if (args and len(args)>1) else []
+    
   def execute(self, slack_client):
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.ctf_channel_id)
+    challenge = ""
+    if self.challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, self.channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == self.ctf_channel_id, ctfs))[0]
-    challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
 
-    if not challenge.is_solved:
-      member = get_member(slack_client, self.user_id)
-      solver_list = [ member['user']['name']] + self.additional_solver
+    for ctf in ctfs:
+      for c in ctf.challenges:
+          if c.channel_id == challenge.channel_id:
+            if not challenge.is_solved:
+              member = get_member(slack_client, self.user_id)
+              solver_list = [ member['user']['name']] + self.additional_solver
       
-      challenge.mark_as_solved(solver_list)
+              challenge.mark_as_solved(solver_list)
 
-      pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+              pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-      # Update channel purpose
-      purpose = dict(ChallengeHandler.CHALL_PURPOSE)
-      purpose['name'] = self.challenge_name
-      purpose['ctf_id'] = self.ctf_channel_id    
-      purpose['solved'] = solver_list
-      purpose = json.dumps(purpose)
-      set_purpose(slack_client, challenge.channel_id, purpose)
+              # Update channel purpose
+              purpose = dict(ChallengeHandler.CHALL_PURPOSE)
+              purpose['name'] = self.challenge_name
+              purpose['ctf_id'] = self.ctf_channel_id    
+              purpose['solved'] = solver_list
+              purpose = json.dumps(purpose)
+              set_purpose(slack_client, challenge.channel_id, purpose)
 
-      # Announce the CTF channel    
-      help_members = ""
+              # Announce the CTF channel    
+              help_members = ""
+            
+              if len(self.additional_solver) > 0:
+                help_members = "(together with %s)" % ", ".join(self.additional_solver)
 
-      if len(self.additional_solver) > 0:
-        help_members = "(together with %s)" % ", ".join(self.additional_solver)
+                message = "<@here> *%s* : %s has solved the \"%s\" challenge %s" % (challenge.name, member['user']['name'], challenge.name, help_members)
+                message += "."
 
-      message = "<@here> *%s* : %s has solved the \"%s\" challenge %s" % (challenge.name, member['user']['name'], challenge.name, help_members)
-      message += "."
-
-      slack_client.api_call("chat.postMessage",
-        channel=self.ctf_channel_id, text=message, as_user=True)
+              slack_client.api_call("chat.postMessage",
+                channel=self.ctf_channel_id, text=message, as_user=True)
+           
+            break
     
 class HelpCommand(Command):
     """
@@ -246,6 +250,11 @@ class HelpCommand(Command):
       message += "@ota_bot working <challenge_name>\n"
       message += "@ota_bot solved <challenge_name> [support_member]\n"
       message += "@ota_bot status\n"
+      message += "!add ctf <ctf_name>\n"
+      message += "!add challenge <challenge_name>\n"
+      message += "!working [challenge_name]\n"
+      message += "!solved [challenge_name]\n"
+      message += "!status\n"
       message += "```"
 
       raise InvalidCommand(message)

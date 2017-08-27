@@ -33,7 +33,8 @@ class Challenge:
     """
       Add a player to the list of working players
     """
-    self.players.append(player)
+    if not any(p.user_id == player.user_id for p in self.players):
+      self.players.append(player)
 
   def remove_player(self, user_id):
     """

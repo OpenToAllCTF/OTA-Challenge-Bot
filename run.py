@@ -14,11 +14,17 @@ def parse_slack_output(slack_rtm_output):
   output_list = slack_rtm_output
   if output_list and len(output_list) > 0:
       for output in output_list:
-          if output and 'text' in output and AT_BOT in output['text']:
-              # return text after the @ mention, whitespace removed
-              return (output['text'].split(AT_BOT)[1].strip().lower(),
-                     output['channel'],
-                     output['user'])
+          if output and 'text' in output:
+              if AT_BOT in output['text']:
+                # return text after the @ mention, whitespace removed
+                return (output['text'].split(AT_BOT)[1].strip().lower(),
+                       output['channel'],
+                       output['user'])
+              if output['text'] and output['text'].startswith('!'):
+                # return the command after the !
+                return (output['text'][1:].strip().lower(),
+                       output['channel'],
+                       output['user'])
   return None, None, None
 
 def get_bot_id(name):
