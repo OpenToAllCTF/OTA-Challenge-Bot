@@ -98,7 +98,7 @@ class AddChallengeCommand(Command):
 
         # Notify the channel
         slack_client.api_call("chat.postMessage",
-                              channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), as_user=True)
+                              channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), parse="full", as_user=True)
 
 
 class StatusCommand(Command):
