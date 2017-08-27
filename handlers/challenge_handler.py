@@ -132,7 +132,7 @@ class StatusCommand(Command):
             response += "\n"
 
         slack_client.api_call("chat.postMessage",
-                              channel=channel_id, text=response.strip(), as_user=True)
+                              channel=channel_id, text=response.strip(), parse="full", as_user=True)
 
 
 class WorkingCommand(Command):
