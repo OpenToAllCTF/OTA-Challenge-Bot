@@ -1,51 +1,42 @@
 #!/usr/bin/env python3
-
-import shlex
 import pickle
 import re
-import json
-from helpers.command import *
-from helpers.invalid_command import *
-from helpers.ctf import *
-from helpers.challenge import *
-from helpers.player import *
-from helpers.util import *
-from unidecode import unidecode
+from bottypes.ctf import *
+from bottypes.challenge import *
+from bottypes.player import *
+from handlers.handler_factory import *
+from handlers.base_handler import *
+from util.util import *
 
 class AddCTFCommand(Command):
   """
     Add and keep track of a new CTF.
-  """
-
-  def __init__(self, args, user, channel):
+  """    
+  def execute(self, slack_client, args, user_id, channel_id):
     if len(args) < 1:
-      raise InvalidCommand("Usage : add ctf <ctf_name>")
+      raise InvalidCommand("Usage: `!ctf addctf <ctf_name>`")
 
-    self.name = args[0]
-    self.user_id = user
-    self.channel_id = channel
-
-  def execute(self, slack_client):
-
+    name = args[0]
+    
     # Create the channel
-    response = create_channel(slack_client, self.name)
+    response = create_channel(slack_client, name)
 
     # Validate that the channel was successfully created.
     if response['ok'] == False:
-      raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (self.name, response['error']))
+      raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (name, response['error']))
 
     # Add purpose tag for persistence
     purpose = dict(ChallengeHandler.CTF_PURPOSE)
-    purpose['name'] = self.name
+    purpose['name'] = name
     purpose = json.dumps(purpose)
     channel = response['channel']['id']
     set_purpose(slack_client, channel, purpose)
 
     # Invite user
-    invite_user(slack_client, self.user_id, channel)
+    invite_user(slack_client, user_id, channel)
 
     # New CTF object
-    ctf = CTF(channel, self.name)
+    ctf = CTF(channel, name)
 
     # Update list of CTFs
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -54,32 +45,25 @@ class AddCTFCommand(Command):
 
     # Notify people of new channel
     message = "Created channel #%s" % response['channel']['name']
-    slack_client.api_call("chat.postMessage",
-        channel=self.channel_id, text=message.strip(), as_user=True, parse="full")
-
+    slack_client.api_call("chat.postMessage", channel=channel_id, text=message.strip(), as_user=True, parse="full")
 
 class AddChallengeCommand(Command):
   """
     Add and keep track of a new challenge for a given CTF
   """
-
-  def __init__(self, args, channel_id, user_id):
+  def execute(self, slack_client, args, channel_id, user_id):
     if len(args) < 1:
-      raise InvalidCommand("Usage : add challenge <challenge_name>")
-
-    self.name = args[0]
-    self.ctf_channel_id = channel_id
-    self.user_id = user_id
-
-  def execute(self, slack_client):
+      raise InvalidCommand("Usage: `!ctf addchallenge <challenge_name>`")
+    name = args[0]
 
     # Validate that the user is in a CTF channel
-    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
     # Create the challenge channel
-    channel_name = "%s-%s" % (ctf.name, self.name)
+    channel_name = "%s-%s" % (ctf.name, name)
     response = create_channel(slack_client, channel_name)
 
     # Validate that the channel was created successfully
@@ -87,19 +71,19 @@ class AddChallengeCommand(Command):
       raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (channel_name, response['error']))
 
     # Add purpose tag for persistence
-    channel_id = response['channel']['id']
+    challenge_channel_id = response['channel']['id']
     purpose = dict(ChallengeHandler.CHALL_PURPOSE)
-    purpose['name'] = self.name
+    purpose['name'] = name
     purpose['ctf_id'] = ctf.channel_id
     purpose = json.dumps(purpose)
-    set_purpose(slack_client, channel_id, purpose)
+    set_purpose(slack_client, challenge_channel_id, purpose)
 
     # Invite user
-    invite_user(slack_client, self.user_id, channel_id)
+    invite_user(slack_client, user_id, challenge_channel_id)
 
     # New Challenge and player object
-    challenge = Challenge(channel_id, self.name)
-    player = Player(self.user_id)
+    challenge = Challenge(challenge_channel_id, name)
+    player = Player(user_id)
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -113,10 +97,7 @@ class StatusCommand(Command):
     Get a status of the currently running CTFs
   """
 
-  def __init__(self, channel):
-    self.channel = channel
-
-  def execute(self, slack_client):
+  def execute(self, slack_client, args, channel_id, user_id):
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
     members = get_members(slack_client)['members']
     response = ""
@@ -137,44 +118,39 @@ class StatusCommand(Command):
       response += "\n"
 
     slack_client.api_call("chat.postMessage",
-        channel=self.channel, text=response.strip(), as_user=True)
+        channel=channel_id, text=response.strip(), as_user=True)
 
 class WorkingCommand(Command):
   """
     Mark a player as "working" on a challenge.
   """
 
-  def __init__(self, args, user_id, ctf_channel_id):
-
+  def execute(self, slack_client, args, channel_id, user_id):
     if len(args) < 1:
-      raise InvalidCommand("Usage : working <challenge_name>")
-
-    self.challenge_name = args[0]
-    self.user_id = user_id
-    self.ctf_channel_id = ctf_channel_id
-
-  def execute(self, slack_client):
+      raise InvalidCommand("Usage: `working <challenge_name>`")
+    challenge_name = args[0]
 
     # Validate that current channel is a CTF channel
-    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, self.ctf_channel_id)
+    ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
     # Get challenge object for challenge name
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, ctf.channel_id)
+    challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, ctf.channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Invite user to challenge channel
-    invite_user(slack_client, self.user_id, challenge.channel_id)
+    invite_user(slack_client, user_id, challenge.channel_id)
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
     ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
     for c in ctf.challenges:
       if c.channel_id == challenge.channel_id:
-        c.add_player(Player(self.user_id))
+        c.add_player(Player(user_id))
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
 class SolveCommand(Command):
@@ -182,53 +158,48 @@ class SolveCommand(Command):
     Mark a challenge as solved.
   """
 
-  def __init__(self, args, ctf_channel_id, user_id):
+  def execute(self, slack_client, args, channel_id, user_id):
     if len(args) < 1:
-      raise InvalidCommand("Usage : @ota_bot solved <challenge_name>")
+      raise InvalidCommand("Usage: `!ctf solved <challenge_name>`")
 
-    self.user_id = user_id
-    self.challenge_name = args[0]
-    self.ctf_channel_id = ctf_channel_id
-
-  def execute(self, slack_client):
-    challenge = get_challenge_by_name(ChallengeHandler.DB, self.challenge_name, self.ctf_channel_id)
+    challenge_name = args[0]
+    
+    challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == self.ctf_channel_id, ctfs))[0]
+    ctf = list(filter(lambda x : x.channel_id == channel_id, ctfs))[0]
     challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
-    challenge.mark_as_solved(self.user_id)
+    challenge.mark_as_solved(user_id)
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
     # Announce the CTF channel
-    member = get_member(slack_client, self.user_id)
+    member = get_member(slack_client, user_id)
     message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
     message += "."
 
-    slack_client.api_call("chat.postMessage",
-      channel=self.ctf_channel_id, text=message, as_user=True)
+    slack_client.api_call("chat.postMessage", channel=channel_id, text=message, as_user=True)
 
 class HelpCommand(Command):
     """
       Displays a help menu
     """
 
-    def execute(self, slack_client):
-      message = "Available Commands : "
-      message += "```"
-      message += "@ota_bot add ctf <ctf_name>\n"
-      message += "@ota_bot add challenge <challenge_name>\n"
-      message += "@ota_bot working <challenge_name>\n"
-      message += "@ota_bot solved <challenge_name>\n"
-      message += "@ota_bot status\n"
+    def execute(self, slack_client, args, channel_id, user_id):      
+      message = "```"
+      message += "!ctf addctf <ctf_name>\n"
+      message += "!ctf addchallenge <challenge_name>\n"
+      message += "!ctf working <challenge_name>\n"
+      message += "!ctf solved <challenge_name>\n"
+      message += "!ctf status\n"
       message += "```"
 
       raise InvalidCommand(message)
 
-class ChallengeHandler:
+class ChallengeHandler(BaseHandler):
   """
     Manages everything related to challenge coordination.
 
@@ -259,9 +230,22 @@ class ChallengeHandler:
     "name" : "",
     "type" : "CHALLENGE"
   }
+  
+  def __init__(self):    
+    self.commands = {
+      "addctf" : AddCTFCommand,
+      "addchallenge" : AddChallengeCommand,
+      "working" : WorkingCommand,
+      "status" : StatusCommand,
+      "solved" : SolveCommand,
+      "help" : HelpCommand
+    }  
 
-  def __init__(self, slack_client, bot_id):
-
+  """
+  This might be refactored. Not sure, if the handler itself should do the channel handling,
+  or if it should be used to a common class, so it can be reused
+  """
+  def init(self, slack_client, bot_id):
     # Find channels generated by challenge_handler
     database = []
     response = slack_client.api_call("channels.list")
@@ -290,46 +274,7 @@ class ChallengeHandler:
           ctf.add_challenge(challenge)
 
     # Create the database accordingly
-    pickle.dump(database, open(self.DB, "wb+"))
-    self.slack_client = slack_client
+    pickle.dump(database, open(self.DB, "wb+"))    
 
-  def process(self, command, channel, user):
-    try:
-      command_line = unidecode(command.lower())
-      args = shlex.split(command_line)
-      command = None
-    except:
-      message = "Command failed : Malformed input."
-      self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=message, as_user=True)
-      return
-
-    try:
-      # Add CTF command
-      if args[:2] == ["add", "ctf"]:
-        command = AddCTFCommand(args[2:], user, channel)
-
-      # Add challenge command
-      elif args[:2] == ["add", "challenge"]:
-        command = AddChallengeCommand(args[2:], channel, user)
-
-      # Working command
-      elif args[:1] == ["working"]:
-        command = WorkingCommand(args[1:], user, channel)
-
-      elif args[:1] == ["status"]:
-        command = StatusCommand(channel)
-
-      elif args[:1] == ["solved"]:
-        command = SolveCommand(args[1:], channel, user)
-
-      elif args[:1] == ["help"]:
-        command = HelpCommand()
-
-      if command:
-        command.execute(self.slack_client)
-
-    except InvalidCommand as e:
-      self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=e.message, as_user=True)
-
+# Register this handler
+HandlerFactory.registerHandler("ctf", ChallengeHandler())

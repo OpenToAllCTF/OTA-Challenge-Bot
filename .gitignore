@@ -1,3 +1,4 @@
 *.pyc
 config.json
 *.bin
+*.log
