@@ -90,6 +90,10 @@ class AddChallengeCommand(Command):
         ctf.add_challenge(challenge)
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
+        # Notify the channel
+        slack_client.api_call("chat.postMessage",
+                channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), as_user=True)
+
 
 class StatusCommand(Command):
     """
