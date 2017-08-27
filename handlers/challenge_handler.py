@@ -46,6 +46,7 @@ class AddCTFCommand(Command):
         message = "Created channel #%s" % response['channel']['name']
         slack_client.api_call("chat.postMessage", channel=channel_id, text=message.strip(), as_user=True, parse="full")
 
+
 class AddChallengeCommand(Command):
     """
     Add and keep track of a new challenge for a given CTF.
@@ -97,25 +98,22 @@ class StatusCommand(Command):
 
     def execute(self, slack_client, args, channel_id, user_id):
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        members = get_members(slack_client)['members']
+        members = [m["id"]: m["name"] for m in get_members(slack_client)['members'] if m["presence"] == "active"]
         response = ""
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name
             for challenge in ctf.challenges:
                 response += "*%s* (Total : %d) " % (challenge.name, len(challenge.players))
                 players = []
-                if not challenge.is_solved:
+                if challenge.is_solved:
+                    response += "Solved by : %s :tada:\n" % ", ".join(challenge.solver)
+                else:
                     response += "Active : "
-                    for player in challenge.players:
-                        active_player_list = list(filter(lambda m: m['id'] == player.user_id and m['presence'] == 'active', members))
-
-                        if len(active_player_list) > 0:
-                            player_name = active_player_list[0]['name']
-                            players.append(player_name)
+                    for player_id in challenge.players:
+                        if player_id in members:
+                            players.append(members[player_id])
 
                     response += ', '.join(players) + "\n"
-                else:
-                    response += "Solved by : %s :tada:\n" % ", ".join(challenge.solver)
             response += "\n"
 
         slack_client.api_call("chat.postMessage",
@@ -213,6 +211,7 @@ class SolveCommand(Command):
                                 channel=ctf.channel_id, text=message, as_user=True)
 
                         break
+
 
 class ChallengeHandler(BaseHandler):
     """
