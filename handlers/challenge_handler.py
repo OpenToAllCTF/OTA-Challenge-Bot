@@ -216,9 +216,6 @@ class HelpCommand(Command):
       Displays a help menu
     """
 
-    def __init__(self, user):
-      self.user = user
-
     def execute(self, slack_client):
       message = "Available Commands : "
       message += "```"
@@ -229,8 +226,7 @@ class HelpCommand(Command):
       message += "@ota_bot status\n"
       message += "```"
 
-      slack_client.api_call("chat.postMessage", 
-        channel=self.user, text=message, as_user=True)
+      raise InvalidCommand(message)
 
 class ChallengeHandler:
   """
@@ -328,7 +324,7 @@ class ChallengeHandler:
         command = SolveCommand(args[1:], channel, user)
 
       elif args[:1] == ["help"]:
-        command = HelpCommand(user)
+        command = HelpCommand()
 
       if command:
         command.execute(self.slack_client)
