@@ -38,7 +38,9 @@ def get_members(slack_client):
     Return a list of all members.
     """
     response = slack_client.api_call("users.list", presence=True)
-    return response
+    if not response["ok"]:
+        raise Exception("API error")
+    return response["members"]
 
 
 def get_member(slack_client, user_id):
