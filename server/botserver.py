@@ -69,7 +69,7 @@ class BotServer(threading.Thread):
         """
         output_list = slackMessage
 
-        if output_list and len(output_list) > 0:
+        if output_list:
             for output in output_list:
                 if output and 'text' in output:
                     if self.botAT in output['text']:
