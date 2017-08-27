@@ -100,6 +100,7 @@ class AddChallengeCommand(Command):
         slack_client.api_call("chat.postMessage",
                               channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), as_user=True)
 
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
@@ -113,8 +114,10 @@ class StatusCommand(Command):
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name
             for challenge in ctf.challenges:
-                response += "*%s* (Total : %d) " % (challenge.name,
-                                                    len(challenge.players))
+                channel_name = "%s-%s" % (ctf.name, challenge.name)
+                response += "*%s* #%s (Total : %d) " % (challenge.name,
+                                                        channel_name, len(challenge.players))
+
                 players = []
                 if challenge.is_solved:
                     response += "Solved by : %s :tada:\n" % ", ".join(
