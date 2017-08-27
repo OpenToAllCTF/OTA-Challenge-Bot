@@ -80,7 +80,7 @@ class AddChallengeCommand(Command):
         invite_user(slack_client, user_id, challenge_channel_id)
 
         # New Challenge and player object
-        challenge = Challenge(challenge_channel_id, name)
+        challenge = Challenge(ctf.channel_id, challenge_channel_id, name)
         player = Player(user_id)
 
         # Update database
@@ -102,7 +102,7 @@ class StatusCommand(Command):
 
     def execute(self, slack_client, args, channel_id, user_id):
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        members = [m["id"]: m["name"] for m in get_members(slack_client)['members'] if m["presence"] == "active"]
+        members = {m["id"]: m["name"] for m in get_members(slack_client)['members'] if m["presence"] == "active"}
         response = ""
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name

@@ -1,5 +1,5 @@
 class Challenge:
-    def __init__(self, channel_id, name):
+    def __init__(self, ctf_channel_id, channel_id, name):
         """
         An object representation of an ongoing challenge.
         channel_id : The slack id for the associated channel

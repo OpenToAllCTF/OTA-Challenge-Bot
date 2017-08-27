@@ -89,6 +89,6 @@ class HandlerFactory():
 
         except InvalidCommand as e:
             slack_client.api_call("chat.postMessage", channel=channel, text=e.message, as_user=True)
-        except Exception as ex:
-            log.error("An error has occured while processing a command: %s" % ex)
+        #except Exception as ex:
+        #    log.error("An error has occured while processing a command: %s" % ex)
 
