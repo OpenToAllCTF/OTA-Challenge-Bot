@@ -11,9 +11,9 @@ from util.util import *
 
 class AddCTFCommand(Command):
   """
-    Add and keep track of a new CTF.
+        Add and keep track of a new CTF.
   """    
-  def execute(self, slack_client, args, user_id, channel_id):    
+  def execute(self, slack_client, args, user_id, channel_id):
     name = args[0]
     
     # Create the channel
@@ -78,7 +78,7 @@ class AddChallengeCommand(Command):
     invite_user(slack_client, user_id, challenge_channel_id)
 
     # New Challenge and player object
-    challenge = Challenge(challenge_channel_id, name)
+    challenge = Challenge(ctf.channel_id, challenge_channel_id, name)
     player = Player(user_id)
 
     # Update database
@@ -162,17 +162,47 @@ class SolveCommand(Command):
   """
 
   def execute(self, slack_client, args, channel_id, user_id):
-    challenge_name = args[0] if args else None
-    additional_solver = args[1:] if (args and len(args)>1) else []
-
     challenge = ""
-    if challenge_name:
-      challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+
+    if args:
+        # Multiple arguments: Need to check if a challenge was specified or not
+        challenge_name = args[0]
+
+        # Check if we're currently in a challenge channel
+        curChallenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if curChallenge:            
+            # User is in a challenge channel => Check for challenge by name in parent ctf channel
+            challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, curChallenge.ctf_channel_id)
+        else:
+            # User is in the ctf channel => Check for challenge by name in current challenge
+            challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+        
+        if not challenge:
+            challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)      
+            additional_args = args if args else []
+        else:
+            additional_args = args[1:] if len(args)>1 else []
     else:
-      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+        # No arguments => direct way of resolving challenge
+        challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)  
+
+        additional_args = []
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
+
+    additional_solver = []
+
+    # Get solving member 
+    member = get_member(slack_client, user_id)
+    solver_list = [ member['user']['name']]
+      
+    # Find additional members to add
+    for addSolve in additional_args:
+        if not addSolve in solver_list:
+            solver_list.append(addSolve)
+            additional_solver.append(addSolve)
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -180,10 +210,7 @@ class SolveCommand(Command):
     for ctf in ctfs:
       for c in ctf.challenges:
           if c.channel_id == challenge.channel_id:
-            if not challenge.is_solved:
-              member = get_member(slack_client, user_id)
-              solver_list = [ member['user']['name']] + additional_solver
-      
+            if not challenge.is_solved:              
               c.mark_as_solved(solver_list)
 
               pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
@@ -274,7 +301,7 @@ class ChallengeHandler(BaseHandler):
       purpose = load_json(channel['purpose']['value'])
 
       if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
-        challenge = Challenge(channel['id'], purpose["name"])
+        challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"])
         ctf_channel_id = purpose["ctf_id"]
         challenge_solved = purpose["solved"]
 
