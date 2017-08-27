@@ -1,9 +1,8 @@
 import shlex
-
 from unidecode import unidecode
-
 from util.loghandler import *
 from bottypes.invalid_command import *
+
 
 class HandlerFactory():
     """
@@ -14,7 +13,8 @@ class HandlerFactory():
     handlers = {}
 
     def registerHandler(handler_name, handler):
-        log.info("Registering new handler: %s (%s)" % (handler_name, handler.__class__.__name__))
+        log.info("Registering new handler: %s (%s)" %
+                 (handler_name, handler.__class__.__name__))
 
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
@@ -42,7 +42,8 @@ class HandlerFactory():
             args = shlex.split(command_line)
         except:
             message = "Command failed : Malformed input."
-            slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+            slack_client.api_call("chat.postMessage",
+                                  channel=channel, text=message, as_user=True)
             return
 
         try:
@@ -64,7 +65,8 @@ class HandlerFactory():
                     command = args[1]
 
                     if handler.canHandle(command):
-                        handler.process(slack_client, command, args[2:], channel, user)
+                        handler.process(slack_client, command,
+                                        args[2:], channel, user)
                         processed = True
             else:
                 # Pass the command to every available handler
@@ -77,17 +79,20 @@ class HandlerFactory():
                         processMsg += handler.getHandlerUsage(slack_client)
                         processed = True
                     elif handler.canHandle(command):
-                        handler.process(slack_client, command, args[1:], channel, user)
+                        handler.process(slack_client, command,
+                                        args[1:], channel, user)
                         processed = True
 
             if not processed:
                 msg = "Unknown handler or command : `%s`" % msg
-                slack_client.api_call("chat.postMessage", channel=channel, text=msg, as_user=True)
+                slack_client.api_call("chat.postMessage",
+                                      channel=channel, text=msg, as_user=True)
 
             if processMsg:
                 raise InvalidCommand(processMsg)
 
         except InvalidCommand as e:
-            slack_client.api_call("chat.postMessage", channel=channel, text=e.message, as_user=True)
+            slack_client.api_call(
+                "chat.postMessage", channel=channel, text=e.message, as_user=True)
         except Exception as ex:
             log.error("An error has occured while processing a command: %s" % ex)

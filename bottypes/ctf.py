@@ -1,4 +1,5 @@
 class CTF:
+
     def __init__(self, channel_id, name):
         """
         An object representation of an ongoing CTF.

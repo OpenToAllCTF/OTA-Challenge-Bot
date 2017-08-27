@@ -4,20 +4,22 @@ import pickle
 #####
 #    SLACK API Wrappers
 #####
+
+
 def invite_user(slack_client, user, channel):
     """
     Invite a user to a given channel.
     """
     response = slack_client.api_call("channels.invite",
-                            channel=channel,
-                            user=user)
+                                     channel=channel,
+                                     user=user)
     return response
 
 
 def kick_user(slack_client, user_id, channel_id):
     response = slack_client.api_call("channels.kick",
-                            channel=channel_id,
-                            user=user_id)
+                                     channel=channel_id,
+                                     user=user_id)
     return response
 
 
@@ -26,7 +28,7 @@ def set_purpose(slack_client, channel, purpose):
     Set the purpose of a given channel.
     """
     response = slack_client.api_call("channels.setPurpose",
-        purpose=purpose, channel=channel)
+                                     purpose=purpose, channel=channel)
 
     return response
 
@@ -68,10 +70,8 @@ def create_channel(slack_client, name):
     Create a channel with a given name.
     """
 
-    print("Creating channel: %s" % name)
-
     response = slack_client.api_call("channels.create",
-            name=name, validate=False)
+                                     name=name, validate=False)
 
     return response
 
@@ -94,7 +94,7 @@ def get_channel_info(slack_client, channel_id):
     Return the channel info of a given channel ID.
     """
     response = slack_client.api_call("channels.info",
-        channel=channel_id)
+                                     channel=channel_id)
 
     return response
 
@@ -156,9 +156,9 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
     """
     ctfs = pickle.load(open(database, "rb"))
     for ctf in ctfs:
-            for challenge in ctf.challenges:
-                if challenge.channel_id == challenge_channel_id:
-                    return challenge
+        for challenge in ctf.challenges:
+            if challenge.channel_id == challenge_channel_id:
+                return challenge
 
     return False
 

@@ -5,10 +5,12 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
 
+
 class ShowAvailableArchCommand(Command):
     """
     Shows the available architecture tables for syscalls
     """
+
     def execute(self, slack_client, args, channel_id, user_id):
         archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
 
@@ -20,7 +22,9 @@ class ShowAvailableArchCommand(Command):
 
         msg += "```\n"
 
-        slack_client.api_call("chat.postMessage", channel=channel_id, text=msg.strip(), as_user=True)
+        slack_client.api_call(
+            "chat.postMessage", channel=channel_id, text=msg.strip(), as_user=True)
+
 
 class ShowSyscallCommand(Command):
     """
@@ -30,7 +34,8 @@ class ShowSyscallCommand(Command):
     def sendMessage(self, slack_client, channel, user, msg):
         destChannel = channel if (SyscallsHandler.MSGMODE == 0) else user
 
-        slack_client.api_call("chat.postMessage", channel=destChannel, text=msg.strip(), as_user=True)
+        slack_client.api_call(
+            "chat.postMessage", channel=destChannel, text=msg.strip(), as_user=True)
 
     def parseSyscallInfo(self, syscallEntry):
         msg = "```"
@@ -55,11 +60,15 @@ class ShowSyscallCommand(Command):
                 entry = archObj.getEntryByName(args[1])
 
             if entry:
-                self.sendMessage(slack_client, channel_id, user_id, self.parseSyscallInfo(entry))
+                self.sendMessage(slack_client, channel_id,
+                                 user_id, self.parseSyscallInfo(entry))
             else:
-                self.sendMessage(slack_client, channel_id, user_id, "Specified syscall not found: `%s (Arch: %s)`" % (args[1], args[0]))
+                self.sendMessage(slack_client, channel_id, user_id,
+                                 "Specified syscall not found: `%s (Arch: %s)`" % (args[1], args[0]))
         else:
-            self.sendMessage(slack_client, channel_id, user_id, "Specified architecture not available: `%s`" % args[0])
+            self.sendMessage(slack_client, channel_id, user_id,
+                             "Specified architecture not available: `%s`" % args[0])
+
 
 class SyscallsHandler(BaseHandler):
     """
@@ -77,7 +86,8 @@ class SyscallsHandler(BaseHandler):
     # Specify the base directory, where the syscall tables are located
     BASEDIR = "addons/syscalls/tables"
 
-    # Specify if messages from syscall handler should be posted to channel (0) or per dm (1)
+    # Specify if messages from syscall handler should be posted to channel (0)
+    # or per dm (1)
     MSGMODE = 0
 
     syscallInfo = None
@@ -86,8 +96,8 @@ class SyscallsHandler(BaseHandler):
         SyscallsHandler.syscallInfo = SyscallInfo(SyscallsHandler.BASEDIR)
 
         self.commands = {
-                "available" : CommandDesc(ShowAvailableArchCommand, "Shows the available syscall architectures", None, None),
-                "show" : CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),
+            "available": CommandDesc(ShowAvailableArchCommand, "Shows the available syscall architectures", None, None),
+            "show": CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),
         }
 
 HandlerFactory.registerHandler("syscalls", SyscallsHandler())
