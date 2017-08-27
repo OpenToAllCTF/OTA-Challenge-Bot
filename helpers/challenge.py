@@ -14,13 +14,13 @@ class Challenge:
     self.is_solved = False
     self.solver = None
 
-  def mark_as_solved(self, user_id):
+  def mark_as_solved(self, solver_list):
     """
       Mark a challenge as solved.
-      user_id : The slack user identifier for the solver.
+      solver_list : List of usernames, that solved the challenge.
     """
     self.is_solved = True
-    self.solver = user_id
+    self.solver = solver_list
 
   def unmark_as_solved(self):
     """
