@@ -6,10 +6,8 @@ import json
 import threading
 import time
 
-"""
-    This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
-    Would make a much cleaner design, than using if/else
-"""
+# This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
+# Would make a much cleaner design, than using if/else
 class ConsoleThread(threading.Thread):
     def __init__(self, botserver):
         self.botserver = botserver

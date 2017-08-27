@@ -8,7 +8,7 @@ from addons.syscalls.syscallinfo import *
 
 class ShowAvailableArchCommand(Command):
     """
-        Shows the available architecture tables for syscalls
+    Shows the available architecture tables for syscalls
     """
     def execute(self, slack_client, args, channel_id, user_id):
         archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
@@ -25,7 +25,7 @@ class ShowAvailableArchCommand(Command):
 
 class ShowSyscallCommand(Command):
     """
-        Shows information about the requested syscall
+    Shows information about the requested syscall
     """
 
     def sendMessage(self, slack_client, channel, user, msg):
@@ -64,15 +64,15 @@ class ShowSyscallCommand(Command):
 
 class SyscallsHandler(BaseHandler):
     """
-        Shows information about syscalls for different architectures.
+    Shows information about syscalls for different architectures.
 
-        Commands :
-        # Show available architectures
-        @ota_bot syscalls available
+    Commands :
+    # Show available architectures
+    @ota_bot syscalls available
 
-        # Show syscall information
-        @ota_bot syscalls show x86 execve
-        @ota_bot syscalls show x86 11
+    # Show syscall information
+    @ota_bot syscalls show x86 execve
+    @ota_bot syscalls show x86 11
     """
 
     # Specify the base directory, where the syscall tables are located

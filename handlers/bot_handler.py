@@ -12,7 +12,7 @@ from handlers.base_handler import *
 
 class PingCommand(Command):
     """
-        Ping this server to check for uptime
+    Ping this server to check for uptime.
     """
     def execute(self, slack_client, args, channel, user):
         # Announce the CTF channel
@@ -22,7 +22,7 @@ class PingCommand(Command):
 
 class BotHandler(BaseHandler):
     """
-        Ping this server to check for uptime
+    Ping this server to check for uptime.
     """
     def __init__(self):
         self.commands = {

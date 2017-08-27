@@ -6,11 +6,8 @@ CONSOLELOGLEVEL = logging.DEBUG
 LOGDIR = "logs"
 LOGPREFIX = "bot"
 
-"""
-Someone fix this ;)
-
-Didn't get 'log' available for other modules...
-"""
+# Someone fix this ;)
+# Didn't get 'log' available for other modules...
 
 log = logging.getLogger("log")
 

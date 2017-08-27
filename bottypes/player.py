@@ -1,6 +1,6 @@
 class Player:
     """
-    An object representation of a CTF player
+    An object representation of a CTF player.
     """
 
     def __init__(self, user_id):

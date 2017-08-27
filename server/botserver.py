@@ -8,9 +8,8 @@ import threading
 import time
 
 class BotServer(threading.Thread):
-    """
-        global lock for locking global data in bot server
-    """
+
+    #global lock for locking global data in bot server
     threadLock = threading.Lock()
     userList = []
 
@@ -19,12 +18,12 @@ class BotServer(threading.Thread):
 
         threading.Thread.__init__(self)
 
-    """ Acquire global lock for working with global (not thread-safe) data """
     def lock(self):
+        """Acquire global lock for working with global (not thread-safe) data."""
         BotServer.threadLock.acquire()
 
-    """ Release global lock after accessing global (not thread-safe) data """
     def release(self):
+        """Release global lock after accessing global (not thread-safe) data."""
         BotServer.threadLock.release()
 
     def updateUserList(self, slack_client):
@@ -62,9 +61,9 @@ class BotServer(threading.Thread):
 
     def parseSlackMessage(self, slackMessage):
         """
-            The Slack Real Time Messaging API is an events firehose.
-            this parsing function returns None unless a message is
-            directed at the Bot, based on its ID.
+        The Slack Real Time Messaging API is an events firehose.
+        this parsing function returns None unless a message is
+        directed at the Bot, based on its ID.
         """
         output_list = slackMessage
 

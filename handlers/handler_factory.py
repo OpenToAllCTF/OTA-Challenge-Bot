@@ -4,12 +4,12 @@ from unidecode import unidecode
 from util.loghandler import *
 from bottypes.invalid_command import *
 
-"""
+class HandlerFactory():
+    """
     Every handler should initialize the `commands` dictionary with the commands he can handle and the corresponding command class
 
     The handler factory will then check, if the handler can process a command, resolve it and execute it
-"""
-class HandlerFactory():
+    """
     handlers = {}
 
     def registerHandler(handler_name, handler):
@@ -18,12 +18,12 @@ class HandlerFactory():
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
 
-    """
+    def initializeHandlers(slack_client, bot_id):
+        """
         Initializes all handler with common information.
 
         Might remove bot_id from here later on?
-    """
-    def initializeHandlers(slack_client, bot_id):
+        """
         for handler in HandlerFactory.handlers:
             HandlerFactory.handlers[handler].init(slack_client, bot_id)
 

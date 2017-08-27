@@ -3,9 +3,9 @@
 class CTF:
     def __init__(self, channel_id, name):
         """
-            An object representation of an ongoing CTF.
-            channel_id : The slack id for the associated channel
-            name : The name of the CTF
+        An object representation of an ongoing CTF.
+        channel_id : The slack id for the associated channel
+        name : The name of the CTF
         """
 
         self.channel_id = channel_id
@@ -14,8 +14,8 @@ class CTF:
 
     def add_challenge(self, challenge):
         """
-            Add a challenge object to the list of challenges belonging
-            to this CTF.
-            challenge : A challenge object
+        Add a challenge object to the list of challenges belonging
+        to this CTF.
+        challenge : A challenge object
         """
         self.challenges.append(challenge)

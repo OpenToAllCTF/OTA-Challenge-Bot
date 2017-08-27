@@ -9,9 +9,10 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from util.util import *
 
+
 class AddCTFCommand(Command):
     """
-        Add and keep track of a new CTF.
+    Add and keep track of a new CTF.
     """
     def execute(self, slack_client, args, user_id, channel_id):
         name = args[0]
@@ -47,7 +48,7 @@ class AddCTFCommand(Command):
 
 class AddChallengeCommand(Command):
     """
-        Add and keep track of a new challenge for a given CTF
+    Add and keep track of a new challenge for a given CTF.
     """
     def execute(self, slack_client, args, channel_id, user_id):
         name = args[0]
@@ -88,9 +89,10 @@ class AddChallengeCommand(Command):
         ctf.add_challenge(challenge)
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
+
 class StatusCommand(Command):
     """
-        Get a status of the currently running CTFs
+    Get a status of the currently running CTFs.
     """
 
     def execute(self, slack_client, args, channel_id, user_id):
@@ -119,9 +121,10 @@ class StatusCommand(Command):
         slack_client.api_call("chat.postMessage",
                 channel=channel_id, text=response.strip(), as_user=True)
 
+
 class WorkingCommand(Command):
     """
-        Mark a player as "working" on a challenge.
+    Mark a player as "working" on a challenge.
     """
 
     def execute(self, slack_client, args, channel_id, user_id):
@@ -156,9 +159,10 @@ class WorkingCommand(Command):
 
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
+
 class SolveCommand(Command):
     """
-        Mark a challenge as solved.
+    Mark a challenge as solved.
     """
 
     def execute(self, slack_client, args, channel_id, user_id):
@@ -212,20 +216,20 @@ class SolveCommand(Command):
 
 class ChallengeHandler(BaseHandler):
     """
-        Manages everything related to challenge coordination.
+    Manages everything related to challenge coordination.
 
-        Commands :
-        # Create a defcon-25-quals channel
-        @ota_bot add ctf "defcon 25 quals"
+    Commands :
+    # Create a defcon-25-quals channel
+    @ota_bot add ctf "defcon 25 quals"
 
-        # Create a web-100 channel
-        @ota_bot add challenge "web 100" "defcon 25 quals"
+    # Create a web-100 channel
+    @ota_bot add challenge "web 100" "defcon 25 quals"
 
-        # Kick member from other ctf challenge channels and invite the member to the web 100 channel
-        @ota_bot working "web 100"
+    # Kick member from other ctf challenge channels and invite the member to the web 100 channel
+    @ota_bot working "web 100"
 
-        # Get status of all CTFs
-        @ota_bot status
+    # Get status of all CTFs
+    @ota_bot status
     """
 
     DB = "databases/challenge_handler.bin"
