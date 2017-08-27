@@ -3,16 +3,16 @@ from util.loghandler import *
 from server.botserver import *
 from server.consolethread import *
 
-if __name__  == "__main__":	
-	log.info("Initializing threads...")	
-	
-	server = BotServer()	
-	server.start()
+if __name__  == "__main__":
+    log.info("Initializing threads...")
 
-	console = ConsoleThread(server)
-	console.start()
-	
-	# Server should be up and running. Quit when server shuts down
-	server.join()
+    server = BotServer()
+    server.start()
 
-	log.info("Server has shut down. Quit")
+    console = ConsoleThread(server)
+    console.start()
+
+    # Server should be up and running. Quit when server shuts down
+    server.join()
+
+    log.info("Server has shut down. Quit")

@@ -6,37 +6,35 @@ import json
 import threading
 import time
 
-"""
-	This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
-	Would make a much cleaner design, than using if/else
-"""
-class ConsoleThread(threading.Thread):	
-	def __init__(self, botserver):		
-		self.botserver = botserver
-		threading.Thread.__init__(self)
-	
-	def run(self):
-		self.running = True
+# This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
+# Would make a much cleaner design, than using if/else
+class ConsoleThread(threading.Thread):
+    def __init__(self, botserver):
+        self.botserver = botserver
+        threading.Thread.__init__(self)
 
-		while True:
-			try:
-				inputMsg = input("")
+    def run(self):
+        self.running = True
 
-				print ("Command : %s" % inputMsg)
+        while True:
+            try:
+                inputMsg = input("")
 
-				parts = inputMsg.split(" ")
+                print ("Command : %s" % inputMsg)
 
-				cmd = parts[0].lower()
+                parts = inputMsg.split(" ")
 
-				if cmd == "quit":
-					self.botserver.quit()
-					break
+                cmd = parts[0].lower()
 
-				# Example command: Useless, but just an example, for what console handler could do
-				elif cmd == "createchannel":
-					if len(parts)<2:
-						print ("Usage: createchannel <channel>")
-					else:					
-						create_channel(self.botserver.slack_client, parts[1])
-			except:
-				print ("Error at executing command...")
+                if cmd == "quit":
+                    self.botserver.quit()
+                    break
+
+                # Example command: Useless, but just an example, for what console handler could do
+                elif cmd == "createchannel":
+                    if len(parts)<2:
+                        print ("Usage: createchannel <channel>")
+                    else:
+                        create_channel(self.botserver.slack_client, parts[1])
+            except:
+                print ("Error at executing command...")
