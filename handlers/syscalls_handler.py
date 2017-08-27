@@ -1,72 +1,48 @@
 #!/usr/bin/env python3
-import shlex
-import re
-import json
-import time
-from helpers.command import *
-from helpers.invalid_command import *
-from unidecode import unidecode
+from bottypes.command import *
+from bottypes.command_descriptor import *
+from bottypes.invalid_command import *
+from handlers.handler_factory import *
+from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
-
-def parseSyscallInfo(syscallEntry):  
-  msg = "```"
-
-  for entry in syscallEntry:
-    msg += "{0:15} : {1}\n".format(entry, syscallEntry[entry])
-  
-  return msg.strip() + "```"  
 
 class ShowAvailableArchCommand(Command):
   """
     Shows the available architecture tables for syscalls
   """
-
-  def __init__(self, channel, user, syscallInfo):
-    self.user = user
-    self.syscallInfo = syscallInfo
-    self.channel = channel
-
-  def showUsage(self):
-    msg  
-
-  def execute(self, slack_client):    
-    archList = self.syscallInfo.getAvailableArchitectures()
+  def execute(self, slack_client, args, channel_id, user_id):    
+    archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
 
     msg = "\n"
-    msg += "Available architectures:\n"
-    msg += "```"
+    msg += "Available architectures:```"    
 
     for arch in archList:
       msg += "%s\t" % arch
 
     msg += "```\n"
 
-    slack_client.api_call("chat.postMessage",
-        channel=self.channel, text=msg.strip(), as_user=True)
+    slack_client.api_call("chat.postMessage", channel=channel_id, text=msg.strip(), as_user=True)
   
 class ShowSyscallCommand(Command):
   """
     Shows information about the requested syscall
   """
 
-  def __init__(self, args, channel, user, syscallInfo):
-    if len(args) < 2:
-      raise InvalidCommand("Usage : ```@ota_bot syscalls show <arch> <syscall name / syscall id>```")
+  def sendMessage(self, slack_client, channel, user, msg):
+    destChannel = channel if (SyscallsHandler.MSGMODE == 0) else user
 
-    self.user = user
-    self.syscallInfo = syscallInfo
-    self.channel = channel
-    self.args = args
+    slack_client.api_call("chat.postMessage", channel=destChannel, text=msg.strip(), as_user=True)    
 
-  def sendMessage(self, slack_client, msg):
-    destChannel = self.channel if (SyscallsHandler.MSGMODE == 0) else self.user
+  def parseSyscallInfo(self, syscallEntry):  
+    msg = "```"
 
-    slack_client.api_call("chat.postMessage", 
-      channel=destChannel, text=msg.strip(), as_user=True)    
+    for entry in syscallEntry:
+      msg += "{0:15} : {1}\n".format(entry, syscallEntry[entry])
+  
+    return msg.strip() + "```"  
 
-  def execute(self, slack_client):
-    
-    archObj = self.syscallInfo.getArch(self.args[0])
+  def execute(self, slack_client, args, channel_id, user_id):    
+    archObj = SyscallsHandler.syscallInfo.getArch(args[0])
 
     if archObj:
       entry = None
@@ -74,39 +50,19 @@ class ShowSyscallCommand(Command):
       # convenience : Try to search syscall by id or by name, depending on what
       # the user has specified
       try:
-        syscallID = int(self.args[1])
+        syscallID = int(args[1])
         entry = archObj.getEntryByID(syscallID)
       except:
-        entry = archObj.getEntryByName(self.args[1])
+        entry = archObj.getEntryByName(args[1])
 
-      if entry:
-        msg = parseSyscallInfo(entry)
-        
-        self.sendMessage(slack_client, msg)
+      if entry:        
+        self.sendMessage(slack_client, channel_id, user_id, self.parseSyscallInfo(entry))
       else:
-        msg = "Specified syscall not found: `%s (Arch: %s)`" % (self.args[1], self.args[0])
-
-        self.sendMessage(slack_client, msg)
+        self.sendMessage(slack_client, channel_id, user_id, "Specified syscall not found: `%s (Arch: %s)`" % (args[1], args[0]))
     else:
-      msg = "Specified architecture not available: `%s`" % self.args[0]
+      self.sendMessage(slack_client, channel_id, user_id, "Specified architecture not available: `%s`" % args[0])
 
-      self.sendMessage(slack_client, msg)
-
-class SyscallHelpCommand(Command):
-    """
-      Displays a help menu
-    """
-
-    def execute(self, slack_client):
-      message = "```"
-      message += "@ota_bot syscalls available\n"
-      message += "@ota_bot syscalls show <arch> <syscall name/syscall id>\n"
-      message += "```"
-
-      raise InvalidCommand(message)
-
-
-class SyscallsHandler:
+class SyscallsHandler(BaseHandler):
   """
     Shows information about syscalls for different architectures.
 
@@ -125,38 +81,14 @@ class SyscallsHandler:
   # Specify if messages from syscall handler should be posted to channel (0) or per dm (1)
   MSGMODE = 0
 
-  def __init__(self, slack_client):
-    self.syscallInfo = SyscallInfo(SyscallsHandler.BASEDIR)
+  syscallInfo = None
 
-    self.slack_client = slack_client    
+  def __init__(self):
+    SyscallsHandler.syscallInfo = SyscallInfo(SyscallsHandler.BASEDIR)
 
-  def process(self, command, channel, user):
-    try:
-      command_line = unidecode(command.lower())
-      args = shlex.split(command_line)
-      command = None
-    except:
-      message = "Command failed : Malformed input."
-      self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=message, as_user=True)
-      return
+    self.commands = {
+        "available" : CommandDesc(ShowAvailableArchCommand, "Shows the available syscall architectures", None, None),
+        "show" : CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),        
+    }     
 
-    try:
-      # Show available architectures
-      if args[:2] == ["syscalls", "available"]:
-        command = ShowAvailableArchCommand(channel, user, self.syscallInfo)
-
-      # Show specific syscall
-      elif args[:2] == ["syscalls", "show"]:
-        command = ShowSyscallCommand(args[2:], channel, user, self.syscallInfo)
-
-      elif args[:1] == ["help"]:
-        command = SyscallHelpCommand()
-
-      if command:
-        command.execute(self.slack_client)
-
-    except InvalidCommand as e:
-      self.slack_client.api_call("chat.postMessage",
-        channel=channel, text=e.message, as_user=True)
-
+HandlerFactory.registerHandler("syscalls", SyscallsHandler())
