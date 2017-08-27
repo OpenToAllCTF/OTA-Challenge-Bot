@@ -62,7 +62,8 @@ if __name__ == "__main__":
   # Connect to Slack's real-time messaging API
   handlers = [
     ping_handler.PingHandler(slack_client),
-    challenge_handler.ChallengeHandler(slack_client, BOT_ID)
+    challenge_handler.ChallengeHandler(slack_client, BOT_ID),
+    syscalls_handler.SyscallsHandler(slack_client)
   ]
 
   if slack_client.rtm_connect():
