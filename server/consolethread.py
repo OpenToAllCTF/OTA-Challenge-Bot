@@ -9,7 +9,10 @@ from util.util import *
 
 # This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
 # Would make a much cleaner design, than using if/else
+
+
 class ConsoleThread(threading.Thread):
+
     def __init__(self, botserver):
         self.botserver = botserver
         threading.Thread.__init__(self)
@@ -31,9 +34,10 @@ class ConsoleThread(threading.Thread):
                     self.botserver.quit()
                     break
 
-                # Example command: Useless, but just an example, for what console handler could do
+                # Example command: Useless, but just an example, for what
+                # console handler could do
                 elif cmd == "createchannel":
-                    if len(parts)<2:
+                    if len(parts) < 2:
                         print("Usage: createchannel <channel>")
                     else:
                         create_channel(self.botserver.slack_client, parts[1])

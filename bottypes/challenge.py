@@ -1,4 +1,5 @@
 class Challenge:
+
     def __init__(self, ctf_channel_id, channel_id, name):
         """
         An object representation of an ongoing challenge.

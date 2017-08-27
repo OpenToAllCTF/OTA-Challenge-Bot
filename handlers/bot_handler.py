@@ -15,20 +15,23 @@ class PingCommand(Command):
     """
     Ping this server to check for uptime.
     """
+
     def execute(self, slack_client, args, channel, user):
         # Announce the CTF channel
         message = "Pong!"
 
-        slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+        slack_client.api_call("chat.postMessage",
+                              channel=channel, text=message, as_user=True)
 
 
 class BotHandler(BaseHandler):
     """
     Ping this server to check for uptime.
     """
+
     def __init__(self):
         self.commands = {
-                "ping" : CommandDesc(PingCommand, "Ping the bot", None, None)
+            "ping": CommandDesc(PingCommand, "Ping the bot", None, None)
         }
 
 HandlerFactory.registerHandler("bot", BotHandler())

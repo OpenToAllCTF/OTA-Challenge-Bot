@@ -11,7 +11,7 @@ from util.loghandler import *
 
 class BotServer(threading.Thread):
 
-    #global lock for locking global data in bot server
+    # global lock for locking global data in bot server
     threadLock = threading.Lock()
     userList = []
 
@@ -59,7 +59,8 @@ class BotServer(threading.Thread):
         self.running = False
 
     def sendMessage(self, channelID, msg):
-        self.slack_client.api_call("chat.PostMessage", channel = channelID, text = msg, as_user=True)
+        self.slack_client.api_call(
+            "chat.PostMessage", channel=channelID, text=msg, as_user=True)
 
     def parseSlackMessage(self, slackMessage):
         """
@@ -100,7 +101,6 @@ class BotServer(threading.Thread):
 
             self.running = False
 
-
     def run(self):
         log.info("Starting server thread...")
 
@@ -119,17 +119,21 @@ class BotServer(threading.Thread):
                 log.info("Connection successful...")
 
                 log.info("Initializing handlers...")
-                HandlerFactory.initializeHandlers(self.slack_client, self.botID)            # Might even pass the bot server for handlers?
+                # Might even pass the bot server for handlers?
+                HandlerFactory.initializeHandlers(
+                    self.slack_client, self.botID)
 
                 # Main loop
                 while self.running:
-                    command, channel, user = self.parseSlackMessage(self.slack_client.rtm_read())
+                    command, channel, user = self.parseSlackMessage(
+                        self.slack_client.rtm_read())
 
                     if command and channel:
-                        log.debug("Received bot command : %s (%s)" % (command, channel))
+                        log.debug("Received bot command : %s (%s)" %
+                                  (command, channel))
 
-                        HandlerFactory.process(self.slack_client, command, channel, user)
-
+                        HandlerFactory.process(
+                            self.slack_client, command, channel, user)
 
                     time.sleep(READ_WEBSOCKET_DELAY)
             else:
