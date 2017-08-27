@@ -163,7 +163,7 @@ class SolveCommand(Command):
 
   def execute(self, slack_client, args, channel_id, user_id):
     challenge_name = args[0] if args else None
-    additional_solver = arggs[1:] if (args and len(args)>1) else []
+    additional_solver = args[1:] if (args and len(args)>1) else []
 
     challenge = ""
     if challenge_name:

@@ -19,7 +19,7 @@ class PingCommand(Command):
 
     slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
 
-class PingHandler(BaseHandler):
+class BotHandler(BaseHandler):
   """
     Ping this server to check for uptime
   """
@@ -28,4 +28,4 @@ class PingHandler(BaseHandler):
         "ping" : CommandDesc(PingCommand, "Ping the bot", None, None)
     }     
 
-HandlerFactory.registerHandler("ping", PingHandler())
+HandlerFactory.registerHandler("bot", BotHandler())
