@@ -1,6 +1,7 @@
-#!/usr/bin/python
 import shlex
+
 from unidecode import unidecode
+
 from util.loghandler import *
 from bottypes.invalid_command import *
 
@@ -90,4 +91,3 @@ class HandlerFactory():
             slack_client.api_call("chat.postMessage", channel=channel, text=e.message, as_user=True)
         except Exception as ex:
             log.error("An error has occured while processing a command: %s" % ex)
-

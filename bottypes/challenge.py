@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 class Challenge:
     def __init__(self, channel_id, name):
         """
@@ -10,7 +8,7 @@ class Challenge:
 
         self.channel_id = channel_id
         self.name = name
-        self.players = []
+        self.players = {}
         self.is_solved = False
         self.solver = None
 
@@ -33,12 +31,15 @@ class Challenge:
         """
         Add a player to the list of working players.
         """
-        if not any(p.user_id == player.user_id for p in self.players):
-            self.players.append(player)
+        self.players[player.user_id] = player
 
     def remove_player(self, user_id):
         """
         Remove a player from the list of working players using a given slack
         user ID.
         """
-        self.players = [player for player in self.players if player.user_id != user_id]
+        try:
+            del self.players[player.user_id]
+        except KeyError:
+            # TODO: Should we allow this to perculate up to the caller?
+            pass

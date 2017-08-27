@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import pickle
 
@@ -69,7 +68,7 @@ def create_channel(slack_client, name):
     Create a channel with a given name.
     """
 
-    print ("Creating channel: %s" % name)
+    print("Creating channel: %s" % name)
 
     response = slack_client.api_call("channels.create",
             name=name, validate=False)
@@ -164,8 +163,7 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
 
     challenges = []
     for challenge in ctf.challenges:
-        for player in challenge.players:
-            if player.user_id == user_id:
-                challenges.append(challenge)
+        if player.user_id in challenge.players:
+            challenges.append(challenge)
 
     return challenges

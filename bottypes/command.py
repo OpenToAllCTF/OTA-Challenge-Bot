@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 from abc import ABC, abstractmethod
+
 
 class Command(ABC):
     """Defines the command interface."""

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 class CommandDesc():
     def __init__(self, command, description, args, optArgs):
         self.command = command

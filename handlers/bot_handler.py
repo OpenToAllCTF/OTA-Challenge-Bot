@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
 import shlex
 import pickle
 import re
 import json
+
 from unidecode import unidecode
 
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
+
 
 class PingCommand(Command):
     """
@@ -19,6 +20,7 @@ class PingCommand(Command):
         message = "Pong!"
 
         slack_client.api_call("chat.postMessage", channel=channel, text=message, as_user=True)
+
 
 class BotHandler(BaseHandler):
     """
