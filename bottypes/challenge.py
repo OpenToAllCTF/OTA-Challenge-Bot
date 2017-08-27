@@ -14,13 +14,13 @@ class Challenge:
     self.is_solved = False
     self.solver = None
 
-  def mark_as_solved(self, user_id):
+  def mark_as_solved(self, solver_list):
     """
       Mark a challenge as solved.
-      user_id : The slack user identifier for the solver.
+      solver_list : List of usernames, that solved the challenge.
     """
     self.is_solved = True
-    self.solver = user_id
+    self.solver = solver_list
 
   def unmark_as_solved(self):
     """
@@ -33,7 +33,8 @@ class Challenge:
     """
       Add a player to the list of working players
     """
-    self.players.append(player)
+    if not any(p.user_id == player.user_id for p in self.players):
+      self.players.append(player)
 
   def remove_player(self, user_id):
     """

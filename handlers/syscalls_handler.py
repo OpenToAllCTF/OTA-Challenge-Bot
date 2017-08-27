@@ -10,7 +10,6 @@ class ShowAvailableArchCommand(Command):
   """
     Shows the available architecture tables for syscalls
   """
-  
   def execute(self, slack_client, args, channel_id, user_id):    
     archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
 

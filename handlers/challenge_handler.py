@@ -105,12 +105,15 @@ class StatusCommand(Command):
         if not challenge.is_solved:
           response += "Active : "
           for player in challenge.players:
-            player_name = list(filter(lambda m: m['id'] == player.user_id and m['presence'] == 'active', members))[0]['name']
-            players.append(player_name)
+            active_player_list = list(filter(lambda m: m['id'] == player.user_id and m['presence'] == 'active', members))
+
+            if len(active_player_list) > 0:
+              player_name = active_player_list[0]['name']
+              players.append(player_name)
+
           response += ', '.join(players) + "\n"
-        else:
-          player_name = list(filter(lambda m: m['id'] == challenge.solver and m['presence'] == 'active', members))[0]['name']
-          response += "Solved by %s : :tada:" % player_name
+        else:          
+          response += "Solved by : %s :tada:\n" % ", ".join(challenge.solver)        
       response += "\n"
 
     slack_client.api_call("chat.postMessage",
@@ -122,7 +125,7 @@ class WorkingCommand(Command):
   """
 
   def execute(self, slack_client, args, channel_id, user_id):
-    challenge_name = args[0]
+    challenge_name = args[0] if args else None
 
     # Validate that current channel is a CTF channel
     ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -130,9 +133,13 @@ class WorkingCommand(Command):
     if not ctf:
       raise InvalidCommand("Command failed. You are not in a CTF channel.")
 
-    # Get challenge object for challenge name
-    challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, ctf.channel_id)
-
+    # Get challenge object for challenge name or channel id
+    challenge = ""
+    if challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+    
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
@@ -141,10 +148,12 @@ class WorkingCommand(Command):
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == ctf.channel_id, ctfs))[0]
-    for c in ctf.challenges:
-      if c.channel_id == challenge.channel_id:
-        c.add_player(Player(user_id))
+
+    for ctf in ctfs:
+      for c in ctf.challenges:
+        if c.channel_id == challenge.channel_id:
+          c.add_player(Player(user_id))
+
     pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
 class SolveCommand(Command):
@@ -153,26 +162,53 @@ class SolveCommand(Command):
   """
 
   def execute(self, slack_client, args, channel_id, user_id):
-    challenge_name = args[0]
-    
-    challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+    challenge_name = args[0] if args else None
+    additional_solver = arggs[1:] if (args and len(args)>1) else []
+
+    challenge = ""
+    if challenge_name:
+      challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+    else:
+      challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
 
     if not challenge:
       raise InvalidCommand("This challenge does not exist.")
 
     # Update database
     ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-    ctf = list(filter(lambda x : x.channel_id == channel_id, ctfs))[0]
-    challenge = list(filter(lambda x : x.channel_id == challenge.channel_id, ctf.challenges))[0]
-    challenge.mark_as_solved(user_id)
-    pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-    # Announce the CTF channel
-    member = get_member(slack_client, user_id)
-    message = "<@here> *%s* : %s has solved the \"%s\" challenge" % (challenge.name, member['user']['name'], challenge.name)
-    message += "."
+    for ctf in ctfs:
+      for c in ctf.challenges:
+          if c.channel_id == challenge.channel_id:
+            if not challenge.is_solved:
+              member = get_member(slack_client, user_id)
+              solver_list = [ member['user']['name']] + additional_solver
+      
+              c.mark_as_solved(solver_list)
 
-    slack_client.api_call("chat.postMessage", channel=channel_id, text=message, as_user=True)
+              pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+              # Update channel purpose
+              purpose = dict(ChallengeHandler.CHALL_PURPOSE)
+              purpose['name'] = challenge.name
+              purpose['ctf_id'] = ctf.channel_id    
+              purpose['solved'] = solver_list
+              purpose = json.dumps(purpose)
+              set_purpose(slack_client, challenge.channel_id, purpose)
+
+              # Announce the CTF channel    
+              help_members = ""
+            
+              if len(additional_solver) > 0:
+                help_members = "(together with %s)" % ", ".join(additional_solver)
+
+              message = "<@here> *%s* : %s has solved the \"%s\" challenge %s" % (challenge.name, member['user']['name'], challenge.name, help_members)
+              message += "."
+
+              slack_client.api_call("chat.postMessage",
+                channel=ctf.channel_id, text=message, as_user=True)
+           
+            break
 
 class ChallengeHandler(BaseHandler):
   """
@@ -203,16 +239,17 @@ class ChallengeHandler(BaseHandler):
     "ota_bot" : "DO_NOT_DELETE_THIS",
     "ctf_id" : "",
     "name" : "",
-    "type" : "CHALLENGE"
+    "solved" : "",
+    "type" : "CHALLENGE",
   }
   
   def __init__(self):    
     self.commands = {
       "addctf" : CommandDesc(AddCTFCommand, "Adds a new ctf",  ["ctf_name"], None),
       "addchallenge" : CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], None),
-      "working" : CommandDesc(WorkingCommand, "Show that you're working on a challenge", ["challenge_name"], None),
+      "working" : CommandDesc(WorkingCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
       "status" : CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
-      "solved" : CommandDesc(SolveCommand, "Mark a challenge as solved", ["challenge_name"], ["support_member"]),      
+      "solved" : CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),      
     }  
 
   """
@@ -239,12 +276,20 @@ class ChallengeHandler(BaseHandler):
       if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
         challenge = Challenge(channel['id'], purpose["name"])
         ctf_channel_id = purpose["ctf_id"]
+        challenge_solved = purpose["solved"]
+
         l = list(filter(lambda ctf : ctf.channel_id == ctf_channel_id, database))
         ctf = l[0] if l else None
+
+        # Mark solved challenges
+        if challenge_solved:                           
+          challenge.mark_as_solved(challenge_solved)
+
         if ctf:
           for member_id in channel['members']:
             if member_id != bot_id:
               challenge.add_player(Player(member_id))
+
           ctf.add_challenge(challenge)
 
     # Create the database accordingly
