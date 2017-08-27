@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 class Challenge:
     def __init__(self, channel_id, name):
         """

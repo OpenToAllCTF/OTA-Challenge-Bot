@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 class InvalidCommand(Exception):
     """
     Exception for invalid commands.

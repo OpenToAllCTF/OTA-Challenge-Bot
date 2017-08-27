@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
 import pickle
 import re
+
 from bottypes.ctf import *
 from bottypes.challenge import *
 from bottypes.player import *

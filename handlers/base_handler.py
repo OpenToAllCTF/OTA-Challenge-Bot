@@ -1,7 +1,8 @@
-#!/usr/bin/python3
 from abc import ABC, abstractmethod
+
 from bottypes.command import *
 from bottypes.invalid_command import *
+
 
 class BaseHandler(ABC):
     def canHandle(self, command):

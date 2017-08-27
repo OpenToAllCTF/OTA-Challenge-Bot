@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import collections, os
+
 
 class SyscallTable:
     def __init__(self, filename):
         self.source = filename
         self.entries = collections.OrderedDict()
-        #self.identifiers = []
 
         self.parse_table(filename)
 

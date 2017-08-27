@@ -1,11 +1,13 @@
-#!/usr/bin/python3
-from slackclient import SlackClient
-from util.loghandler import *
-from handlers.handler_factory import *
-from handlers import *
 import json
 import threading
 import time
+
+from slackclient import SlackClient
+
+from handlers.handler_factory import *
+from handlers import *
+from util.loghandler import *
+
 
 class BotServer(threading.Thread):
 

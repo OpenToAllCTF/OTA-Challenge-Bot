@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 class CTF:
     def __init__(self, channel_id, name):
         """

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from bottypes.invalid_command import *

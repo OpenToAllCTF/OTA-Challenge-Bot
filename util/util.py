@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import json
 import pickle
 
@@ -69,7 +68,7 @@ def create_channel(slack_client, name):
     Create a channel with a given name.
     """
 
-    print ("Creating channel: %s" % name)
+    print("Creating channel: %s" % name)
 
     response = slack_client.api_call("channels.create",
             name=name, validate=False)
