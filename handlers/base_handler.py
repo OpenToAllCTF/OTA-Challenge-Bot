@@ -6,18 +6,15 @@ from bottypes.invalid_command import *
 
 class BaseHandler(ABC):
 
-    def canHandle(self, command):
-        if command in self.commands:
-            return True
-
-        return False
+    def can_handle(self, command):
+        return command in self.commands
 
     def init(self, slack_client, botid):
         pass
 
     # TODO: Refactor showCommandUsage and showHandlerUsage, so they'll reuse
     # duplicate code
-    def getCommandUsage(self, command, descriptor):
+    def command_usage(self, command, descriptor):
         msg = "Usage: `!%s %s" % (self.handler_name, command)
 
         if descriptor.arguments:
@@ -35,7 +32,8 @@ class BaseHandler(ABC):
 
         return msg
 
-    def getHandlerUsage(self, slack_client):
+    @property
+    def usage(self):
         msg = "```"
 
         for command in self.commands:
@@ -64,6 +62,6 @@ class BaseHandler(ABC):
         if cmdDescriptor:
             if (cmdDescriptor.arguments) and (len(args) < len(cmdDescriptor.arguments)):
                 raise InvalidCommand(
-                    self.getCommandUsage(command, cmdDescriptor))
+                    self.command_usage(command, cmdDescriptor))
             else:
                 cmdDescriptor.command().execute(slack_client, args, channel, user)

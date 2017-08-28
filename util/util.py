@@ -38,7 +38,9 @@ def get_members(slack_client):
     Return a list of all members.
     """
     response = slack_client.api_call("users.list", presence=True)
-    return response
+    if not response["ok"]:
+        raise Exception("API error")
+    return response["members"]
 
 
 def get_member(slack_client, user_id):
@@ -105,12 +107,12 @@ def get_channel_info(slack_client, channel_id):
 def load_json(string):
     """
     Return a JSON object based on its string representation.
-    Return false if the string isn't valid JSON.
+    Return None if the string isn't valid JSON.
     """
     try:
         json_object = json.loads(string)
     except ValueError as e:
-        return False
+        return None
     return json_object
 
 
@@ -120,7 +122,7 @@ def load_json(string):
 def get_ctf_by_channel_id(database, channel_id):
     """
     Fetch a CTF object in the database with a given channel ID.
-    Return the matching CTF object if found, or False otherwise.
+    Return the matching CTF object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
     for ctf in ctfs:
@@ -130,14 +132,14 @@ def get_ctf_by_channel_id(database, channel_id):
             if challenge.channel_id == channel_id:
                 return ctf
 
-    return False
+    return None
 
 
 def get_challenge_by_name(database, challenge_name, ctf_channel_id):
     """
     Fetch a Challenge object in the database with a given name and ctf channel
     ID.
-    Return the matching Challenge object if found, or False otherwise.
+    Return the matching Challenge object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
     for ctf in ctfs:
@@ -146,13 +148,13 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
                 if challenge.name == challenge_name:
                     return challenge
 
-    return False
+    return None
 
 
 def get_challenge_by_channel_id(database, challenge_channel_id):
     """
     Fetch a Challenge object in the database with a given channel ID
-    Return the matching Challenge object if found, or False otherwise.
+    Return the matching Challenge object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
     for ctf in ctfs:
@@ -160,7 +162,7 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
             if challenge.channel_id == challenge_channel_id:
                 return challenge
 
-    return False
+    return None
 
 
 def get_challenges_for_user_id(database, user_id, ctf_channel_id):

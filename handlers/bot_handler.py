@@ -34,4 +34,4 @@ class BotHandler(BaseHandler):
             "ping": CommandDesc(PingCommand, "Ping the bot", None, None)
         }
 
-HandlerFactory.registerHandler("bot", BotHandler())
+HandlerFactory.register("bot", BotHandler())

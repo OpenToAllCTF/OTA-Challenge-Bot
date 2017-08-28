@@ -6,20 +6,21 @@ from bottypes.invalid_command import *
 
 class HandlerFactory():
     """
-    Every handler should initialize the `commands` dictionary with the commands he can handle and the corresponding command class
+    Every handler should initialize the `commands` dictionary with the commands
+    he can handle and the corresponding command class
 
     The handler factory will then check, if the handler can process a command, resolve it and execute it
     """
     handlers = {}
 
-    def registerHandler(handler_name, handler):
+    def register(handler_name, handler):
         log.info("Registering new handler: %s (%s)" %
                  (handler_name, handler.__class__.__name__))
 
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
 
-    def initializeHandlers(slack_client, bot_id):
+    def initialize(slack_client, bot_id):
         """
         Initializes all handler with common information.
 
@@ -27,12 +28,6 @@ class HandlerFactory():
         """
         for handler in HandlerFactory.handlers:
             HandlerFactory.handlers[handler].init(slack_client, bot_id)
-
-    def getHandler(handler_name):
-        if handler_name in HandlerFactory.handlers:
-            return HandlerFactory.handlers[handler_name]
-
-        return None
 
     def process(slack_client, msg, channel, user):
         log.debug("Processing message: %s from %s (%s)" % (msg, channel, user))
@@ -53,18 +48,17 @@ class HandlerFactory():
 
             processMsg = ""
 
-            if handler_name in HandlerFactory.handlers:
-                # Call a specific handler with this command
-                handler = HandlerFactory.getHandler(handler_name)
-
+            # Call a specific handler with this command
+            handler = HandlerFactory.handlers.get(handler_name)
+            if handler:
                 if (len(args) < 2) or (args[1] == "help"):
                     # Generic help handling
-                    processMsg += handler.getHandlerUsage(slack_client)
+                    processMsg += handler.usage
                     processed = True
                 else:
                     command = args[1]
 
-                    if handler.canHandle(command):
+                    if handler.can_handle(command):
                         handler.process(slack_client, command,
                                         args[2:], channel, user)
                         processed = True
@@ -76,9 +70,9 @@ class HandlerFactory():
                     handler = HandlerFactory.handlers[handler_name]
 
                     if command == "help":
-                        processMsg += handler.getHandlerUsage(slack_client)
+                        processMsg += handler.usage
                         processed = True
-                    elif handler.canHandle(command):
+                    elif handler.can_handle(command):
                         handler.process(slack_client, command,
                                         args[1:], channel, user)
                         processed = True
