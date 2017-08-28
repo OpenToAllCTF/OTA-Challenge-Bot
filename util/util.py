@@ -103,6 +103,17 @@ def get_channel_info(slack_client, channel_id):
     return response
 
 
+def update_channel_purpose_name(slack_client, channel_id, new_name):
+    # Update channel purpose
+    channel_info = get_channel_info(slack_client, channel_id)
+
+    if channel_info:
+        purpose = load_json(channel_info['channel']['purpose']['value'])
+        purpose['name'] = new_name
+
+        set_purpose(slack_client, channel_id, json.dumps(purpose))
+
+
 #######
 # Helper functions
 #######
@@ -133,6 +144,19 @@ def get_ctf_by_channel_id(database, channel_id):
         for challenge in ctf.challenges:
             if challenge.channel_id == channel_id:
                 return ctf
+
+    return None
+
+
+def get_ctf_by_name(database, name):
+    """
+    Fetch a CTF object in the database with a given name.
+    Return the matching CTF object if found, or None otherwise.
+    """
+    ctfs = pickle.load(open(database, "rb"))
+    for ctf in ctfs:
+        if ctf.name == name:
+            return ctf
 
     return None
 
@@ -184,3 +208,30 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
             challenges.append(challenge)
 
     return challenges
+
+
+def update_challenge_name(database, challenge_channel_id, new_name):
+    """
+    Updates the name of the challenge with the specified challenge id
+    """
+    ctfs = pickle.load(open(database, "rb"))
+
+    for ctf in ctfs:
+        for chal in ctf.challenges:
+            if chal.channel_id == challenge_channel_id:
+                chal.name = new_name
+                pickle.dump(ctfs, open(database, "wb"))
+                return
+
+
+def update_ctf_name(database, ctf_channel_id, new_name):
+    """
+    Updates the name of the ctf with the specified channel id
+    """
+    ctfs = pickle.load(open(database, "rb"))
+
+    for ctf in ctfs:
+        if ctf.channel_id == ctf_channel_id:
+            ctf.name = new_name
+            pickle.dump(ctfs, open(database, "wb"))
+            return
