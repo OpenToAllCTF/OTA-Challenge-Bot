@@ -358,4 +358,4 @@ class ChallengeHandler(BaseHandler):
         pickle.dump(database, open(self.DB, "wb+"))
 
 # Register this handler
-HandlerFactory.registerHandler("ctf", ChallengeHandler())
+HandlerFactory.register("ctf", ChallengeHandler())

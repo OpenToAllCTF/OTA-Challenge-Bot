@@ -120,7 +120,7 @@ class BotServer(threading.Thread):
 
                 log.info("Initializing handlers...")
                 # Might even pass the bot server for handlers?
-                HandlerFactory.initializeHandlers(
+                HandlerFactory.initialize(
                     self.slack_client, self.botID)
 
                 # Main loop

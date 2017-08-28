@@ -100,4 +100,4 @@ class SyscallsHandler(BaseHandler):
             "show": CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),
         }
 
-HandlerFactory.registerHandler("syscalls", SyscallsHandler())
+HandlerFactory.register("syscalls", SyscallsHandler())
