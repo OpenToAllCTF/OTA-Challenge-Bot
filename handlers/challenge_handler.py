@@ -50,6 +50,70 @@ class AddCTFCommand(Command):
                               text=message.strip(), as_user=True, parse="full")
 
 
+class RenameChallengeCommand(Command):
+    """
+    Renames an existing challenge channel
+    """
+
+    def update_challenge(self, ctfs, challenge_channel_id, new_name):
+        for ctf in ctfs:
+            for chal in ctf.challenges:
+                if chal.channel_id == challenge_channel_id:
+                    chal.name = new_name
+                    return
+
+    def execute(self, slack_client, args, channel_id, user_id):
+        old_name = args[0]
+        new_name = args[1]
+
+        # Validate that the user is in a CTF channel
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        old_channel_name = "{0}-{1}".format(ctf.name, old_name)
+        new_channel_name = "{0}-{1}".format(ctf.name, new_name)
+
+        # Get the channel id for the channel to rename
+        challenge = get_challenge_by_name(
+            ChallengeHandler.DB, old_name, ctf.channel_id)
+
+        if not challenge:
+            raise InvalidCommand(
+                "Command failed. Challenge '{}' not found.".format(old_name))
+
+        response = rename_channel(
+            slack_client, challenge.channel_id, new_channel_name)
+
+        if not response['ok']:
+            raise InvalidCommand("\"{0}\" channel rename failed.\nError : {1}".format(
+                old_channel_name, response['error']))
+
+        # Update channel purpose
+        channel_info = get_channel_info(slack_client, challenge.channel_id)
+
+        if channel_info:
+            purpose = load_json(channel_info['channel']['purpose']['value'])
+            purpose['name'] = new_name
+
+            log.debug("Updating channel purpose : {}".format(purpose))
+
+            purpose = json.dumps(purpose)
+            set_purpose(slack_client, challenge.channel_id, purpose)
+
+        # Update database
+        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+
+        self.update_challenge(ctfs, challenge.channel_id, new_name)
+
+        pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+        slack_client.api_call("chat.postMessage",
+                              channel=channel_id, text="Challenge {} renamed to {} (#{})".format(old_name, new_name, new_channel_name), parse="full", as_user=True)
+
+
 class AddChallengeCommand(Command):
     """
     Add and keep track of a new challenge for a given CTF.
@@ -100,6 +164,7 @@ class AddChallengeCommand(Command):
         slack_client.api_call("chat.postMessage",
                               channel=channel_id, text="New challenge {} created in channel #{}".format(name, channel_name), as_user=True)
 
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
@@ -107,13 +172,15 @@ class StatusCommand(Command):
 
     def execute(self, slack_client, args, channel_id, user_id):
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        members = {m["id"]: m["name"] for m in get_members(slack_client) if m.get("presence") == "active"}
+        members = {m["id"]: m["name"] for m in get_members(
+            slack_client) if m.get("presence") == "active"}
         response = ""
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name
             for challenge in ctf.challenges:
                 channel_name = "%s-%s" % (ctf.name, challenge.name)
-                response += "*%s* #%s (Total : %d) " % (challenge.name, channel_name, len(challenge.players))
+                response += "*%s* #%s (Total : %d) " % (challenge.name,
+                                                        channel_name, len(challenge.players))
                 players = []
                 if challenge.is_solved:
                     response += "Solved by : %s :tada:\n" % ", ".join(
@@ -309,6 +376,7 @@ class ChallengeHandler(BaseHandler):
             "working": CommandDesc(WorkingCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solved": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
+            "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None)
         }
 
     """
