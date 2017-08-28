@@ -1,6 +1,8 @@
 import json
 import pickle
 
+from util.loghandler import *
+
 #####
 #    SLACK API Wrappers
 #####
@@ -78,15 +80,15 @@ def create_channel(slack_client, name):
     return response
 
 
-def rename_channel(slack_client, old_name, new_name):
+def rename_channel(slack_client, channel_id, new_name):
     """
     Rename an existing channel.
     """
 
-    print("Renaming channel %s to %s" % (old_name, new_name))
+    log.debug("Renaming channel {} to {}".format(channel_id, new_name))
 
     response = slack_client.api_call("channels.rename",
-            channel=old_name, name=new_name, validate=False)
+                                     channel=channel_id, name=new_name, validate=False)
 
     return response
 
