@@ -4,7 +4,7 @@ from server.botserver import *
 from server.consolethread import *
 
 
-if __name__  == "__main__":
+if __name__ == "__main__":
     log.info("Initializing threads...")
 
     server = BotServer()

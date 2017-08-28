@@ -7,7 +7,7 @@ from slackclient import SlackClient
 from handlers.handler_factory import *
 from handlers import *
 from util.loghandler import *
-
+from bottypes.invalid_console_command import *
 
 class BotServer(threading.Thread):
 
@@ -62,6 +62,42 @@ class BotServer(threading.Thread):
         self.slack_client.api_call(
             "chat.PostMessage", channel=channelID, text=msg, as_user=True)
 
+    def load_config(self):
+        self.lock()
+
+        with open("./config.json") as f:
+            self.config = json.load(f)
+
+        self.release()
+
+    def get_config_option(self, option):
+        self.lock()
+
+        result = None
+
+        if option in self.config:
+            result = self.config[option]
+
+        self.release()
+
+        return result
+
+    def set_config_option(self, option, value):
+        self.lock()
+
+        try:
+            if option in self.config:
+                self.config[option] = value
+
+                log.info("Updated configuration: {} => {}".format(option, value))
+
+                with open("./config.json", "w") as f:
+                    json.dump(self.config, f)
+            else:
+                raise InvalidConsoleCommand("The specified configuration option doesn't exist: {}".format(option))
+        finally:
+            self.release()
+
     def parseSlackMessage(self, slackMessage):
         """
         The Slack Real Time Messaging API is an events firehose.
@@ -104,12 +140,11 @@ class BotServer(threading.Thread):
     def run(self):
         log.info("Starting server thread...")
 
-        with open("./config.json") as f:
-            config = json.load(f)
+        self.load_config()
 
-        self.slack_client = SlackClient(config['api_key'])
+        self.slack_client = SlackClient(self.get_config_option('api_key'))
 
-        self.searchBotUser(config['bot_name'])
+        self.searchBotUser(self.get_config_option('bot_name'))
 
         if self.botID:
             # 1 second delay between reading from firehose
@@ -133,7 +168,7 @@ class BotServer(threading.Thread):
                                   (command, channel))
 
                         HandlerFactory.process(
-                            self.slack_client, command, channel, user)
+                            self.slack_client, self, command, channel, user)
 
                     time.sleep(READ_WEBSOCKET_DELAY)
             else:

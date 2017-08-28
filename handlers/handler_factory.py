@@ -29,7 +29,7 @@ class HandlerFactory():
         for handler in HandlerFactory.handlers:
             HandlerFactory.handlers[handler].init(slack_client, bot_id)
 
-    def process(slack_client, msg, channel, user):
+    def process(slack_client, botserver, msg, channel, user):
         log.debug("Processing message: %s from %s (%s)" % (msg, channel, user))
 
         try:
@@ -46,14 +46,14 @@ class HandlerFactory():
 
             processed = False
 
-            processMsg = ""
+            usage_msg = ""
 
             # Call a specific handler with this command
             handler = HandlerFactory.handlers.get(handler_name)
             if handler:
                 if (len(args) < 2) or (args[1] == "help"):
                     # Generic help handling
-                    processMsg += handler.usage
+                    usage_msg += handler.usage
                     processed = True
                 else:
                     command = args[1]
@@ -70,7 +70,7 @@ class HandlerFactory():
                     handler = HandlerFactory.handlers[handler_name]
 
                     if command == "help":
-                        processMsg += handler.usage
+                        usage_msg += handler.usage
                         processed = True
                     elif handler.can_handle(command):
                         handler.process(slack_client, command,
@@ -82,8 +82,9 @@ class HandlerFactory():
                 slack_client.api_call("chat.postMessage",
                                       channel=channel, text=msg, as_user=True)
 
-            if processMsg:
-                raise InvalidCommand(processMsg)
+            if usage_msg:
+                slack_client.api_call("chat.postMessage",
+                                      channel=user if botserver.get_config_option("send_help_as_dm")=="1" else channel, text=usage_msg, as_user=True)
 
         except InvalidCommand as e:
             slack_client.api_call(

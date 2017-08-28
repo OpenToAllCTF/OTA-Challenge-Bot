@@ -1,4 +1,5 @@
 {
   "api_key" : "",
-  "bot_name" : ""
+  "bot_name" : "",
+  "send_help_as_dm" : "1"
 }

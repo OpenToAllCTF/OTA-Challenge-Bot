@@ -166,6 +166,7 @@ class AddChallengeCommand(Command):
 
 
 
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
