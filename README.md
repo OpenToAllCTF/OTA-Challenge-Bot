@@ -37,3 +37,11 @@ Secondary features :
 2. Fill the API token and bot name in the config.json file.
 3. `docker build -t ota-challenge-bot .`
 4. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
+
+## Development
+
+1. Copy `config.json.template` to `config.json`
+2. Fill the API token and bot name in the config.json file.
+3. Create a virtual env: `python3 -m venv .venv`
+4. Enter the virtual env: `source .venv/bin/activate`
+5. Install requirements: `pip install -r requirements.txt`
