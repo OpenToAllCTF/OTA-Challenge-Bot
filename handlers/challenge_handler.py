@@ -46,21 +46,13 @@ class AddCTFCommand(Command):
 
         # Notify people of new channel
         message = "Created channel #%s" % response['channel']['name']
-        slack_client.api_call("chat.postMessage", channel=channel_id,
-                              text=message.strip(), as_user=True, parse="full")
+        slack_client.api_call("chat.postMessage", channel=channel_id, text=message.strip(), as_user=True, parse="full")
 
 
 class RenameChallengeCommand(Command):
     """
     Renames an existing challenge channel
     """
-
-    def update_challenge(self, ctfs, challenge_channel_id, new_name):
-        for ctf in ctfs:
-            for chal in ctf.challenges:
-                if chal.channel_id == challenge_channel_id:
-                    chal.name = new_name
-                    return
 
     def execute(self, slack_client, args, channel_id, user_id):
         old_name = args[0]
@@ -88,30 +80,54 @@ class RenameChallengeCommand(Command):
             slack_client, challenge.channel_id, new_channel_name)
 
         if not response['ok']:
-            raise InvalidCommand("\"{0}\" channel rename failed.\nError : {1}".format(
-                old_channel_name, response['error']))
+            raise InvalidCommand("\"{0}\" channel rename failed.\nError : {1}".format(old_channel_name, response['error']))
 
         # Update channel purpose
-        channel_info = get_channel_info(slack_client, challenge.channel_id)
-
-        if channel_info:
-            purpose = load_json(channel_info['channel']['purpose']['value'])
-            purpose['name'] = new_name
-
-            log.debug("Updating channel purpose : {}".format(purpose))
-
-            purpose = json.dumps(purpose)
-            set_purpose(slack_client, challenge.channel_id, purpose)
+        update_channel_purpose_name(slack_client, challenge.channel_id, new_name)
 
         # Update database
-        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-
-        self.update_challenge(ctfs, challenge.channel_id, new_name)
-
-        pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+        update_challenge_name(ChallengeHandler.DB, challenge.channel_id, new_name)
 
         slack_client.api_call("chat.postMessage",
-                              channel=channel_id, text="Challenge {} renamed to {} (#{})".format(old_name, new_name, new_channel_name), parse="full", as_user=True)
+                              channel=channel_id, text="Challenge `{}` renamed to `{}` (#{})".format(old_name, new_name, new_channel_name), parse="full", as_user=True)
+
+
+class RenameCTFCommand(Command):
+    """
+    Renames an existing challenge channel
+    """
+
+    def execute(self, slack_client, args, channel_id, user_id):
+        old_name = args[0]
+        new_name = args[1]
+
+        ctf = get_ctf_by_name(ChallengeHandler.DB, old_name)
+
+        if not ctf:
+            raise InvalidCommand(
+                "Command failed. CTF '{}' not found.".format(old_name))
+
+        slack_client.api_call("chat.postMessage", channel=ctf.channel_id,
+                              text="Renaming ctf might take some time, depending on active channels...", as_user=True)
+
+        # Rename the ctf channel
+        response = rename_channel(slack_client, ctf.channel_id, new_name)
+
+        if not response['ok']:
+            raise InvalidCommand("\"{0}\" channel rename failed.\nError : {1}".format(old_name, response['error']))
+
+        # Update channel purpose
+        update_channel_purpose_name(slack_client, ctf.channel_id, new_name)
+
+        # Update database
+        update_ctf_name(ChallengeHandler.DB, ctf.channel_id, new_name)
+
+        # Rename all challenge channels for this ctf
+        for chall in ctf.challenges:
+            RenameChallengeCommand().execute(slack_client, [chall.name, chall.name], ctf.channel_id, user_id)
+
+        slack_client.api_call("chat.postMessage",
+                              channel=ctf.channel_id, text="CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name), parse="full", as_user=True)
 
 
 class AddChallengeCommand(Command):
@@ -135,8 +151,7 @@ class AddChallengeCommand(Command):
 
         # Validate that the channel was created successfully
         if not response['ok']:
-            raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (
-                channel_name, response['error']))
+            raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (channel_name, response['error']))
 
         # Add purpose tag for persistence
         challenge_channel_id = response['channel']['id']
@@ -378,7 +393,8 @@ class ChallengeHandler(BaseHandler):
             "working": CommandDesc(WorkingCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solved": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
-            "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None)
+            "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
+            "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None)
         }
 
     """
