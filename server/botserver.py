@@ -101,19 +101,19 @@ class BotServer(threading.Thread):
     def parseSlackMessage(self, slackMessage):
         """
         The Slack Real Time Messaging API is an events firehose.
-        this parsing function returns None unless a message is
-        directed at the Bot, based on its ID.
+        Return (message, channel, user) if the message is directed at the bot,
+        otherwise return (None, None, None).
         """
-        output_list = slackMessage
+        message_list = slackMessage
 
-        if output_list:
-            for output in output_list:
-                if output and 'text' in output:
-                    if self.botAT in output['text']:
-                        # return text after the @ mention, whitespace removed
-                        return (output['text'].split(self.botAT)[1].strip().lower(), output['channel'], output['user'])
-                    elif output['text'] and output['text'].startswith('!'):
-                        return (output['text'][1:].strip().lower(), output['channel'], output['user'])
+        for msg in message_list:
+            if msg.get("type") == "message":
+                if self.botAT in msg.get("text", ""):
+                    # return text after the @ mention, whitespace removed
+                    return msg['text'].split(self.botAT)[1].strip().lower(), msg['channel'], msg['user']
+                elif msg.get("text", "").startswith('!'):
+                    # return text after the !
+                    return msg['text'][1:].strip().lower(), msg['channel'], msg['user']
 
         return None, None, None
 
@@ -163,7 +163,7 @@ class BotServer(threading.Thread):
                     command, channel, user = self.parseSlackMessage(
                         self.slack_client.rtm_read())
 
-                    if command and channel:
+                    if command:
                         log.debug("Received bot command : %s (%s)" %
                                   (command, channel))
 
