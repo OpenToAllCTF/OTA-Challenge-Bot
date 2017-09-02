@@ -194,23 +194,28 @@ class StatusCommand(Command):
         response = ""
         for ctf in ctfs:
             response += "*============= %s =============*\n" % ctf.name
-            for challenge in ctf.challenges:
+            solved = [c for c in ctf.challenges if c.is_solved]
+            unsolved = [c for c in ctf.challenges if not c.is_solved]
+            response += "-------------- SOLVED -------------\n"
+            for challenge in solved:
                 channel_name = "%s-%s" % (ctf.name, challenge.name)
                 players = []
-                if challenge.is_solved:
-                    response += "~*%s* #%s~ (Total : %d) " % (challenge.name,
-                                                              channel_name, len(challenge.players))
-                    response += "Solved by : %s :tada:\n" % ", ".join(
-                        challenge.solver)
-                else:
-                    response += "*%s* #%s (Total : %d) " % (challenge.name,
-                                                            channel_name, len(challenge.players))
-                    response += "Active : "
-                    for player_id in challenge.players:
-                        if player_id in members:
-                            players.append(members[player_id])
+                response += "~*%s* #%s~ (Total : %d) " % (challenge.name,
+                                                          channel_name, len(challenge.players))
+                response += "Solved by : %s :tada:\n" % ", ".join(
+                    challenge.solver)
+            response += "------------- UNSOLVED ------------\n"
+            for challenge in unsolved:
+                channel_name = "%s-%s" % (ctf.name, challenge.name)
+                players = []
+                response += "*%s* #%s (Total : %d) " % (challenge.name,
+                                                        channel_name, len(challenge.players))
+                response += "Active : "
+                for player_id in challenge.players:
+                    if player_id in members:
+                        players.append(members[player_id])
 
-                    response += ', '.join(players) + "\n"
+                response += ', '.join(players) + "\n"
             response += "\n"
 
         slack_client.api_call("chat.postMessage",
