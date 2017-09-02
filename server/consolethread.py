@@ -60,6 +60,6 @@ class ConsoleThread(threading.Thread):
                         self.show_set_usage()
                     else:
                         self.update_config(parts[1], parts[2])
-            except:
+            except Exception:
                 log.exception(
                     "An error has occured while processing a console command")
