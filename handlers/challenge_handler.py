@@ -196,13 +196,15 @@ class StatusCommand(Command):
             response += "*============= %s =============*\n" % ctf.name
             for challenge in ctf.challenges:
                 channel_name = "%s-%s" % (ctf.name, challenge.name)
-                response += "*%s* #%s (Total : %d) " % (challenge.name,
-                                                        channel_name, len(challenge.players))
                 players = []
                 if challenge.is_solved:
+                    response += "~*%s* #%s~ (Total : %d) " % (challenge.name,
+                                                              channel_name, len(challenge.players))
                     response += "Solved by : %s :tada:\n" % ", ".join(
                         challenge.solver)
                 else:
+                    response += "*%s* #%s (Total : %d) " % (challenge.name,
+                                                            channel_name, len(challenge.players))
                     response += "Active : "
                     for player_id in challenge.players:
                         if player_id in members:
