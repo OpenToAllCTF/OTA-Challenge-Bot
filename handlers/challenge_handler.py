@@ -193,33 +193,38 @@ class StatusCommand(Command):
             slack_client) if m.get("presence") == "active"}
         response = ""
         for ctf in ctfs:
-            response += "*============= %s =============*\n" % ctf.name
+
+            response += "*============= %s =============*\n" % ctf.name.upper()
             solved = [c for c in ctf.challenges if c.is_solved]
             unsolved = [c for c in ctf.challenges if not c.is_solved]
-            response += "-------------- SOLVED -------------\n"
+
+            # Check if the CTF has any challenges
+            if not solved and not unsolved:
+                response += "*[ No challenges available yet ]*\n"
+                continue
+
+            # Solved challenges
+            response += "* > Solved*\n" if solved else "\n"
             for challenge in solved:
-                channel_name = "%s-%s" % (ctf.name, challenge.name)
                 players = []
-                response += "~*%s* #%s~ (Total : %d) " % (challenge.name,
-                                                          channel_name, len(challenge.players))
-                response += "Solved by : %s :tada:\n" % ", ".join(
-                    challenge.solver)
-            response += "------------- UNSOLVED ------------\n"
+                response += ":tada: *{}* (Solved by : {})\n".format(challenge.name, transliterate(", ".join(challenge.solver)))
+
+            # Unsolved challenges
+            response += "* > Unsolved*\n" if unsolved else "\n"
             for challenge in unsolved:
-                channel_name = "%s-%s" % (ctf.name, challenge.name)
+
+                # Get active players
                 players = []
-                response += "*%s* #%s (Total : %d) " % (challenge.name,
-                                                        channel_name, len(challenge.players))
                 response += "Active : "
                 for player_id in challenge.players:
                     if player_id in members:
                         players.append(members[player_id])
 
-                response += ', '.join(players) + "\n"
+                response += "[{} active] *{}* : {}\n".format(len(players), challenge.name, ", ".join(players))
             response += "\n"
 
         slack_client.api_call("chat.postMessage",
-                              channel=channel_id, text=response.strip(), parse="full", as_user=True)
+                              channel=channel_id, text=response.strip(), link_names=False, as_user=True)
 
 
 class WorkingCommand(Command):

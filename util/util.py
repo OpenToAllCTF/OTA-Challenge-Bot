@@ -7,7 +7,6 @@ from util.loghandler import *
 #    SLACK API Wrappers
 #####
 
-
 def invite_user(slack_client, user, channel):
     """
     Invite a user to a given channel.
@@ -127,6 +126,26 @@ def load_json(string):
     except ValueError as e:
         return None
     return json_object
+
+def transliterate(string):
+    """
+        Converts ascii characters to a unicode
+        equivalent.
+    """
+    mapping = {
+        "a" : "ɑ", # \xc9\x91
+        "A" : "А", # \xd0\x90
+        "e" : "е", # \xd0\xb5
+        "E" : "Е", # \xd0\x95
+        "i" : "і", # \xd1\x96
+        "I" : "І", # \xd0\x86
+        "o" : "о", # \xd0\xbe
+        "O" : "О", # \xd0\x9e
+        "u" : "υ", # \xcf\x85
+        "U" : "υ", # \xcf\x85
+    }
+
+    return ''.join([mapping[c] if c in mapping else c for c in string])
 
 
 #######
