@@ -77,13 +77,13 @@ class RenameChallengeCommand(Command):
                 "Command failed. Challenge '{}' not found.".format(old_name))
 
         response = rename_channel(
-            slack_client, challenge.channel_id, new_channel_name)
+            slack_client, challenge.channel_id, new_channel_name, is_private=True)
 
         if not response['ok']:
             raise InvalidCommand("\"{0}\" channel rename failed.\nError : {1}".format(old_channel_name, response['error']))
 
         # Update channel purpose
-        update_channel_purpose_name(slack_client, challenge.channel_id, new_name)
+        update_channel_purpose_name(slack_client, challenge.channel_id, new_name, is_private=True)
 
         # Update database
         update_challenge_name(ChallengeHandler.DB, challenge.channel_id, new_name)
@@ -342,7 +342,7 @@ class SolveCommand(Command):
                         purpose['solved'] = solver_list
                         purpose = json.dumps(purpose)
                         set_purpose(
-                            slack_client, challenge.channel_id, purpose)
+                            slack_client, challenge.channel_id, purpose, is_private=True)
 
                         # Announce the CTF channel
                         help_members = ""
@@ -424,7 +424,8 @@ class ChallengeHandler(BaseHandler):
                 database.append(ctf)
 
         # Find active challenge channels
-        for channel in response['channels']:
+        response = slack_client.api_call("groups.list")
+        for channel in response['groups']:
             purpose = load_json(channel['purpose']['value'])
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":

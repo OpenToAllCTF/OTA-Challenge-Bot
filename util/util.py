@@ -94,38 +94,52 @@ def create_channel(slack_client, name, is_private=False):
     return response
 
 
-def rename_channel(slack_client, channel_id, new_name):
+def rename_channel(slack_client, channel_id, new_name, is_private=False):
     """
     Rename an existing channel.
     """
 
     log.debug("Renaming channel {} to {}".format(channel_id, new_name))
 
-    response = slack_client.api_call("channels.rename",
+    if is_private:
+        response = slack_client.api_call("groups.rename",
+                                     channel=channel_id, name=new_name, validate=False)
+    else:
+        response = slack_client.api_call("channels.rename",
                                      channel=channel_id, name=new_name, validate=False)
 
     return response
 
 
-def get_channel_info(slack_client, channel_id):
+def get_channel_info(slack_client, channel_id, is_private=False):
     """
     Return the channel info of a given channel ID.
     """
-    response = slack_client.api_call("channels.info",
+
+    if is_private:
+        response = slack_client.api_call("groups.info",
+                                     channel=channel_id)
+    else:
+        response = slack_client.api_call("channels.info",
                                      channel=channel_id)
 
     return response
 
 
-def update_channel_purpose_name(slack_client, channel_id, new_name):
+def update_channel_purpose_name(slack_client, channel_id, new_name, is_private=False):
     # Update channel purpose
-    channel_info = get_channel_info(slack_client, channel_id)
+    channel_info = get_channel_info(slack_client, channel_id, is_private)
 
     if channel_info:
-        purpose = load_json(channel_info['channel']['purpose']['value'])
+        if is_private:
+            purpose = load_json(channel_info['group']['purpose']['value'])
+        else:
+            purpose = load_json(channel_info['channel']['purpose']['value'])
+
         purpose['name'] = new_name
 
-        set_purpose(slack_client, channel_id, json.dumps(purpose))
+
+        set_purpose(slack_client, channel_id, json.dumps(purpose), is_private)
 
 
 #######
