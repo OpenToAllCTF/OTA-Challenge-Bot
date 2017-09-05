@@ -15,7 +15,7 @@ class AddCTFCommand(Command):
     Add and keep track of a new CTF.
     """
 
-    def execute(self, slack_client, args, user_id, channel_id):
+    def execute(self, slack_client, args, channel_id, user_id):
         name = args[0]
 
         # Create the channel
@@ -147,22 +147,19 @@ class AddChallengeCommand(Command):
 
         # Create the challenge channel
         channel_name = "%s-%s" % (ctf.name, name)
-        response = create_channel(slack_client, channel_name)
+        response = create_channel(slack_client, channel_name, is_private=True)
 
         # Validate that the channel was created successfully
         if not response['ok']:
             raise InvalidCommand("\"%s\" channel creation failed.\nError : %s" % (channel_name, response['error']))
 
         # Add purpose tag for persistence
-        challenge_channel_id = response['channel']['id']
+        challenge_channel_id = response['group']['id']
         purpose = dict(ChallengeHandler.CHALL_PURPOSE)
         purpose['name'] = name
         purpose['ctf_id'] = ctf.channel_id
         purpose = json.dumps(purpose)
-        set_purpose(slack_client, challenge_channel_id, purpose)
-
-        # Invite user
-        invite_user(slack_client, user_id, challenge_channel_id)
+        set_purpose(slack_client, challenge_channel_id, purpose, is_private=True)
 
         # New Challenge and player object
         challenge = Challenge(ctf.channel_id, challenge_channel_id, name)
@@ -215,12 +212,11 @@ class StatusCommand(Command):
 
                 # Get active players
                 players = []
-                response += "Active : "
                 for player_id in challenge.players:
                     if player_id in members:
                         players.append(members[player_id])
 
-                response += "[{} active] *{}* : {}\n".format(len(players), challenge.name, ", ".join(players))
+                response += "[{} active] *{}* : {}\n".format(len(players), challenge.name, transliterate(", ".join(players)))
             response += "\n"
 
         slack_client.api_call("chat.postMessage",
@@ -255,7 +251,7 @@ class WorkingCommand(Command):
             raise InvalidCommand("This challenge does not exist.")
 
         # Invite user to challenge channel
-        invite_user(slack_client, user_id, challenge.channel_id)
+        invite_user(slack_client, user_id, challenge.channel_id, is_private=True)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))

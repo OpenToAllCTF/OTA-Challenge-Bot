@@ -7,13 +7,19 @@ from util.loghandler import *
 #    SLACK API Wrappers
 #####
 
-def invite_user(slack_client, user, channel):
+def invite_user(slack_client, user, channel, is_private=False):
     """
     Invite a user to a given channel.
     """
-    response = slack_client.api_call("channels.invite",
+    if is_private:
+        response = slack_client.api_call("groups.invite",
                                      channel=channel,
                                      user=user)
+    else:
+        response = slack_client.api_call("channels.invite",
+                                     channel=channel,
+                                     user=user)
+
     return response
 
 
@@ -24,11 +30,16 @@ def kick_user(slack_client, user_id, channel_id):
     return response
 
 
-def set_purpose(slack_client, channel, purpose):
+def set_purpose(slack_client, channel, purpose, is_private=False):
     """
     Set the purpose of a given channel.
     """
-    response = slack_client.api_call("channels.setPurpose",
+    if is_private:
+        response = slack_client.api_call("groups.setPurpose",
+                                     purpose=purpose, channel=channel)
+
+    else:
+        response = slack_client.api_call("channels.setPurpose",
                                      purpose=purpose, channel=channel)
 
     return response
@@ -68,12 +79,16 @@ def get_member_by_name(slack_client, user_name):
     return None
 
 
-def create_channel(slack_client, name):
+def create_channel(slack_client, name, is_private=False):
     """
     Create a channel with a given name.
     """
 
-    response = slack_client.api_call("channels.create",
+    if is_private:
+        response = slack_client.api_call("groups.create",
+                                     name=name, validate=False)
+    else:
+        response = slack_client.api_call("channels.create",
                                      name=name, validate=False)
 
     return response
