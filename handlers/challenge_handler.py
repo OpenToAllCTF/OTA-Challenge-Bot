@@ -26,6 +26,10 @@ class AddCTFCommand(Command):
             raise InvalidCommand(
                 "\"%s\" channel creation failed.\nError : %s" % (name, response['error']))
 
+        if len(name) > 10:
+            raise InvalidCommand(
+                "Command failed. CTF name must be <= 10 characters.")
+
         # Add purpose tag for persistence
         purpose = dict(ChallengeHandler.CTF_PURPOSE)
         purpose['name'] = name
@@ -64,6 +68,10 @@ class RenameChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
+
+        if len(new_name) > 10:
+            raise InvalidCommand(
+                "Command failed. Challenge name must be <= 10 characters.")
 
         old_channel_name = "{0}-{1}".format(ctf.name, old_name)
         new_channel_name = "{0}-{1}".format(ctf.name, new_name)
@@ -107,6 +115,11 @@ class RenameCTFCommand(Command):
             raise InvalidCommand(
                 "Command failed. CTF '{}' not found.".format(old_name))
 
+        if len(new_name) > 10:
+            raise InvalidCommand(
+                "Command failed. CTF name must be <= 10 characters.")
+
+
         slack_client.api_call("chat.postMessage", channel=ctf.channel_id,
                               text="Renaming ctf might take some time, depending on active channels...", as_user=True)
 
@@ -144,6 +157,10 @@ class AddChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
+
+        if len(name) > 10:
+            raise InvalidCommand(
+                "Command failed. Challenge name must be <= 10 characters.")
 
         # Create the challenge channel
         channel_name = "%s-%s" % (ctf.name, name)
