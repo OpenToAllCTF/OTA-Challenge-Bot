@@ -1,9 +1,6 @@
 import json
 import threading
 import time
-
-from slackclient import SlackClient
-
 from util.loghandler import *
 from util.util import *
 from bottypes.invalid_console_command import *
@@ -54,7 +51,7 @@ class ConsoleThread(threading.Thread):
                     if len(parts) < 2:
                         print("Usage: createchannel <channel>")
                     else:
-                        create_channel(self.botserver.slack_client, parts[1])
+                        self.botserver.slack_wrapper.create_channel(parts[1])
                 elif cmd == "set":
                     if len(parts) < 3:
                         self.show_set_usage()

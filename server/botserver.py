@@ -2,93 +2,57 @@ import json
 import threading
 import time
 
-from slackclient import SlackClient
-
 from handlers.handler_factory import *
 from handlers import *
 from util.loghandler import *
+from util.slack_wrapper import *
 from bottypes.invalid_console_command import *
 
 class BotServer(threading.Thread):
 
-    # global lock for locking global data in bot server
-    threadLock = threading.Lock()
-    userList = []
+    # Global lock for locking global data in bot server
+    thread_lock = threading.Lock()
+    user_list = {}
 
     def __init__(self):
         log.debug("Parse config file and initialize threading...")
-
         threading.Thread.__init__(self)
 
     def lock(self):
         """Acquire global lock for working with global (not thread-safe) data."""
-        BotServer.threadLock.acquire()
+        BotServer.thread_lock.acquire()
 
     def release(self):
         """Release global lock after accessing global (not thread-safe) data."""
-        BotServer.threadLock.release()
-
-    def updateUserList(self, slack_client):
-        self.lock()
-
-        log.debug("Retrieving user list")
-
-        api_call = slack_client.api_call("users.list")
-        if api_call.get('ok'):
-            BotServer.userList = api_call.get('members')
-
-        self.release()
-
-    def getUser(self, userName):
-        self.lock()
-
-        foundUser = None
-
-        for user in BotServer.userList:
-            if 'name' in user and user.get('name') == userName:
-                foundUser = user
-                break
-
-        self.release()
-
-        return foundUser
+        BotServer.thread_lock.release()
 
     def quit(self):
+        """Inform the application that it is quitting"""
         log.info("Shutting down")
-
         self.running = False
 
-    def sendMessage(self, channelID, msg):
-        self.slack_client.api_call(
-            "chat.PostMessage", channel=channelID, text=msg, as_user=True)
-
     def load_config(self):
+        """Load configuration file"""
         self.lock()
-
         with open("./config.json") as f:
             self.config = json.load(f)
-
         self.release()
 
     def get_config_option(self, option):
+        """Get configuration option"""
         self.lock()
-
-        result = None
-
-        if option in self.config:
-            result = self.config[option]
-
+        result = self.config.get(option)
         self.release()
 
         return result
 
     def set_config_option(self, option, value):
+        """Set configuration option"""
         self.lock()
 
         try:
             if option in self.config:
                 self.config[option] = value
-
                 log.info("Updated configuration: {} => {}".format(option, value))
 
                 with open("./config.json", "w") as f:
@@ -98,80 +62,64 @@ class BotServer(threading.Thread):
         finally:
             self.release()
 
-    def parseSlackMessage(self, slackMessage):
+    def parse_slack_message(self, message_list):
         """
         The Slack Real Time Messaging API is an events firehose.
         Return (message, channel, user) if the message is directed at the bot,
         otherwise return (None, None, None).
         """
-        message_list = slackMessage
-
         for msg in message_list:
-            if msg.get("type") == "message":
-                if self.botAT in msg.get("text", ""):
-                    # return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.botAT)[1].strip().lower(), msg['channel'], msg['user']
+            if msg.get("type") == "message" and "subtype" not in msg:
+                if self.bot_at in msg.get("text", ""):
+                    # Return text after the @ mention, whitespace removed
+                    return msg['text'].split(self.bot_at)[1].strip().lower(), msg['channel'], msg['user']
                 elif msg.get("text", "").startswith('!'):
-                    # return text after the !
+                    # Return text after the !
                     return msg['text'][1:].strip().lower(), msg['channel'], msg['user']
 
         return None, None, None
 
-    def searchBotUser(self, botName):
-        log.debug("Trying to resolve bot user in slack")
-
-        self.updateUserList(self.slack_client)
-
-        self.botName = botName
-        botUser = self.getUser(self.botName)
-
-        if botUser:
-            self.botID = botUser['id']
-            self.botAT = "<@%s>" % self.botID
-
-            log.debug("Found bot user %s (%s)" % (self.botName, self.botID))
-
-            self.running = True
-        else:
-            log.error("Could not find bot user. Abort...")
-
-            self.running = False
+    def load_bot_data(self):
+        """
+        Fetches the bot user information such as
+        bot_name, bot_id and bot_at
+        """
+        log.debug("Resolving bot user in slack")
+        self.bot_name = self.slack_wrapper.username
+        self.bot_id = self.slack_wrapper.user_id
+        self.bot_at = "<@{}>".format(self.bot_id)
+        log.debug("Found bot user {} ({})".format(self.bot_name, self.bot_id))
+        self.running = True
 
     def run(self):
         log.info("Starting server thread...")
 
         self.load_config()
+        self.slack_wrapper = SlackWrapper(self.get_config_option('api_key'))
 
-        self.slack_client = SlackClient(self.get_config_option('api_key'))
+        if self.slack_wrapper.connected:
+            log.info("Connection successful...")
+            self.load_bot_data()
+            READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
 
-        self.searchBotUser(self.get_config_option('bot_name'))
 
-        if self.botID:
-            # 1 second delay between reading from firehose
-            READ_WEBSOCKET_DELAY = 1
+            # Might even pass the bot server for handlers?
+            log.info("Initializing handlers...")
+            HandlerFactory.initialize(self.slack_wrapper, self.bot_id)
 
-            if self.slack_client.rtm_connect():
-                log.info("Connection successful...")
+            # Main loop
+            log.info("Bot is running...")
+            while self.running:
+                message = self.slack_wrapper.read()
+                command, channel, user = self.parse_slack_message(message)
 
-                log.info("Initializing handlers...")
-                # Might even pass the bot server for handlers?
-                HandlerFactory.initialize(
-                    self.slack_client, self.botID)
+                if command:
+                    log.debug("Received bot command : {} ({})".format(command, channel))
+                    HandlerFactory.process(self.slack_wrapper, self,
+                                           command, channel, user)
 
-                # Main loop
-                while self.running:
-                    command, channel, user = self.parseSlackMessage(
-                        self.slack_client.rtm_read())
-
-                    if command:
-                        log.debug("Received bot command : %s (%s)" %
-                                  (command, channel))
-
-                        HandlerFactory.process(
-                            self.slack_client, self, command, channel, user)
-
-                    time.sleep(READ_WEBSOCKET_DELAY)
-            else:
-                log.error("Connection failed. Invalid slack token or bot id?")
+                time.sleep(READ_WEBSOCKET_DELAY)
+        else:
+            log.error("Connection failed. Invalid slack token or bot id?")
 
         log.info("Shutdown complete...")

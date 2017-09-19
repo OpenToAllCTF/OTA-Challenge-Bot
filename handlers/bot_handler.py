@@ -16,13 +16,9 @@ class PingCommand(Command):
     Ping this server to check for uptime.
     """
 
-    def execute(self, slack_client, args, channel, user):
-        # Announce the CTF channel
-        message = "Pong!"
-
-        slack_client.api_call("chat.postMessage",
-                              channel=channel, text=message, as_user=True)
-
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Announce the bot's presence in the channel"""
+        slack_wrapper.post_message(channel_id, "Pong!")
 
 class BotHandler(BaseHandler):
     """
