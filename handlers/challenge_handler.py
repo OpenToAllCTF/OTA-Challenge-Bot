@@ -232,6 +232,10 @@ class StatusCommand(Command):
             response += "\n"
 
         response = response.strip()
+
+        if response == "": # Response is empty
+            response += "*There are currently no running CTFs*"
+
         slack_wrapper.post_message(channel_id, response)
 
 class WorkingCommand(Command):
