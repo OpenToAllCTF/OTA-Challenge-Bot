@@ -399,8 +399,6 @@ class ArchiveCTFCommand(Command):
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
 
-
-
 class ChallengeHandler(BaseHandler):
     """
     Manages everything related to challenge coordination.
