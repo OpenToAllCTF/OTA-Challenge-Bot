@@ -7,9 +7,9 @@ class SlackWrapper:
     """
     def __init__(self, api_key):
         """
-        SlackWrapper constructor
+        SlackWrapper constructor.
         Connect to the real-time messaging API and
-        load the bot's login data
+        load the bot's login data.
         """
         self.api_key = api_key
         self.client = SlackClient(self.api_key)
@@ -24,7 +24,7 @@ class SlackWrapper:
             self.user_id = self.server.login_data.get('self').get('id')
 
     def read(self):
-        """Read from the real-time messaging API"""
+        """Read from the real-time messaging API."""
         return self.client.rtm_read()
 
     def invite_user(self, user, channel, is_private=False):
@@ -81,7 +81,7 @@ class SlackWrapper:
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
-        Updates the channel purpose 'name' field for a given channel ID
+        Updates the channel purpose 'name' field for a given channel ID.
         """
 
         # Update channel purpose
@@ -96,19 +96,20 @@ class SlackWrapper:
 
     def post_message(self, channel_id, text, parse="full"):
         """
-        Post a message in a given channel
+        Post a message in a given channel.
         channel_id can also be a user_id for private messages.
         """
         self.client.api_call("chat.postMessage", channel=channel_id,
                              text=text, as_user=True, parse=parse)
 
     def get_public_channels(self):
-        """Fetch all public channels"""
+        """Fetch all public channels."""
         return self.client.api_call("channels.list")
 
     def get_private_channels(self):
-        """Fetch all private channels in which the user participates"""
+        """Fetch all private channels in which the user participates."""
         return self.client.api_call("groups.list")
 
-
-
+    def archive_private_channel(self, channel_id):
+        """Archive a private channel"""
+        return self.client.api_call('groups.archive', channel=channel_id)

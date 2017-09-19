@@ -372,6 +372,32 @@ class SolveCommand(Command):
 
                     break
 
+class ArchiveCTFCommand(Command):
+    """Archive the challenge channels for a given CTF."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the ArchiveCTF command."""
+
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        # Get list of challenges
+        challenges = get_challenges_for_ctf_id(ChallengeHandler.DB, channel_id)
+
+        message = "Archived the following channels :\n"
+        for challenge in challenges:
+            message += "- #{}-{}\n".format(ctf.name, challenge.name)
+            slack_wrapper.archive_private_channel(challenge.channel_id)
+            remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
+
+        # Stop tracking the main CTF channel
+        slack_wrapper.set_purpose(channel_id, "")
+        remove_ctf_by_channel_id(ChallengeHandler.DB, ctf.channel_id)
+
+        # Show confirmation message
+        slack_wrapper.post_message(channel_id, message)
 
 class ChallengeHandler(BaseHandler):
     """
@@ -414,7 +440,8 @@ class ChallengeHandler(BaseHandler):
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solved": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
-            "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None)
+            "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None)
         }
 
 
