@@ -68,7 +68,7 @@ class SlackWrapper:
         """
         api_call = "groups.rename" if is_private else "channels.rename"
 
-        return self.client.api_call("groups.rename", channel=channel_id,
+        return self.client.api_call(api_call, channel=channel_id,
                                      name=new_name, validate=False)
 
     def get_channel_info(self, channel_id, is_private=False):
