@@ -13,7 +13,7 @@ class BaseHandler(ABC):
         pass
 
     def parse_command_usage(self, command, descriptor):
-        """Returns a usage string from a given command and descriptor"""
+        """Returns a usage string from a given command and descriptor."""
         msg = command
         if descriptor.arguments:
             for arg in descriptor.arguments:
@@ -30,13 +30,13 @@ class BaseHandler(ABC):
 
 
     def command_usage(self, command, descriptor):
-        """Return the usage of a given command of a handler"""
+        """Return the usage of a given command of a handler."""
         usage = self.parse_command_usage(command, descriptor)
         return "Usage: `!{} {}`".format(self.handler_name, usage)
 
     @property
     def usage(self):
-        """Return the usage of a handler"""
+        """Return the usage of a handler."""
         msg = "```"
 
         for command in self.commands:
@@ -49,7 +49,7 @@ class BaseHandler(ABC):
         return msg
 
     def process(self, slack_wrapper, command, args, channel, user):
-        """Check if enough arguments were passed for this command"""
+        """Check if enough arguments were passed for this command."""
         cmd_descriptor = self.commands[command]
 
         if cmd_descriptor:

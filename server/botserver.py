@@ -27,19 +27,19 @@ class BotServer(threading.Thread):
         BotServer.thread_lock.release()
 
     def quit(self):
-        """Inform the application that it is quitting"""
+        """Inform the application that it is quitting."""
         log.info("Shutting down")
         self.running = False
 
     def load_config(self):
-        """Load configuration file"""
+        """Load configuration file."""
         self.lock()
         with open("./config.json") as f:
             self.config = json.load(f)
         self.release()
 
     def get_config_option(self, option):
-        """Get configuration option"""
+        """Get configuration option."""
         self.lock()
         result = self.config.get(option)
         self.release()
@@ -47,7 +47,7 @@ class BotServer(threading.Thread):
         return result
 
     def set_config_option(self, option, value):
-        """Set configuration option"""
+        """Set configuration option."""
         self.lock()
 
         try:
@@ -82,7 +82,7 @@ class BotServer(threading.Thread):
     def load_bot_data(self):
         """
         Fetches the bot user information such as
-        bot_name, bot_id and bot_at
+        bot_name, bot_id and bot_at.
         """
         log.debug("Resolving bot user in slack")
         self.bot_name = self.slack_wrapper.username

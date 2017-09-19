@@ -7,12 +7,10 @@ from addons.syscalls.syscallinfo import *
 
 
 class ShowAvailableArchCommand(Command):
-    """
-    Shows the available architecture tables for syscalls
-    """
+    """Shows the available architecture tables for syscalls."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute the ShowAvailableArch command"""
+        """Execute the ShowAvailableArch command."""
         archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
 
         msg = "\n"
@@ -26,17 +24,15 @@ class ShowAvailableArchCommand(Command):
         slack_wrapper.post_message(channel_id, msg)
 
 class ShowSyscallCommand(Command):
-    """
-    Shows information about the requested syscall
-    """
+    """Shows information about the requested syscall."""
 
     def send_message(self, slack_wrapper, channel_id, user_id, msg):
-        """Send message to user or channel"""
+        """Send message to user or channel."""
         dest_channel = channel_id if (SyscallsHandler.MSGMODE == 0) else user_id
         slack_wrapper.post_message(dest_channel, msg)
 
     def parse_syscall_info(self, syscall_entries):
-        """Parse syscall information"""
+        """Parse syscall information."""
         msg = "```"
 
         for entry in syscall_entries:
@@ -45,7 +41,7 @@ class ShowSyscallCommand(Command):
         return msg.strip() + "```"
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute the ShowSyscall command"""
+        """Execute the ShowSyscall command."""
         archObj = SyscallsHandler.syscallInfo.getArch(args[0])
 
         if archObj:
