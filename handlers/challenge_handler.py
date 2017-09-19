@@ -182,14 +182,12 @@ class AddChallengeCommand(Command):
         purpose = json.dumps(purpose)
         slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
 
-        # New Challenge and player object
+        # New Challenge
         challenge = Challenge(ctf.channel_id, challenge_channel_id, name)
-        player = Player(user_id)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         ctf = ctfs[ctf.channel_id]
-        challenge.add_player(player)
         ctf.add_challenge(challenge)
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
