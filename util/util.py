@@ -103,8 +103,6 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
     """
     Fetch a list of all challenges a user is working on for a given CTF.
     Return a list of matching Challenge objects.
-    This should technically only return 0 or 1 challenge, as a user
-    can only work on 1 challenge at a time.
     """
 
     ctfs = pickle.load(open(database, "rb"))
@@ -117,6 +115,20 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
 
     return challenges
 
+def get_challenges_for_ctf_id(database, ctf_channel_id):
+    """
+    Fetch a list of all challenges of a given CTF.
+    Return a list of matching Challenge objects.
+    """
+
+    ctfs = pickle.load(open(database, "rb"))
+    ctf = ctfs[ctf_channel_id]
+
+    challenges = []
+    for challenge in ctf.challenges:
+        challenges.append(challenge)
+
+    return challenges
 
 def update_challenge_name(database, challenge_channel_id, new_name):
     """
@@ -140,3 +152,22 @@ def update_ctf_name(database, ctf_channel_id, new_name):
     ctf = ctfs[ctf_channel_id]
     ctf.name = new_name
     pickle.dump(ctfs, open(database, "wb"))
+
+def remove_challenge_by_channel_id(database, challenge_channel_id, ctf_channel_id):
+    """
+    Remove a challenge from the database using a given challenge and CTF id.
+    """
+    ctfs = pickle.load(open(database, "rb"))
+    ctf = ctfs[ctf_channel_id]
+    ctf.challenges = list(filter(lambda challenge: challenge.channel_id != challenge_channel_id, ctf.challenges))
+    pickle.dump(ctfs, open(database, "wb"))
+
+def remove_ctf_by_channel_id(database, ctf_channel_id):
+    """
+    Remove a CTF from the database using a given CTF id.
+    """
+    ctfs = pickle.load(open(database, "rb"))
+    ctf = ctfs[ctf_channel_id]
+    ctfs.pop(ctf_channel_id)
+    pickle.dump(ctfs, open(database, "wb"))
+
