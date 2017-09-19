@@ -17,7 +17,7 @@ log.setLevel(logging.DEBUG)
 if not os.path.exists(LOGDIR):
     os.makedirs(LOGDIR)
 
-elog = logging.FileHandler(os.path.join(LOGDIR, "%s_error.log" % LOGPREFIX))
+elog = logging.FileHandler(os.path.join(LOGDIR, "{}_error.log".format(LOGPREFIX)))
 elog.setLevel(logging.ERROR)
 
 # Console logging
