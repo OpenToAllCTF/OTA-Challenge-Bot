@@ -42,7 +42,7 @@ class BaseHandler(ABC):
         for command in self.commands:
             descriptor = self.commands[command]
             usage = self.parse_command_usage(command, descriptor)
-            msg += "!{} {}\n".format(self.handler_name, command)
+            msg += "!{} {}\n".format(self.handler_name, usage)
 
         msg += "```"
 
