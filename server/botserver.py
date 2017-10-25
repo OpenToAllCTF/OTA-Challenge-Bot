@@ -126,6 +126,7 @@ class BotServer(threading.Thread):
                         time.sleep(READ_WEBSOCKET_DELAY)
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
+                    self.running = False
             except websocket._exceptions.WebSocketConnectionClosedException:
                 log.exception("Web socket error. Executing reconnect...")
 

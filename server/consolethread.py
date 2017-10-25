@@ -32,10 +32,15 @@ class ConsoleThread(threading.Thread):
                                             self.botserver.config[config_option]))
         print("")
 
+    def quit(self):
+        """Inform the application that it is quitting."""
+        log.info("Shutting down")
+        self.running = False
+
     def run(self):
         self.running = True
 
-        while True:
+        while self.running:
             try:
                 parts = input("").split(" ")
 
