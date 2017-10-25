@@ -47,7 +47,7 @@ def getDictValue(src_dict, key):
     Return None if the key doesn't exist in the dictionary
     """
     if key in src_dict:
-        return purpose[key]
+        return src_dict[key]
     return None
 
 
