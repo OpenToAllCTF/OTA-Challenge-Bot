@@ -1,12 +1,14 @@
 import json
 import threading
 import time
+import websocket
 
 from handlers.handler_factory import *
 from handlers import *
 from util.loghandler import *
 from util.slack_wrapper import *
 from bottypes.invalid_console_command import *
+
 
 class BotServer(threading.Thread):
 
@@ -94,32 +96,38 @@ class BotServer(threading.Thread):
     def run(self):
         log.info("Starting server thread...")
 
-        self.load_config()
-        self.slack_wrapper = SlackWrapper(self.get_config_option('api_key'))
+        self.running = True
 
-        if self.slack_wrapper.connected:
-            log.info("Connection successful...")
-            self.load_bot_data()
-            READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+        while self.running:
+            try:
+                self.load_config()
+                self.slack_wrapper = SlackWrapper(self.get_config_option('api_key'))
 
+                if self.slack_wrapper.connected:
+                    log.info("Connection successful...")
+                    self.load_bot_data()
+                    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
 
-            # Might even pass the bot server for handlers?
-            log.info("Initializing handlers...")
-            HandlerFactory.initialize(self.slack_wrapper, self.bot_id)
+                    # Might even pass the bot server for handlers?
+                    log.info("Initializing handlers...")
+                    HandlerFactory.initialize(self.slack_wrapper, self.bot_id)
 
-            # Main loop
-            log.info("Bot is running...")
-            while self.running:
-                message = self.slack_wrapper.read()
-                command, channel, user = self.parse_slack_message(message)
+                    # Main loop
+                    log.info("Bot is running...")
+                    while self.running:
+                        message = self.slack_wrapper.read()
+                        command, channel, user = self.parse_slack_message(message)
 
-                if command:
-                    log.debug("Received bot command : {} ({})".format(command, channel))
-                    HandlerFactory.process(self.slack_wrapper, self,
-                                           command, channel, user)
+                        if command:
+                            log.debug("Received bot command : {} ({})".format(command, channel))
+                            HandlerFactory.process(self.slack_wrapper, self,
+                                                   command, channel, user)
 
-                time.sleep(READ_WEBSOCKET_DELAY)
-        else:
-            log.error("Connection failed. Invalid slack token or bot id?")
+                        time.sleep(READ_WEBSOCKET_DELAY)
+                else:
+                    log.error("Connection failed. Invalid slack token or bot id?")
+                    self.running = False
+            except websocket._exceptions.WebSocketConnectionClosedException:
+                log.exception("Web socket error. Executing reconnect...")
 
         log.info("Shutdown complete...")
