@@ -89,7 +89,6 @@ class RenameChallengeCommand(Command):
         if not response['ok']:
             raise InvalidCommand("\"{}\" channel rename failed.\nError : {}".format(old_channel_name, response['error']))
 
-
         # Update channel purpose
         slack_wrapper.update_channel_purpose_name(challenge.channel_id, new_name, is_private=True)
 
@@ -117,7 +116,6 @@ class RenameCTFCommand(Command):
             raise InvalidCommand(
                 "Command failed. CTF name must be <= 10 characters.")
 
-
         text = "Renaming the CTF might take some time depending on active channels..."
         slack_wrapper.post_message(ctf.channel_id, text)
 
@@ -140,13 +138,16 @@ class RenameCTFCommand(Command):
         text = "CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name)
         slack_wrapper.post_message(ctf.channel_id, text)
 
+
 class AddChallengeCommand(Command):
     """
     Add and keep track of a new challenge for a given CTF.
     """
+
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the AddChallenge command."""
         name = args[0]
+        category = args[1] if len(args) > 1 else None
 
         # Validate that the user is in a CTF channel
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -173,11 +174,13 @@ class AddChallengeCommand(Command):
         purpose = dict(ChallengeHandler.CHALL_PURPOSE)
         purpose['name'] = name
         purpose['ctf_id'] = ctf.channel_id
+        purpose['category'] = category
+
         purpose = json.dumps(purpose)
         slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
 
         # New Challenge
-        challenge = Challenge(ctf.channel_id, challenge_channel_id, name)
+        challenge = Challenge(ctf.channel_id, challenge_channel_id, name, category)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -189,6 +192,7 @@ class AddChallengeCommand(Command):
         text = "New challenge {} created in channel #{}".format(name, channel_name)
         slack_wrapper.post_message(channel_id, text)
 
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
@@ -198,7 +202,7 @@ class StatusCommand(Command):
         """Execute the Status command."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
-        members = {m["id"] : m["name"] for m in members['members'] if m.get("presence") == "active"}
+        members = {m["id"]: m["name"] for m in members['members'] if m.get("presence") == "active"}
 
         response = ""
         for _, ctf in ctfs.items():
@@ -228,15 +232,17 @@ class StatusCommand(Command):
                     if player_id in members:
                         players.append(members[player_id])
 
-                response += "[{} active] *{}* : {}\n".format(len(players), challenge.name, transliterate(", ".join(players)))
+                response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
+                                                               if challenge.category else "", transliterate(", ".join(players)))
             response += "\n"
 
         response = response.strip()
 
-        if response == "": # Response is empty
+        if response == "":  # Response is empty
             response += "*There are currently no running CTFs*"
 
         slack_wrapper.post_message(channel_id, response)
+
 
 class WorkingCommand(Command):
     """
@@ -258,10 +264,10 @@ class WorkingCommand(Command):
         challenge = ""
         if challenge_name:
             challenge = get_challenge_by_name(ChallengeHandler.DB,
-                challenge_name, channel_id)
+                                              challenge_name, channel_id)
         else:
             challenge = get_challenge_by_channel_id(ChallengeHandler.DB,
-                channel_id)
+                                                    channel_id)
 
         if not challenge:
             raise InvalidCommand("This challenge does not exist.")
@@ -376,6 +382,7 @@ class SolveCommand(Command):
 
                     break
 
+
 class ArchiveCTFCommand(Command):
     """Archive the challenge channels for a given CTF."""
 
@@ -402,6 +409,7 @@ class ArchiveCTFCommand(Command):
 
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
+
 
 class ChallengeHandler(BaseHandler):
     """
@@ -433,13 +441,14 @@ class ChallengeHandler(BaseHandler):
         "ctf_id": "",
         "name": "",
         "solved": "",
+        "category": "",
         "type": "CHALLENGE",
     }
 
     def __init__(self):
         self.commands = {
             "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf",    ["ctf_name"], None),
-            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], None),
+            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
             "working": CommandDesc(WorkingCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
@@ -447,7 +456,6 @@ class ChallengeHandler(BaseHandler):
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None)
         }
-
 
     def init(self, slack_wrapper):
         """
@@ -475,7 +483,7 @@ class ChallengeHandler(BaseHandler):
             if not channel['is_archived'] and \
                purpose and "ota_bot" in purpose and \
                purpose["type"] == "CHALLENGE":
-                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"])
+                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], getDictValue(purpose, "category"))
                 ctf_channel_id = purpose["ctf_id"]
                 solvers = purpose["solved"]
                 ctf = database.get(ctf_channel_id)
