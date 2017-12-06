@@ -6,6 +6,8 @@ from util.loghandler import *
 #######
 # Helper functions
 #######
+
+
 def load_json(string):
     """
     Return a JSON object based on its string representation.
@@ -17,30 +19,43 @@ def load_json(string):
         return None
     return json_object
 
+
 def transliterate(string):
     """
         Converts ascii characters to a unicode
         equivalent.
     """
     mapping = {
-        "a" : "ɑ", # \xc9\x91
-        "A" : "А", # \xd0\x90
-        "e" : "е", # \xd0\xb5
-        "E" : "Е", # \xd0\x95
-        "i" : "і", # \xd1\x96
-        "I" : "І", # \xd0\x86
-        "o" : "о", # \xd0\xbe
-        "O" : "О", # \xd0\x9e
-        "u" : "υ", # \xcf\x85
-        "U" : "υ", # \xcf\x85
+        "a": "ɑ",  # \xc9\x91
+        "A": "А",  # \xd0\x90
+        "e": "е",  # \xd0\xb5
+        "E": "Е",  # \xd0\x95
+        "i": "і",  # \xd1\x96
+        "I": "І",  # \xd0\x86
+        "o": "о",  # \xd0\xbe
+        "O": "О",  # \xd0\x9e
+        "u": "υ",  # \xcf\x85
+        "U": "υ",  # \xcf\x85
     }
 
     return ''.join([mapping[c] if c in mapping else c for c in string])
 
 
+def getDictValue(src_dict, key):
+    """
+    Return the value for the specified key from the dictionary, if the key exists
+    Return None if the key doesn't exist in the dictionary
+    """
+    if key in src_dict:
+        return src_dict[key]
+    return None
+
+
 #######
 # Database manipulation
 #######
+
+
 def get_ctf_by_channel_id(database, channel_id):
     """
     Fetch a CTF object in the database with a given channel ID.
@@ -115,6 +130,7 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
 
     return challenges
 
+
 def get_challenges_for_ctf_id(database, ctf_channel_id):
     """
     Fetch a list of all challenges of a given CTF.
@@ -129,6 +145,7 @@ def get_challenges_for_ctf_id(database, ctf_channel_id):
         challenges.append(challenge)
 
     return challenges
+
 
 def update_challenge_name(database, challenge_channel_id, new_name):
     """
@@ -153,6 +170,7 @@ def update_ctf_name(database, ctf_channel_id, new_name):
     ctf.name = new_name
     pickle.dump(ctfs, open(database, "wb"))
 
+
 def remove_challenge_by_channel_id(database, challenge_channel_id, ctf_channel_id):
     """
     Remove a challenge from the database using a given challenge and CTF id.
@@ -162,6 +180,7 @@ def remove_challenge_by_channel_id(database, challenge_channel_id, ctf_channel_i
     ctf.challenges = list(filter(lambda challenge: challenge.channel_id != challenge_channel_id, ctf.challenges))
     pickle.dump(ctfs, open(database, "wb"))
 
+
 def remove_ctf_by_channel_id(database, ctf_channel_id):
     """
     Remove a CTF from the database using a given CTF id.
@@ -170,4 +189,3 @@ def remove_ctf_by_channel_id(database, ctf_channel_id):
     ctf = ctfs[ctf_channel_id]
     ctfs.pop(ctf_channel_id)
     pickle.dump(ctfs, open(database, "wb"))
-
