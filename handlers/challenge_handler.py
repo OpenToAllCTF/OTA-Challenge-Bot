@@ -208,8 +208,7 @@ class StatusCommand(Command):
         response = ""
         for ctf in ctfs:
 
-            response += "*============= %s =============*\n" % ctf.name.upper()
-            response += "*> Channel: #%s*\n" % ctf.name
+            response += "*============= #%s =============*\n" % ctf.name
             solved = [c for c in ctf.challenges if c.is_solved]
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
