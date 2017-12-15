@@ -207,7 +207,7 @@ class StatusCommand(Command):
         response = ""
         for _, ctf in ctfs.items():
 
-            response += "*============= {} =============*\n".format(ctf.name.upper())
+            response += "*============= #{} =============*\n".format(ctf.name)
             solved = [c for c in ctf.challenges if c.is_solved]
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
