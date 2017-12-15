@@ -18,6 +18,10 @@ class AddCTFCommand(Command):
         """Execute AddCTF command."""
         name = args[0]
 
+        if len(name) > 10:
+            raise InvalidCommand(
+                "Command failed. CTF name must be <= 10 characters.")
+
         # Create the channel
         response = slack_wrapper.create_channel(name)
 
@@ -25,10 +29,6 @@ class AddCTFCommand(Command):
         if response['ok'] == False:
             raise InvalidCommand(
                 "\"{}\" channel creation failed.\nError : {}".format(name, response['error']))
-
-        if len(name) > 10:
-            raise InvalidCommand(
-                "Command failed. CTF name must be <= 10 characters.")
 
         # Add purpose tag for persistence
         purpose = dict(ChallengeHandler.CTF_PURPOSE)
