@@ -205,7 +205,7 @@ class StatusCommand(Command):
         members = {m["id"]: m["name"] for m in members['members'] if m.get("presence") == "active"}
 
         response = ""
-        for _, ctf in ctfs.items():
+        for ctf in ctfs.values():
 
             response += "*============= #{} =============*\n".format(ctf.name)
             solved = [c for c in ctf.challenges if c.is_solved]
@@ -278,7 +278,7 @@ class WorkingCommand(Command):
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
 
-        for _, ctf in ctfs.items():
+        for ctf in ctfs.values():
             for chal in ctf.challenges:
                 if chal.channel_id == challenge.channel_id:
                     chal.add_player(Player(user_id))
@@ -346,7 +346,7 @@ class SolveCommand(Command):
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
 
-        for _, ctf in ctfs.items():
+        for ctf in ctfs.values():
             for chal in ctf.challenges:
                 if chal.channel_id == challenge.channel_id:
                     if not challenge.is_solved:
@@ -483,7 +483,7 @@ class ChallengeHandler(BaseHandler):
             if not channel['is_archived'] and \
                purpose and "ota_bot" in purpose and \
                purpose["type"] == "CHALLENGE":
-                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], getDictValue(purpose, "category"))
+                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
                 ctf_channel_id = purpose["ctf_id"]
                 solvers = purpose["solved"]
                 ctf = database.get(ctf_channel_id)

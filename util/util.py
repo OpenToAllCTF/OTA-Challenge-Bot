@@ -41,16 +41,6 @@ def transliterate(string):
     return ''.join([mapping[c] if c in mapping else c for c in string])
 
 
-def getDictValue(src_dict, key):
-    """
-    Return the value for the specified key from the dictionary, if the key exists
-    Return None if the key doesn't exist in the dictionary
-    """
-    if key in src_dict:
-        return src_dict[key]
-    return None
-
-
 #######
 # Database manipulation
 #######
@@ -79,7 +69,7 @@ def get_ctf_by_name(database, name):
     Return the matching CTF object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
-    for _, ctf in ctfs.items():
+    for ctf in ctfs.values():
         if ctf.name == name:
             return ctf
 
@@ -106,7 +96,7 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
     Return the matching Challenge object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
-    for _, ctf in ctfs.items():
+    for ctf in ctfs.values():
         for challenge in ctf.challenges:
             if challenge.channel_id == challenge_channel_id:
                 return challenge
@@ -153,7 +143,7 @@ def update_challenge_name(database, challenge_channel_id, new_name):
     """
     ctfs = pickle.load(open(database, "rb"))
 
-    for _, ctf in ctfs.items():
+    for ctf in ctfs.values():
         for chal in ctf.challenges:
             if chal.channel_id == challenge_channel_id:
                 chal.name = new_name

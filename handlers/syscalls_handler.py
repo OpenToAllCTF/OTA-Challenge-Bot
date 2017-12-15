@@ -36,7 +36,7 @@ class ShowSyscallCommand(Command):
         msg = "```"
 
         for entry in syscall_entries:
-            msg += "{0:15} : {1}\n".format(entry, syscall_entries[entry])
+            msg += "{:15} : {}\n".format(entry, syscall_entries[entry])
 
         return msg.strip() + "```"
 
