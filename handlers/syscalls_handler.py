@@ -7,45 +7,41 @@ from addons.syscalls.syscallinfo import *
 
 
 class ShowAvailableArchCommand(Command):
-    """
-    Shows the available architecture tables for syscalls
-    """
+    """Shows the available architecture tables for syscalls."""
 
-    def execute(self, slack_client, args, channel_id, user_id):
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the ShowAvailableArch command."""
         archList = SyscallsHandler.syscallInfo.getAvailableArchitectures()
 
         msg = "\n"
         msg += "Available architectures:```"
 
         for arch in archList:
-            msg += "%s\t" % arch
+            msg += "{}\t".format(arch)
 
-        msg += "```\n"
+        msg = msg.strip() + "```"
 
-        slack_client.api_call(
-            "chat.postMessage", channel=channel_id, text=msg.strip(), as_user=True)
-
+        slack_wrapper.post_message(channel_id, msg)
 
 class ShowSyscallCommand(Command):
-    """
-    Shows information about the requested syscall
-    """
+    """Shows information about the requested syscall."""
 
-    def sendMessage(self, slack_client, channel, user, msg):
-        destChannel = channel if (SyscallsHandler.MSGMODE == 0) else user
+    def send_message(self, slack_wrapper, channel_id, user_id, msg):
+        """Send message to user or channel."""
+        dest_channel = channel_id if (SyscallsHandler.MSGMODE == 0) else user_id
+        slack_wrapper.post_message(dest_channel, msg)
 
-        slack_client.api_call(
-            "chat.postMessage", channel=destChannel, text=msg.strip(), as_user=True)
-
-    def parseSyscallInfo(self, syscallEntry):
+    def parse_syscall_info(self, syscall_entries):
+        """Parse syscall information."""
         msg = "```"
 
-        for entry in syscallEntry:
-            msg += "{0:15} : {1}\n".format(entry, syscallEntry[entry])
+        for entry in syscall_entries:
+            msg += "{:15} : {}\n".format(entry, syscall_entries[entry])
 
         return msg.strip() + "```"
 
-    def execute(self, slack_client, args, channel_id, user_id):
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the ShowSyscall command."""
         archObj = SyscallsHandler.syscallInfo.getArch(args[0])
 
         if archObj:
@@ -60,14 +56,14 @@ class ShowSyscallCommand(Command):
                 entry = archObj.getEntryByName(args[1])
 
             if entry:
-                self.sendMessage(slack_client, channel_id,
-                                 user_id, self.parseSyscallInfo(entry))
+                self.send_message(slack_wrapper, channel_id,
+                                 user_id, self.parse_syscall_info(entry))
             else:
-                self.sendMessage(slack_client, channel_id, user_id,
-                                 "Specified syscall not found: `%s (Arch: %s)`" % (args[1], args[0]))
+                self.send_message(slack_wrapper, channel_id, user_id,
+                                 "Specified syscall not found: `{} (Arch: {})`".format(args[1], args[0]))
         else:
-            self.sendMessage(slack_client, channel_id, user_id,
-                             "Specified architecture not available: `%s`" % args[0])
+            self.send_message(slack_wrapper, channel_id, user_id,
+                             "Specified architecture not available: `{}`".format(args[0]))
 
 
 class SyscallsHandler(BaseHandler):

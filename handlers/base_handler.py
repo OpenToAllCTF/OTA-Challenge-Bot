@@ -9,59 +9,52 @@ class BaseHandler(ABC):
     def can_handle(self, command):
         return command in self.commands
 
-    def init(self, slack_client, botid):
+    def init(self, slack_wrapper):
         pass
 
-    # TODO: Refactor showCommandUsage and showHandlerUsage, so they'll reuse
-    # duplicate code
-    def command_usage(self, command, descriptor):
-        msg = "Usage: `!%s %s" % (self.handler_name, command)
-
+    def parse_command_usage(self, command, descriptor):
+        """Returns a usage string from a given command and descriptor."""
+        msg = command
         if descriptor.arguments:
             for arg in descriptor.arguments:
-                msg += " <%s>" % arg
+                msg += " <{}>".format(arg)
 
         if descriptor.optionalArgs:
             for arg in descriptor.optionalArgs:
-                msg += " [%s]" % arg
+                msg += " [{}]".format(arg)
 
         if descriptor.description:
-            msg += "\t(%s)" % descriptor.description
-
-        msg += "`"
+            msg += "\t({})".format(descriptor.description)
 
         return msg
+
+
+    def command_usage(self, command, descriptor):
+        """Return the usage of a given command of a handler."""
+        usage = self.parse_command_usage(command, descriptor)
+        return "Usage: `!{} {}`".format(self.handler_name, usage)
 
     @property
     def usage(self):
+        """Return the usage of a handler."""
         msg = "```"
 
         for command in self.commands:
-            cmdMsg = "!%s %s" % (self.handler_name, command)
-
             descriptor = self.commands[command]
+            usage = self.parse_command_usage(command, descriptor)
+            msg += "!{} {}\n".format(self.handler_name, usage)
 
-            if descriptor.arguments:
-                for arg in descriptor.arguments:
-                    cmdMsg += " <%s>" % arg
-
-            if descriptor.optionalArgs:
-                for arg in descriptor.optionalArgs:
-                    cmdMsg += " [%s]" % arg
-
-            msg += "%s\n" % cmdMsg
-
-        msg += "```\n"
+        msg += "```"
 
         return msg
 
-    def process(self, slack_client, command, args, channel, user):
-        # Check if enough arguments were passed for this command
-        cmdDescriptor = self.commands[command]
+    def process(self, slack_wrapper, command, args, channel, user):
+        """Check if enough arguments were passed for this command."""
+        cmd_descriptor = self.commands[command]
 
-        if cmdDescriptor:
-            if (cmdDescriptor.arguments) and (len(args) < len(cmdDescriptor.arguments)):
+        if cmd_descriptor:
+            if (cmd_descriptor.arguments) and (len(args) < len(cmd_descriptor.arguments)):
                 raise InvalidCommand(
-                    self.command_usage(command, cmdDescriptor))
+                    self.command_usage(command, cmd_descriptor))
             else:
-                cmdDescriptor.command().execute(slack_client, args, channel, user)
+                cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
