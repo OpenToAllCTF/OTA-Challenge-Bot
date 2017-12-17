@@ -188,8 +188,9 @@ class AddChallengeCommand(Command):
         ctf.add_challenge(challenge)
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-        # Notify the channel
-        text = "New challenge {} created in channel #{}".format(name, channel_name)
+        # Notify the channel        
+        text = "New challenge *{0}* created in private channel (type `!working {0}` to join).".format(name)
+
         slack_wrapper.post_message(channel_id, text)
 
 
