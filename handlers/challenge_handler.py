@@ -453,9 +453,6 @@ class AddCredsCommand(Command):
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
 
-        cur_ctf.cred_user = args[0]
-        cur_ctf.cred_pw = args[1]
-
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
 
@@ -463,6 +460,7 @@ class AddCredsCommand(Command):
             if ctf.name == cur_ctf.name:
                 ctf.cred_user = args[0]
                 ctf.cred_pw = args[1]
+                ctf.cred_url = args[2] if len(args) > 2 else ""
 
                 pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
@@ -472,6 +470,7 @@ class AddCredsCommand(Command):
                 purpose["type"] = "CTF"
                 purpose["cred_user"] = ctf.cred_user
                 purpose["cred_pw"] = ctf.cred_pw
+                purpose["cred_url"] = ctf.cred_url
 
                 slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
@@ -494,6 +493,10 @@ class ShowCredsCommand(Command):
         if (cur_ctf.cred_user != "") or (cur_ctf.cred_pw != ""):
             message = "Credentials for CTF *{0}*\n".format(cur_ctf.name)
             message += "```"
+
+            if (cur_ctf.cred_url != ""):
+                message += "URL      : {0}\n".format(cur_ctf.cred_url)
+
             message += "Username : {0}\n".format(cur_ctf.cred_user)
             message += "Password : {0}\n".format(cur_ctf.cred_pw)
             message += "```"
@@ -527,7 +530,8 @@ class ChallengeHandler(BaseHandler):
         "name": "",
         "type": "CTF",
         "cred_user": "",
-        "cred_pw": ""
+        "cred_pw": "",
+        "cred_url": ""
     }
 
     CHALL_PURPOSE = {
@@ -550,7 +554,7 @@ class ChallengeHandler(BaseHandler):
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload" : CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
-            "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], None),
+            "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
         }
 
@@ -573,7 +577,8 @@ class ChallengeHandler(BaseHandler):
                     ctf.cred_user = purpose["cred_user"]
                 if ("cred_pw" in purpose):
                     ctf.cred_pw = purpose["cred_pw"]
-
+                if ("cred_url" in purpose):
+                    ctf.cred_url = purpose["cred_url"]
                 database[ctf.channel_id] = ctf
 
         # Find active challenge channels

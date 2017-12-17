@@ -12,6 +12,7 @@ class CTF:
         self.challenges = []
         self.cred_user = ""
         self.cred_pw = ""
+        self.cred_url = ""
 
     def add_challenge(self, challenge):
         """
