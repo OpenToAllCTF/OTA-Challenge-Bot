@@ -352,10 +352,17 @@ class SolveCommand(Command):
         solver_list = [member['user']['name']]
 
         # Find additional members to add
-        for addSolve in additional_args:
-            if not addSolve in solver_list:
-                solver_list.append(addSolve)
-                additional_solver.append(addSolve)
+        for add_solve in additional_args:
+            if (add_solve.startswith("<@")) and (add_solve.endswith(">")):
+                # slack @notation (resolve to real username)
+                add_solve = add_solve[2:-1].upper()
+                user_obj = slack_wrapper.get_member(add_solve)
+                if (user_obj['ok']):
+                    add_solve = user_obj['user']['name']
+
+            if not add_solve in solver_list:                
+                solver_list.append(add_solve)
+                additional_solver.append(add_solve)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
