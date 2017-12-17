@@ -4,7 +4,7 @@ from bottypes.invalid_command import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
-
+import re
 
 class ShowAdminsCommand(Command):
     """Shows list of users in the admin user group."""
@@ -44,6 +44,10 @@ class AddAdminCommand(Command):
         """Execute the AddAdmin command."""
         user = args[0].upper()
 
+        if (user.startswith("<@")) and (user.endswith(">")):
+            # TODO: Someone replace this with a nifty regex ;)
+            user = user[2:-1]
+
         # Validate that a correct user_id was passed
         user_object = slack_wrapper.get_member(user)
 
@@ -71,6 +75,10 @@ class RemoveAdminCommand(Command):
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the RemoveAdmin command."""
         user = args[0].upper()
+
+        if (user.startswith("<@")) and (user.endswith(">")):
+            # TODO: Someone replace this with a nifty regex ;)
+            user = user[2:-1]
 
         admin_users = HandlerFactory.botserver.get_config_option("admin_users")
 
