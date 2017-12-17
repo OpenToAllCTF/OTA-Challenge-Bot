@@ -60,7 +60,8 @@ class BotServer(threading.Thread):
                 with open("./config.json", "w") as f:
                     json.dump(self.config, f)
             else:
-                raise InvalidConsoleCommand("The specified configuration option doesn't exist: {}".format(option))
+                raise InvalidConsoleCommand(
+                    "The specified configuration option doesn't exist: {}".format(option))
         finally:
             self.release()
 
@@ -101,7 +102,8 @@ class BotServer(threading.Thread):
         while self.running:
             try:
                 self.load_config()
-                self.slack_wrapper = SlackWrapper(self.get_config_option('api_key'))
+                self.slack_wrapper = SlackWrapper(
+                    self.get_config_option('api_key'))
 
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
@@ -110,22 +112,26 @@ class BotServer(threading.Thread):
 
                     # Might even pass the bot server for handlers?
                     log.info("Initializing handlers...")
-                    HandlerFactory.initialize(self.slack_wrapper, self.bot_id)
+                    HandlerFactory.initialize(
+                        self.slack_wrapper, self.bot_id, self)
 
                     # Main loop
                     log.info("Bot is running...")
                     while self.running:
                         message = self.slack_wrapper.read()
-                        command, channel, user = self.parse_slack_message(message)
+                        command, channel, user = self.parse_slack_message(
+                            message)
 
                         if command:
-                            log.debug("Received bot command : {} ({})".format(command, channel))
-                            HandlerFactory.process(self.slack_wrapper, self,
+                            log.debug("Received bot command : {} ({})".format(
+                                command, channel))
+                            HandlerFactory.process(self.slack_wrapper, self, 
                                                    command, channel, user)
 
                         time.sleep(READ_WEBSOCKET_DELAY)
                 else:
-                    log.error("Connection failed. Invalid slack token or bot id?")
+                    log.error(
+                        "Connection failed. Invalid slack token or bot id?")
                     self.running = False
             except websocket._exceptions.WebSocketConnectionClosedException:
                 log.exception("Web socket error. Executing reconnect...")
