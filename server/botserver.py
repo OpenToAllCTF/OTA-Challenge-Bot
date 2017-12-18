@@ -76,7 +76,7 @@ class BotServer(threading.Thread):
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
                     return msg['text'].split(self.bot_at)[1].strip().lower(), msg['channel'], msg['user']
-                elif msg.get("text", "").startswith('!'):
+                elif msg.get("text", "").startswith("!"):
                     # Return text after the !
                     return msg['text'][1:].strip().lower(), msg['channel'], msg['user']
 
@@ -103,7 +103,7 @@ class BotServer(threading.Thread):
             try:
                 self.load_config()
                 self.slack_wrapper = SlackWrapper(
-                    self.get_config_option('api_key'))
+                    self.get_config_option("api_key"))
 
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
@@ -125,7 +125,7 @@ class BotServer(threading.Thread):
                         if command:
                             log.debug("Received bot command : {} ({})".format(
                                 command, channel))
-                            HandlerFactory.process(self.slack_wrapper, self, 
+                            HandlerFactory.process(self.slack_wrapper, self,
                                                    command, channel, user)
 
                         time.sleep(READ_WEBSOCKET_DELAY)

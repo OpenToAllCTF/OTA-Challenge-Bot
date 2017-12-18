@@ -1,10 +1,12 @@
 from slackclient import SlackClient
 from util.util import *
 
+
 class SlackWrapper:
     """
     Slack API wrapper
     """
+
     def __init__(self, api_key):
         """
         SlackWrapper constructor.
@@ -15,13 +17,13 @@ class SlackWrapper:
         self.client = SlackClient(self.api_key)
         self.connected = self.client.rtm_connect()
         self.server = None
-        self.username =  None
+        self.username = None
         self.user_id = None
 
         if self.connected:
             self.server = self.client.server
-            self.username =  self.server.username
-            self.user_id = self.server.login_data.get('self').get('id')
+            self.username = self.server.username
+            self.user_id = self.server.login_data.get("self").get("id")
 
     def read(self):
         """Read from the real-time messaging API."""
@@ -68,8 +70,7 @@ class SlackWrapper:
         """
         api_call = "groups.rename" if is_private else "channels.rename"
 
-        return self.client.api_call(api_call, channel=channel_id,
-                                     name=new_name, validate=False)
+        return self.client.api_call(api_call, channel=channel_id, name=new_name, validate=False)
 
     def get_channel_info(self, channel_id, is_private=False):
         """
@@ -112,4 +113,4 @@ class SlackWrapper:
 
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""
-        return self.client.api_call('groups.archive', channel=channel_id)
+        return self.client.api_call("groups.archive", channel=channel_id)
