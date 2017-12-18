@@ -353,14 +353,14 @@ class SolveCommand(Command):
 
         # Find additional members to add
         for add_solve in additional_args:
-            if (add_solve.startswith("<@")) and (add_solve.endswith(">")):
+            if add_solve.startswith("<@") and add_solve.endswith(">"):
                 # slack @notation (resolve to real username)
                 add_solve = add_solve[2:-1].upper()
                 user_obj = slack_wrapper.get_member(add_solve)
-                if (user_obj['ok']):
+                if user_obj['ok']:
                     add_solve = user_obj['user']['name']
 
-            if not add_solve in solver_list:                
+            if add_solve not in solver_list:                
                 solver_list.append(add_solve)
                 additional_solver.append(add_solve)
 
