@@ -200,7 +200,6 @@ class AddChallengeCommand(Command):
 
         # Notify the channel
         text = "New challenge *{0}* created in private channel (type `!working {0}` to join).".format(name)
-
         slack_wrapper.post_message(channel_id, text)
 
 
@@ -443,7 +442,7 @@ class ReloadCommand(Command):
 
 
 class AddCredsCommand(Command):
-    """Add credential informations for current ctf"""
+    """Add credential informations for current ctf."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the AddCreds command."""
@@ -454,7 +453,8 @@ class AddCredsCommand(Command):
                 "Command failed. You are not in a CTF channel.")
 
         # Update database
-        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+        with open(ChallengeHandler.DB, "rb") as f:
+            ctfs = pickle.load(f)
 
         for ctf in ctfs.values():
             if ctf.name == cur_ctf.name:
@@ -462,7 +462,8 @@ class AddCredsCommand(Command):
                 ctf.cred_pw = args[1]
                 ctf.cred_url = args[2] if len(args) > 2 else ""
 
-                pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+                with open(ChallengeHandler.DB, "wb") as f:
+                    pickle.dump(ctfs, f)
 
                 purpose = dict(ChallengeHandler.CTF_PURPOSE)
                 purpose["ota_bot"] = "DO_NOT_DELETE_THIS"
@@ -474,13 +475,14 @@ class AddCredsCommand(Command):
 
                 slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
-                message = "Credentials for CTF *{}* updated...".format(ctf.name)
+                message = "Credentials for CTF *{}* updated...".format(
+                    ctf.name)
                 slack_wrapper.post_message(channel_id, message)
                 return
 
 
 class ShowCredsCommand(Command):
-    """Shows credential informations for current ctf"""
+    """Shows credential informations for current ctf."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the ShowCreds command."""
@@ -573,12 +575,10 @@ class ChallengeHandler(BaseHandler):
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
                 ctf = CTF(channel['id'], purpose['name'])
 
-                if "cred_user" in purpose:
-                    ctf.cred_user = purpose["cred_user"]
-                if "cred_pw" in purpose:
-                    ctf.cred_pw = purpose["cred_pw"]
-                if "cred_url" in purpose:
-                    ctf.cred_url = purpose["cred_url"]
+                ctf.cred_user = purpose.get("cred_user", "")
+                ctf.cred_pw = purpose.get("cred_pw", "")
+                ctf.cred_url = purpose.get("cred_url", "")
+
                 database[ctf.channel_id] = ctf
 
         # Find active challenge channels
