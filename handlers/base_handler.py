@@ -48,7 +48,7 @@ class BaseHandler(ABC):
         for command in self.commands:
             descriptor = self.commands[command]
 
-            if (not descriptor.is_admin_cmd) or (user_is_admin):
+            if (not descriptor.is_admin_cmd) or user_is_admin:
                 usage = self.parse_command_usage(command, descriptor)
                 msg += "!{} {}\n".format(self.handler_name, usage)
 
@@ -65,8 +65,8 @@ class BaseHandler(ABC):
         cmd_descriptor = self.commands[command]
 
         if cmd_descriptor:
-            if (cmd_descriptor.arguments) and (len(args) < len(cmd_descriptor.arguments)):                
+            if cmd_descriptor.arguments and len(args) < len(cmd_descriptor.arguments):
                 raise InvalidCommand(
                     self.command_usage(command, cmd_descriptor))
-            else:                
+            else:
                 cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
