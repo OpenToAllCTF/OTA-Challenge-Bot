@@ -48,7 +48,7 @@ class HandlerFactory():
             usage_msg = ""
 
             admin_users = botserver.get_config_option("admin_users")
-            user_is_admin = (admin_users) and (user_id in admin_users)
+            user_is_admin = admin_users and user_id in admin_users
 
             # Call a specific handler with this command
             handler = HandlerFactory.handlers.get(handler_name)
