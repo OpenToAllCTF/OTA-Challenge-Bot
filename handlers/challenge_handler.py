@@ -468,6 +468,7 @@ class ChallengeHandler(BaseHandler):
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None)
         }
 
+    @staticmethod
     def update_database_from_slack(slack_wrapper):
         """
         Reload the ctf and challenge information from slack.        
