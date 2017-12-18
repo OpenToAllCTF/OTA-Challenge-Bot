@@ -474,7 +474,7 @@ class AddCredsCommand(Command):
 
                 slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
-                message = "Credentials for CTF *{0}* updated...".format(ctf.name)
+                message = "Credentials for CTF *{}* updated...".format(ctf.name)
                 slack_wrapper.post_message(channel_id, message)
                 return
 
@@ -490,20 +490,20 @@ class ShowCredsCommand(Command):
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
 
-        if (cur_ctf.cred_user != "") or (cur_ctf.cred_pw != ""):
-            message = "Credentials for CTF *{0}*\n".format(cur_ctf.name)
+        if cur_ctf.cred_user and cur_ctf.cred_pw:
+            message = "Credentials for CTF *{}*\n".format(cur_ctf.name)
             message += "```"
 
-            if (cur_ctf.cred_url != ""):
-                message += "URL      : {0}\n".format(cur_ctf.cred_url)
+            if cur_ctf.cred_url:
+                message += "URL      : {}\n".format(cur_ctf.cred_url)
 
-            message += "Username : {0}\n".format(cur_ctf.cred_user)
-            message += "Password : {0}\n".format(cur_ctf.cred_pw)
+            message += "Username : {}\n".format(cur_ctf.cred_user)
+            message += "Password : {}\n".format(cur_ctf.cred_pw)
             message += "```"
         else:
-            message = "No credentials provided for CTF *{0}*.".format(cur_ctf.name)
+            message = "No credentials provided for CTF *{}*.".format(cur_ctf.name)
 
-        slack_wrapper.post_message(channel_id, message)
+        slack_wrapper.post_message(channel_id, message, "")
 
 
 class ChallengeHandler(BaseHandler):
@@ -573,11 +573,11 @@ class ChallengeHandler(BaseHandler):
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
                 ctf = CTF(channel['id'], purpose['name'])
 
-                if ("cred_user" in purpose):
+                if "cred_user" in purpose:
                     ctf.cred_user = purpose["cred_user"]
-                if ("cred_pw" in purpose):
+                if "cred_pw" in purpose:
                     ctf.cred_pw = purpose["cred_pw"]
-                if ("cred_url" in purpose):
+                if "cred_url" in purpose:
                     ctf.cred_url = purpose["cred_url"]
                 database[ctf.channel_id] = ctf
 
