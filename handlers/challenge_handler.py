@@ -416,9 +416,9 @@ class ReloadCommand(Command):
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the Reload command."""
 
-        slack_wrapper.post_message(channel_id, "Start updating CTF challenge handler...")
+        slack_wrapper.post_message(channel_id, "Updating CTFs and challenges...")
         ChallengeHandler.update_database_from_slack(slack_wrapper)
-        slack_wrapper.post_message(channel_id, "Finished updating CTF challenge handler...")
+        slack_wrapper.post_message(channel_id, "Update finished...")
         
 
 class ChallengeHandler(BaseHandler):
@@ -470,7 +470,7 @@ class ChallengeHandler(BaseHandler):
 
     def update_database_from_slack(slack_wrapper):
         """
-        Reloads the ctf and challenge information from slack.        
+        Reload the ctf and challenge information from slack.        
         """
         database = {}
         response = slack_wrapper.get_public_channels()
@@ -511,10 +511,6 @@ class ChallengeHandler(BaseHandler):
         pickle.dump(database, open(ChallengeHandler.DB, "wb+"))
 
     def init(self, slack_wrapper):
-        """
-        Initialize the challenge handler.
-        """
-
         ChallengeHandler.update_database_from_slack(slack_wrapper)
 
 # Register this handler
