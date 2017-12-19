@@ -12,6 +12,7 @@ class HandlerFactory():
     The handler factory will then check, if the handler can process a command, resolve it and execute it
     """
     handlers = {}
+    botserver = None
 
     def register(handler_name, handler):
         log.info("Registering new handler: {} ({})".format(handler_name,
@@ -20,12 +21,13 @@ class HandlerFactory():
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
 
-    def initialize(slack_wrapper, bot_id):
+    def initialize(slack_wrapper, bot_id, botserver):
         """
         Initializes all handler with common information.
 
         Might remove bot_id from here later on?
         """
+        HandlerFactory.botserver = botserver
         for handler in HandlerFactory.handlers:
             HandlerFactory.handlers[handler].init(slack_wrapper)
 
@@ -45,6 +47,9 @@ class HandlerFactory():
             processed = False
             usage_msg = ""
 
+            admin_users = botserver.get_config_option("admin_users")
+            user_is_admin = admin_users and user_id in admin_users
+
             # Call a specific handler with this command
             handler = HandlerFactory.handlers.get(handler_name)
 
@@ -56,7 +61,7 @@ class HandlerFactory():
 
                 else: # Send command to specified handler
                     command = args[1]
-                    if handler.can_handle(command):
+                    if handler.can_handle(command, user_is_admin):
                         handler.process(slack_wrapper, command,
                                         args[2:], channel_id, user_id)
                         processed = True
@@ -66,12 +71,12 @@ class HandlerFactory():
 
                 for handler_name, handler in HandlerFactory.handlers.items():
                     if command == "help": # Setup usage message
-                        usage_msg += "{}\n".format(handler.usage)
+                        usage_msg += "{}\n".format(handler.get_usage(user_is_admin))
                         processed = True
 
-                    elif handler.can_handle(command): # Send command to handler
+                    elif handler.can_handle(command, user_is_admin): # Send command to handler
                         handler.process(slack_wrapper, command,
-                                        args[1:], channel_id, user_id)
+                                        args[1:], channel_id, user_id, user_is_admin)
                         processed = True
 
             if not processed: # Send error message
