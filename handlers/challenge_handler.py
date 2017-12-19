@@ -198,7 +198,7 @@ class AddChallengeCommand(Command):
         ctf.add_challenge(challenge)
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
-        # Notify the channel        
+        # Notify the channel
         text = "New challenge *{0}* created in private channel (type `!working {0}` to join).".format(name)
 
         slack_wrapper.post_message(channel_id, text)
@@ -352,10 +352,15 @@ class SolveCommand(Command):
         solver_list = [member['user']['name']]
 
         # Find additional members to add
-        for addSolve in additional_args:
-            if not addSolve in solver_list:
-                solver_list.append(addSolve)
-                additional_solver.append(addSolve)
+        for add_solve in additional_args:
+            user_obj = resolve_user_by_user_id(slack_wrapper, add_solve)
+
+            if user_obj['ok']:
+                add_solve = user_obj['user']['name']
+
+            if add_solve not in solver_list:
+                solver_list.append(add_solve)
+                additional_solver.append(add_solve)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -434,7 +439,7 @@ class ReloadCommand(Command):
         slack_wrapper.post_message(channel_id, "Updating CTFs and challenges...")
         ChallengeHandler.update_database_from_slack(slack_wrapper)
         slack_wrapper.post_message(channel_id, "Update finished...")
-        
+
 
 class ChallengeHandler(BaseHandler):
     """
