@@ -167,8 +167,7 @@ def remove_challenge_by_channel_id(database, challenge_channel_id, ctf_channel_i
     """
     ctfs = pickle.load(open(database, "rb"))
     ctf = ctfs[ctf_channel_id]
-    ctf.challenges = list(filter(
-        lambda challenge: challenge.channel_id != challenge_channel_id, ctf.challenges))
+    ctf.challenges = list(filter(lambda challenge: challenge.channel_id != challenge_channel_id, ctf.challenges))
     pickle.dump(ctfs, open(database, "wb"))
 
 
@@ -184,7 +183,7 @@ def remove_ctf_by_channel_id(database, ctf_channel_id):
 
 def parse_user_id(user_id):
     """
-    Parses a user_id, removing possible @-notation and make sure it's uppercase
+    Parse a user_id, removing possible @-notation and make sure it's uppercase.
     """
     if user_id.startswith("<@") and user_id.endswith(">"):
         return user_id[2:-1].upper()
@@ -194,6 +193,6 @@ def parse_user_id(user_id):
 
 def resolve_user_by_user_id(slack_wrapper, user_id):
     """
-    Resolves an user id to an user object.    
+    Resolve a user id to an user object.
     """
     return slack_wrapper.get_member(parse_user_id(user_id))
