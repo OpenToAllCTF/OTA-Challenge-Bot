@@ -19,9 +19,11 @@ Secondary features :
 ```
 !ctf addctf <ctf_name>
 !ctf addchallenge <challenge_name>
-!ctf working [challenge_name]
+!ctf working <challenge_name>
 !ctf status
-!ctf solved [challenge_name] [support_member]
+!ctf solve <challenge_name> [support_member]
+!ctf addcreds <ctf_user> <ctf_pw> (Add credentials for ctf)
+!ctf showcreds (Shows credentials for current ctf)
 ```
 ```
 !syscalls available

@@ -200,7 +200,6 @@ class AddChallengeCommand(Command):
 
         # Notify the channel
         text = "New challenge *{0}* created in private channel (type `!working {0}` to join).".format(name)
-
         slack_wrapper.post_message(channel_id, text)
 
 
@@ -430,6 +429,7 @@ class ArchiveCTFCommand(Command):
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
 
+
 class ReloadCommand(Command):
     """Reload the ctf information from slack to reflect updates of channel purposes."""
 
@@ -439,6 +439,73 @@ class ReloadCommand(Command):
         slack_wrapper.post_message(channel_id, "Updating CTFs and challenges...")
         ChallengeHandler.update_database_from_slack(slack_wrapper)
         slack_wrapper.post_message(channel_id, "Update finished...")
+
+
+class AddCredsCommand(Command):
+    """Add credential informations for current ctf."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the AddCreds command."""
+
+        cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not cur_ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        # Update database
+        with open(ChallengeHandler.DB, "rb") as f:
+            ctfs = pickle.load(f)
+
+        for ctf in ctfs.values():
+            if ctf.name == cur_ctf.name:
+                ctf.cred_user = args[0]
+                ctf.cred_pw = args[1]
+                ctf.cred_url = args[2] if len(args) > 2 else ""
+
+                with open(ChallengeHandler.DB, "wb") as f:
+                    pickle.dump(ctfs, f)
+
+                purpose = dict(ChallengeHandler.CTF_PURPOSE)
+                purpose["ota_bot"] = "DO_NOT_DELETE_THIS"
+                purpose["name"] = ctf.name
+                purpose["type"] = "CTF"
+                purpose["cred_user"] = ctf.cred_user
+                purpose["cred_pw"] = ctf.cred_pw
+                purpose["cred_url"] = ctf.cred_url
+
+                slack_wrapper.set_purpose(ctf.channel_id, purpose)
+
+                message = "Credentials for CTF *{}* updated...".format(
+                    ctf.name)
+                slack_wrapper.post_message(channel_id, message)
+                return
+
+
+class ShowCredsCommand(Command):
+    """Shows credential informations for current ctf."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the ShowCreds command."""
+
+        cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not cur_ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        if cur_ctf.cred_user and cur_ctf.cred_pw:
+            message = "Credentials for CTF *{}*\n".format(cur_ctf.name)
+            message += "```"
+
+            if cur_ctf.cred_url:
+                message += "URL      : {}\n".format(cur_ctf.cred_url)
+
+            message += "Username : {}\n".format(cur_ctf.cred_user)
+            message += "Password : {}\n".format(cur_ctf.cred_pw)
+            message += "```"
+        else:
+            message = "No credentials provided for CTF *{}*.".format(cur_ctf.name)
+
+        slack_wrapper.post_message(channel_id, message, "")
 
 
 class ChallengeHandler(BaseHandler):
@@ -463,7 +530,10 @@ class ChallengeHandler(BaseHandler):
     CTF_PURPOSE = {
         "ota_bot": "DO_NOT_DELETE_THIS",
         "name": "",
-        "type": "CTF"
+        "type": "CTF",
+        "cred_user": "",
+        "cred_pw": "",
+        "cred_url": ""
     }
 
     CHALL_PURPOSE = {
@@ -485,13 +555,15 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload" : CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True)
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
+            "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
         }
 
     @staticmethod
     def update_database_from_slack(slack_wrapper):
         """
-        Reload the ctf and challenge information from slack.        
+        Reload the ctf and challenge information from slack.
         """
         database = {}
         response = slack_wrapper.get_public_channels()
@@ -502,6 +574,11 @@ class ChallengeHandler(BaseHandler):
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
                 ctf = CTF(channel['id'], purpose['name'])
+
+                ctf.cred_user = purpose.get("cred_user", "")
+                ctf.cred_pw = purpose.get("cred_pw", "")
+                ctf.cred_url = purpose.get("cred_url", "")
+
                 database[ctf.channel_id] = ctf
 
         # Find active challenge channels
