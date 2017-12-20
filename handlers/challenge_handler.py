@@ -199,7 +199,7 @@ class AddChallengeCommand(Command):
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
 
         # Notify the channel
-        text = "New challenge *{0}* created in private channel (type `!working {0}` to join).".format(name)
+        text = "New challenge *{0}* created in private channel (type `!workon {0}` to join).".format(name)
         slack_wrapper.post_message(channel_id, text)
 
 
@@ -256,13 +256,13 @@ class StatusCommand(Command):
         slack_wrapper.post_message(channel_id, response)
 
 
-class WorkingCommand(Command):
+class WorkonCommand(Command):
     """
     Mark a player as "working" on a challenge.
     """
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute the Working command."""
+        """Execute the Workon command."""
         challenge_name = args[0] if args else None
 
         # Validate that current channel is a CTF channel
@@ -520,7 +520,7 @@ class ChallengeHandler(BaseHandler):
     !ctf addchallenge "web 100" "defcon 25 quals"
 
     # Kick member from other ctf challenge channels and invite the member to the web 100 channel
-    !ctf working "web 100"
+    !ctf workon "web100"
 
     # Get status of all CTFs
     !ctf status
@@ -549,7 +549,7 @@ class ChallengeHandler(BaseHandler):
         self.commands = {
             "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf",    ["ctf_name"], None),
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
-            "working": CommandDesc(WorkingCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
+            "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
