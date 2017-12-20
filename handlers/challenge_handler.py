@@ -599,7 +599,7 @@ class ChallengeHandler(BaseHandler):
 
                 # Mark solved challenges
                 if solvers:
-                    challenge.mark_as_solved(solvers, purpose.get("solve_date", 0))
+                    challenge.mark_as_solved(solvers, purpose.get("solve_date"))
 
                 if ctf:
                     for member_id in channel['members']:
