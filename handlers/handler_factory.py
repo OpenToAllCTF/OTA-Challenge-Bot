@@ -16,7 +16,7 @@ class HandlerFactory():
 
     def register(handler_name, handler):
         log.info("Registering new handler: {} ({})".format(handler_name,
-            handler.__class__.__name__))
+                                                           handler.__class__.__name__))
 
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
@@ -56,14 +56,13 @@ class HandlerFactory():
             if handler:
                 # Setup usage message
                 if len(args) < 2 or args[1] == "help":
-                    usage_msg += handler.usage
+                    usage_msg += handler.get_usage(user_is_admin)
                     processed = True
 
                 else: # Send command to specified handler
                     command = args[1]
                     if handler.can_handle(command, user_is_admin):
-                        handler.process(slack_wrapper, command,
-                                        args[2:], channel_id, user_id)
+                        handler.process(slack_wrapper, command, args[2:], channel_id, user_id, user_is_admin)
                         processed = True
 
             else: # Pass the command to every available handler
