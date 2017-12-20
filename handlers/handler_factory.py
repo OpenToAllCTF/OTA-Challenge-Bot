@@ -15,8 +15,7 @@ class HandlerFactory():
     botserver = None
 
     def register(handler_name, handler):
-        log.info("Registering new handler: {} ({})".format(handler_name,
-                                                           handler.__class__.__name__))
+        log.info("Registering new handler: {} ({})".format(handler_name, handler.__class__.__name__))
 
         HandlerFactory.handlers[handler_name] = handler
         handler.handler_name = handler_name
