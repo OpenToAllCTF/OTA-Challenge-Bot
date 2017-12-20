@@ -219,7 +219,7 @@ class StatusCommand(Command):
         for ctf in ctfs.values():
 
             response += "*============= #{} =============*\n".format(ctf.name)
-            solved = [c for c in ctf.challenges if c.is_solved]
+            solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
             # Check if the CTF has any challenges
@@ -381,6 +381,8 @@ class SolveCommand(Command):
                         purpose['name'] = challenge.name
                         purpose['ctf_id'] = ctf.channel_id
                         purpose['solved'] = solver_list
+                        purpose['solve_date'] = chal.solve_date
+
                         purpose = json.dumps(purpose)
                         slack_wrapper.set_purpose(
                             challenge.channel_id, purpose, is_private=True)
@@ -597,7 +599,7 @@ class ChallengeHandler(BaseHandler):
 
                 # Mark solved challenges
                 if solvers:
-                    challenge.mark_as_solved(solvers)
+                    challenge.mark_as_solved(solvers, purpose.get("solve_date"))
 
                 if ctf:
                     for member_id in channel['members']:
