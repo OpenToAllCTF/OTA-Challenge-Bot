@@ -1,0 +1,5 @@
+{
+    "use_message_queue" : "True",
+    "message_queue_interval" : "5",
+    "irc_process_interval" : "1"
+}
