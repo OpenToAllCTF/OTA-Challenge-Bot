@@ -1,3 +1,5 @@
+import time
+
 class Challenge:
 
     def __init__(self, ctf_channel_id, channel_id, name, category):
@@ -14,14 +16,17 @@ class Challenge:
         self.players = {}
         self.is_solved = False
         self.solver = None
+        self.solve_date = 0
 
-    def mark_as_solved(self, solver_list):
+    def mark_as_solved(self, solver_list, solve_date=None):
         """
         Mark a challenge as solved.
         solver_list : List of usernames, that solved the challenge.
+        solve_date : Time of solve (epoch) (None: current time / value: set to specified value).
         """
         self.is_solved = True
         self.solver = solver_list
+        self.solve_date = solve_date or int(time.time())
 
     def unmark_as_solved(self):
         """

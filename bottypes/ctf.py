@@ -10,6 +10,9 @@ class CTF:
         self.channel_id = channel_id
         self.name = name
         self.challenges = []
+        self.cred_user = ""
+        self.cred_pw = ""
+        self.cred_url = ""
 
     def add_challenge(self, challenge):
         """
