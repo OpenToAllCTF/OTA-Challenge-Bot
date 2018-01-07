@@ -42,7 +42,7 @@ class ShowSyscallCommand(Command):
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the ShowSyscall command."""
-        archObj = SyscallsHandler.syscallInfo.getArch(args[0])
+        archObj = SyscallsHandler.syscallInfo.getArch(args[0].lower())
 
         if archObj:
             entry = None
@@ -53,7 +53,7 @@ class ShowSyscallCommand(Command):
                 syscallID = int(args[1])
                 entry = archObj.getEntryByID(syscallID)
             except:
-                entry = archObj.getEntryByName(args[1])
+                entry = archObj.getEntryByName(args[1].lower())
 
             if entry:
                 self.send_message(slack_wrapper, channel_id,
