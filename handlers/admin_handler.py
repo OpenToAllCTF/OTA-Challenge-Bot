@@ -114,13 +114,9 @@ class AsCommand(Command):
 
         if user_obj['ok']:
             dest_user_id = user_obj['user']['id']
-
-            dest_args = [ dest_command ]
-            for arg in dest_arguments:
-                dest_args.append(arg)
-
+            
             # Redirecting command execution to handler factory
-            HandlerFactory.process_command(slack_wrapper, dest_command, dest_args, channel_id, dest_user_id)
+            HandlerFactory.process_command(slack_wrapper, dest_command, [dest_command] + dest_arguments, channel_id, dest_user_id)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 
