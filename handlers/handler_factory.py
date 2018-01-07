@@ -40,15 +40,19 @@ class HandlerFactory():
             message = "Command failed : Malformed input."
             slack_wrapper.post_message(channel_id, message)
             return
+            
+        HandlerFactory.process_command(slack_wrapper, message, args, channel_id, user_id)
 
+    def process_command(slack_wrapper, message, args, channel_id, user_id):
+        
         try:
             handler_name = args[0]
             processed = False
             usage_msg = ""
 
-            admin_users = botserver.get_config_option("admin_users")
+            admin_users = HandlerFactory.botserver.get_config_option("admin_users")
             user_is_admin = admin_users and user_id in admin_users
-
+    
             # Call a specific handler with this command
             handler = HandlerFactory.handlers.get(handler_name)
 
@@ -81,8 +85,8 @@ class HandlerFactory():
                 message = "Unknown handler or command : `{}`".format(message)
                 slack_wrapper.post_message(channel_id, message)
 
-            if usage_msg: # Send usage message
-                send_help_as_dm = botserver.get_config_option("send_help_as_dm") == "1"
+            if usage_msg: # Send usage message 
+                send_help_as_dm = HandlerFactory.botserver.get_config_option("send_help_as_dm") == "1"               
                 target_id = user_id if send_help_as_dm else channel_id
                 slack_wrapper.post_message(target_id, usage_msg)
 
