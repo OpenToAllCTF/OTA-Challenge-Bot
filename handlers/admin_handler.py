@@ -100,6 +100,27 @@ class RemoveAdminCommand(Command):
                 slack_wrapper, channel_id, user_id, response)
 
 
+class AsCommand(Command):
+    """Execute a command as another user."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the As command."""
+        dest_user = args[0].lower()
+        dest_command = args[1].lower()
+
+        dest_arguments = args[2:]
+
+        user_obj = resolve_user_by_user_id(slack_wrapper, dest_user)
+
+        if user_obj['ok']:
+            dest_user_id = user_obj['user']['id']
+            
+            # Redirecting command execution to handler factory
+            HandlerFactory.process_command(slack_wrapper, dest_command, [dest_command] + dest_arguments, channel_id, dest_user_id)
+        else:
+            raise InvalidCommand("You have to specify a valid user (use @-notation).")
+
+
 class AdminHandler(BaseHandler):
     """
     Handles configuration options for administrators.
@@ -129,7 +150,8 @@ class AdminHandler(BaseHandler):
         self.commands = {
             "show_admins": CommandDesc(ShowAdminsCommand, "Show a list of current admin users", None, None, True),
             "add_admin": CommandDesc(AddAdminCommand, "Add a user to the admin user group", ["user_id"], None, True),
-            "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True)
+            "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True),
+            "as" : CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True)
         }
 
 
