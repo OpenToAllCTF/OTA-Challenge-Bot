@@ -16,7 +16,7 @@ class AddCTFCommand(Command):
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute AddCTF command."""
-        name = args[0]
+        name = args[0].lower()
 
         if len(name) > 10:
             raise InvalidCommand(
@@ -58,8 +58,8 @@ class RenameChallengeCommand(Command):
     """Renames an existing challenge channel."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        old_name = args[0]
-        new_name = args[1]
+        old_name = args[0].lower()
+        new_name = args[1].lower()
 
         # Validate that the user is in a CTF channel
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -108,8 +108,8 @@ class RenameCTFCommand(Command):
     """Renames an existing challenge channel."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        old_name = args[0]
-        new_name = args[1]
+        old_name = args[0].lower()
+        new_name = args[1].lower()
 
         ctf = get_ctf_by_name(ChallengeHandler.DB, old_name)
 
@@ -154,7 +154,7 @@ class AddChallengeCommand(Command):
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the AddChallenge command."""
-        name = args[0]
+        name = args[0].lower()
         category = args[1] if len(args) > 1 else None
 
         # Validate that the user is in a CTF channel
@@ -263,7 +263,7 @@ class WorkonCommand(Command):
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the Workon command."""
-        challenge_name = args[0] if args else None
+        challenge_name = args[0].lower() if args else None
 
         # Validate that current channel is a CTF channel
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -311,7 +311,7 @@ class SolveCommand(Command):
         if args:
             # Multiple arguments: Need to check if a challenge was specified or
             # not
-            challenge_name = args[0]
+            challenge_name = args[0].lower()
 
             # Check if we're currently in a challenge channel
             curChallenge = get_challenge_by_channel_id(

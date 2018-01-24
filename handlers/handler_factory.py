@@ -33,8 +33,8 @@ class HandlerFactory():
     def process(slack_wrapper, botserver, message, channel_id, user_id):
         log.debug("Processing message: {} from {} ({})".format(message, channel_id, user_id))
 
-        try:  # Parse command and check for malformed input
-            command_line = unidecode(message.lower())
+        try: # Parse command and check for malformed input
+            command_line = unidecode(message)
             args = shlex.split(command_line)
         except:
             message = "Command failed : Malformed input."
@@ -46,7 +46,7 @@ class HandlerFactory():
     def process_command(slack_wrapper, message, args, channel_id, user_id):
 
         try:
-            handler_name = args[0]
+            handler_name = args[0].lower()
             processed = False
             usage_msg = ""
 
@@ -62,14 +62,14 @@ class HandlerFactory():
                     usage_msg += handler.get_usage(user_is_admin)
                     processed = True
 
-                else:  # Send command to specified handler
-                    command = args[1]
+                else: # Send command to specified handler
+                    command = args[1].lower()
                     if handler.can_handle(command, user_is_admin):
                         handler.process(slack_wrapper, command, args[2:], channel_id, user_id, user_is_admin)
                         processed = True
 
-            else:  # Pass the command to every available handler
-                command = args[0]
+            else: # Pass the command to every available handler
+                command = args[0].lower()
 
                 for handler_name, handler in HandlerFactory.handlers.items():
                     if command == "help":  # Setup usage message
