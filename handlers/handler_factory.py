@@ -33,18 +33,18 @@ class HandlerFactory():
     def process(slack_wrapper, botserver, message, channel_id, user_id):
         log.debug("Processing message: {} from {} ({})".format(message, channel_id, user_id))
 
-        try: # Parse command and check for malformed input
+        try:  # Parse command and check for malformed input
             command_line = unidecode(message.lower())
             args = shlex.split(command_line)
         except:
             message = "Command failed : Malformed input."
             slack_wrapper.post_message(channel_id, message)
             return
-            
+
         HandlerFactory.process_command(slack_wrapper, message, args, channel_id, user_id)
 
     def process_command(slack_wrapper, message, args, channel_id, user_id):
-        
+
         try:
             handler_name = args[0]
             processed = False
@@ -52,7 +52,7 @@ class HandlerFactory():
 
             admin_users = HandlerFactory.botserver.get_config_option("admin_users")
             user_is_admin = admin_users and user_id in admin_users
-    
+
             # Call a specific handler with this command
             handler = HandlerFactory.handlers.get(handler_name)
 
@@ -62,31 +62,31 @@ class HandlerFactory():
                     usage_msg += handler.get_usage(user_is_admin)
                     processed = True
 
-                else: # Send command to specified handler
+                else:  # Send command to specified handler
                     command = args[1]
                     if handler.can_handle(command, user_is_admin):
                         handler.process(slack_wrapper, command, args[2:], channel_id, user_id, user_is_admin)
                         processed = True
 
-            else: # Pass the command to every available handler
+            else:  # Pass the command to every available handler
                 command = args[0]
 
                 for handler_name, handler in HandlerFactory.handlers.items():
-                    if command == "help": # Setup usage message
+                    if command == "help":  # Setup usage message
                         usage_msg += "{}\n".format(handler.get_usage(user_is_admin))
                         processed = True
 
-                    elif handler.can_handle(command, user_is_admin): # Send command to handler
+                    elif handler.can_handle(command, user_is_admin):  # Send command to handler
                         handler.process(slack_wrapper, command,
                                         args[1:], channel_id, user_id, user_is_admin)
                         processed = True
 
-            if not processed: # Send error message
+            if not processed:  # Send error message
                 message = "Unknown handler or command : `{}`".format(message)
                 slack_wrapper.post_message(channel_id, message)
 
-            if usage_msg: # Send usage message 
-                send_help_as_dm = HandlerFactory.botserver.get_config_option("send_help_as_dm") == "1"               
+            if usage_msg:  # Send usage message
+                send_help_as_dm = HandlerFactory.botserver.get_config_option("send_help_as_dm") == "1"
                 target_id = user_id if send_help_as_dm else channel_id
                 slack_wrapper.post_message(target_id, usage_msg)
 
