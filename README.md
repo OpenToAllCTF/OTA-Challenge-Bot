@@ -36,6 +36,7 @@ Secondary features :
 !admin show_admins    (Show a list of current admin users)
 !admin add_admin <user_id>    (Add an user to the admin user group)
 !admin remove_admin <user_id>    (Remove an user from the admin user group)
+!admin as <@user> <command>    (Execute a command as another user)
 ```
 
 ## Installation
