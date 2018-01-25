@@ -22,7 +22,7 @@ class BaseHandler(ABC):
 
     def parse_command_usage(self, command, descriptor):
         """Returns a usage string from a given command and descriptor."""
-        msg = "`"+command
+        msg = "`!{} {}".format(self.handler_name, command)
         
         if descriptor.arguments:
             for arg in descriptor.arguments:
@@ -42,7 +42,7 @@ class BaseHandler(ABC):
     def command_usage(self, command, descriptor):
         """Return the usage of a given command of a handler."""
         usage = self.parse_command_usage(command, descriptor)
-        return "Usage: `!{}` {}".format(self.handler_name, usage)
+        return "Usage: {}".format(usage)
 
     def get_usage(self, user_is_admin):
         """Return the usage of a handler."""
@@ -53,7 +53,7 @@ class BaseHandler(ABC):
 
             if (not descriptor.is_admin_cmd) or user_is_admin:
                 usage = self.parse_command_usage(command, descriptor)
-                msg += "`!{}` {}\n".format(self.handler_name, usage)
+                msg += "{}\n".format(usage)
 
         # Return empty message, if no applicable commands were found
         if msg == "``````":
