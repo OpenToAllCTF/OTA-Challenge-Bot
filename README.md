@@ -30,7 +30,8 @@ Secondary features :
 !syscalls show <arch> <syscall name/syscall id>
 ```
 ```
-!bot ping
+!bot ping (Ping the bot)
+!bot intro (Show an introduction message for new members)
 ```
 ```
 !admin show_admins    (Show a list of current admin users)
@@ -48,8 +49,9 @@ Secondary features :
 2. Fill the API token and bot name in the config.json file.
 3. Add your user id (slack id, not the username) to `admin_users` group in `config.json`
 4. If you want to use the wolfram alpha api, register a valid app id on http://products.wolframalpha.com/api/ and set `wolfram_app_id` in `config.json`
-5. `docker build -t ota-challenge-bot .`
-6. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
+5. Copy `intro_msg.template` to `intro_msg` and set a proper introduction message, which can be shown with `!intro`
+6. `docker build -t ota-challenge-bot .`
+7. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
 
 ## Development
 
