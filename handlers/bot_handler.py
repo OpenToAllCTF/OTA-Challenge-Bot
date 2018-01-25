@@ -27,7 +27,7 @@ class IntroCommand(Command):
             with open("intro_msg") as f:
                 message = f.read()
 
-                slack_wrapper.post_message(channel_id, message)
+            slack_wrapper.post_message(channel_id, message)
         except:
             message = "Sorry, I forgot what I wanted to say (or the admins forgot to give me an intro message :wink:)"
 
