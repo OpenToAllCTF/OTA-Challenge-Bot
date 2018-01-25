@@ -22,18 +22,22 @@ class QuestionCommand(Command):
                 question = " ".join(args)
                 client = wolframalpha.Client(app_id)
                 res = client.query(question)
-                answer = next(res.results)
+
+                answer = next(res.results, None)
 
                 if answer:
                     response = answer.text
 
                     WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
                 else:
-                    response = "Wolfram Alpha doesn't seem to understand you. What a pity :("
+                    response = "Wolfram Alpha doesn't seem to know the answer for this :("
 
-                    WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
-            except:
-                response = "Wolfram Alpha doesn't seem to understand you :("
+                    WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)                
+            except Exception as ex:
+                if "Invalid appid" in str(ex):
+                    response = "Wolfram Alpha app id doesn't seem to be correct (or api is choking)..."
+                else:
+                    response = "Wolfram Alpha doesn't seem to understand you :("
 
                 WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
         else:
