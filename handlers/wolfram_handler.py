@@ -10,8 +10,8 @@ import wolframalpha
 import re
 
 
-class QuestionCommand(Command):
-    """Asks wolfram alpha a question and shows the anser."""
+class AskCommand(Command):
+    """Asks wolfram alpha a question and shows the answer."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the Qeuestion command."""
@@ -62,7 +62,7 @@ class WolframHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "ask": CommandDesc(QuestionCommand, "Ask wolfram alpha a question", ["question"], None, False),
+            "ask": CommandDesc(AskCommand, "Ask wolfram alpha a question", ["question"], None, False),
         }
 
 
