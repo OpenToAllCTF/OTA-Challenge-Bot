@@ -14,7 +14,7 @@ class QuestionCommand(Command):
     """Asks wolfram alpha a question and shows the anser."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute the QeuestionAdmins command."""
+        """Execute the Qeuestion command."""
         app_id = HandlerFactory.botserver.get_config_option("wolfram_app_id")
 
         if app_id:
