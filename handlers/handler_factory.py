@@ -13,7 +13,7 @@ class HandlerFactory():
     """
     handlers = {}
     botserver = None
-    
+
     def register(handler_name, handler):
         log.info("Registering new handler: {} ({})".format(handler_name, handler.__class__.__name__))
 
@@ -35,11 +35,11 @@ class HandlerFactory():
 
         try: # Parse command and check for malformed input
             command_line = unidecode(message)
-                        
+
             lexer = shlex.shlex(command_line)
             lexer.quotes = '"'
             lexer.whitespace_split = True
-            
+
             args = list(lexer)
         except:
             message = "Command failed : Malformed input."
