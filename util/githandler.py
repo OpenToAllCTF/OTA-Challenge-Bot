@@ -8,6 +8,7 @@ from util.loghandler import *
 git_config = None
 git_support = False
 
+
 def upload_post(data, post_name, post_directory, commit_message):
     if not git_support:
         raise Exception("Upload post failed: Git support is deactivated...")
@@ -61,10 +62,10 @@ def __init_git_config():
     try:
         with open("./config_git.json") as f:
             git_config = json.load(f)
-        
-        git_support=True
+
+        git_support = True
     except:
-        git_support=False        
+        git_support = False
 
 
 __init_git_config()

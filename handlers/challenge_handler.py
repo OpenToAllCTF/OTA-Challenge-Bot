@@ -39,6 +39,7 @@ class PostSolvesCommand(Command):
         except Exception as ex:
             raise InvalidCommand(str(ex))
 
+
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
 
@@ -589,7 +590,7 @@ class ChallengeHandler(BaseHandler):
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
-            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title", "filename"], None, True)            
+            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title", "filename"], None, True)
         }
 
     @staticmethod

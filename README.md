@@ -61,14 +61,13 @@ Secondary features :
 2. Configure the git account, the local repo and the remote path, which should be used to access your git repository
 
 Example:
-
-{
+```{
     "git_repopath" : "/home/ota_bot/OTA_Upload",
     "git_repouser" : "otabot",
     "git_repopass" : "password",
     "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
     "git_branch" : "master"
-}
+}```
 
 3. Update the templates in `templates` according to your preferences (or go with the default ones)
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
