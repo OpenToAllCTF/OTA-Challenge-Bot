@@ -24,6 +24,7 @@ Secondary features :
 !ctf solve <challenge_name> [support_member]
 !ctf addcreds <ctf_user> <ctf_pw> (Add credentials for ctf)
 !ctf showcreds (Shows credentials for current ctf)
+!ctf postsolves <title> <filename_postfix> (Post current solve status to git)
 ```
 ```
 !syscalls available
@@ -52,6 +53,26 @@ Secondary features :
 5. Copy `intro_msg.template` to `intro_msg` and set a proper introduction message, which can be shown with `!intro`
 6. `docker build -t ota-challenge-bot .`
 7. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
+
+
+## Using git support for uploading solve updates
+
+1. Copy `config_git.json` to `config_git`
+2. Configure the git account, the local repo and the remote path, which should be used to access your git repository
+
+Example:
+
+{
+    "git_repopath" : "/home/ota_bot/OTA_Upload",
+    "git_repouser" : "otabot",
+    "git_repopass" : "password",
+    "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
+    "git_branch" : "master"
+}
+
+3. Update the templates in `templates` according to your preferences (or go with the default ones)
+4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
+
 
 ## Development
 
