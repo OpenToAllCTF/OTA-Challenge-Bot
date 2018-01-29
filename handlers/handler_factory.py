@@ -35,7 +35,12 @@ class HandlerFactory():
 
         try: # Parse command and check for malformed input
             command_line = unidecode(message)
-            args = shlex.split(command_line)
+
+            lexer = shlex.shlex(command_line)
+            lexer.quotes = '"'
+            lexer.whitespace_split = True
+
+            args = list(lexer)
         except:
             message = "Command failed : Malformed input."
             slack_wrapper.post_message(channel_id, message)
