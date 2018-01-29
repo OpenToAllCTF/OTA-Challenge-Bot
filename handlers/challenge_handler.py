@@ -13,6 +13,12 @@ from util.githandler import *
 from util.ctf_template_resolver import *
 
 
+def is_valid_name(name):
+    if re.match(r"^[\w\-_]+$", name):
+        return True
+    return False
+
+
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
 
@@ -25,6 +31,10 @@ class AddCTFCommand(Command):
         if len(name) > 10:
             raise InvalidCommand(
                 "Command failed. CTF name must be <= 10 characters.")
+
+        # Check for invalid characters
+        if not is_valid_name(name):
+            raise InvalidCommand("Command failed. Invalid characters for CTF name found.")
 
         # Create the channel
         response = slack_wrapper.create_channel(name)
@@ -79,6 +89,10 @@ class RenameChallengeCommand(Command):
             raise InvalidCommand(
                 "Command failed. Challenge name must be <= 10 characters.")
 
+        # Check for invalid characters
+        if not is_valid_name(new_name):
+            raise InvalidCommand("Command failed. Invalid characters for challenge name found.")
+
         old_channel_name = "{}-{}".format(ctf.name, old_name)
         new_channel_name = "{}-{}".format(ctf.name, new_name)
 
@@ -129,6 +143,10 @@ class RenameCTFCommand(Command):
             raise InvalidCommand(
                 "Command failed. CTF name must be <= 10 characters.")
 
+        # Check for invalid characters
+        if not is_valid_name(new_name):
+            raise InvalidCommand("Command failed. Invalid characters for CTF name found.")
+
         text = "Renaming the CTF might take some time depending on active channels..."
         slack_wrapper.post_message(ctf.channel_id, text)
 
@@ -176,6 +194,10 @@ class AddChallengeCommand(Command):
         if len(name) > 10:
             raise InvalidCommand(
                 "Command failed. Challenge name must be <= 10 characters.")
+
+        # Check for invalid characters
+        if not is_valid_name(name):
+            raise InvalidCommand("Command failed. Invalid characters for challenge name found.")
 
         # Create the challenge channel
         channel_name = "{}-{}".format(ctf.name, name)
