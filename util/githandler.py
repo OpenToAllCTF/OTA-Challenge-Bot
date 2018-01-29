@@ -8,13 +8,13 @@ from util.loghandler import *
 git_config = None
 git_support = False
 
-def upload_post(data, postname, commit_message):
+def upload_post(data, post_name, post_directory, commit_message):
     if not git_support:
         raise Exception("Upload post failed: Git support is deactivated...")
 
     now = datetime.datetime.now()
 
-    post_filename = "_posts/{}-{}-{}-{}.md".format(now.year, now.month, now.day, postname)
+    post_filename = "{}/{}-{}-{}-{}.md".format(post_directory, now.year, now.month, now.day, post_name)
 
     try:
         repo_path = git_config["git_repopath"]

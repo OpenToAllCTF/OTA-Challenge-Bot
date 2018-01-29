@@ -35,8 +35,8 @@ class HandlerFactory():
 
         try: # Parse command and check for malformed input
             command_line = unidecode(message)
-
-            lexer = shlex.shlex(command_line)
+            
+            lexer = shlex.shlex(command_line, posix=True)
             lexer.quotes = '"'
             lexer.whitespace_split = True
 

@@ -19,10 +19,10 @@ def resolve_ctf_template(ctf, title, template_file, solves_template_file):
         chall_value = chall_value.replace("{name}", challenge.name)
         chall_value = chall_value.replace("{solver}", ", ".join(challenge.solver))
         chall_value = chall_value.replace("{solve_date}", time.ctime(challenge.solve_date))
-        chall_value = chall_value.replace("{category}", challenge.category)
+        chall_value = chall_value.replace("{category}", challenge.category if challenge.category else "")
 
-        chall_value = chall_value.replace("{name_with_category}", "{} {}".format(
-            challenge.name, "({})".format(challenge.category) if challenge.category else ""))
+        chall_value = chall_value.replace("{name_with_category}", "{}{}".format(
+            challenge.name, " ({})".format(challenge.category) if challenge.category else ""))
 
         challenge_data.append(chall_value)
 

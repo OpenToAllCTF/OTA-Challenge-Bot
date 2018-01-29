@@ -30,8 +30,14 @@ class PostSolvesCommand(Command):
 
         data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
 
-        githandler.upload_post(data, postname, "Solve post from {}".format(ctf.name))
+        try:
+            # TODO: Get posts directory from configuration
+            githandler.upload_post(data, postname, "_posts", "Solve post from {}".format(ctf.name))
 
+            message = "Post was successfully uploaded..."
+            slack_wrapper.post_message(channel_id, message)
+        except Exception as ex:
+            raise InvalidCommand(str(ex))
 
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
