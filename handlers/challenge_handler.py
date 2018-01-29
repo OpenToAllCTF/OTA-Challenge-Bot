@@ -9,6 +9,28 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from util.util import *
 from util.slack_wrapper import *
+from util import githandler
+from util.ctf_template_resolver import *
+
+
+class PostSolvesCommand(Command):
+    """Posts the current state of solves to the configured git branch."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute PostSolves command."""
+        title = args[0]
+        postname = args[1]
+
+        # Validate that the user is in a CTF channel
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
+
+        githandler.upload_post(data, postname, "Solve post from {}".format(ctf.name))
 
 
 class AddCTFCommand(Command):
@@ -556,10 +578,11 @@ class ChallengeHandler(BaseHandler):
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
-            "reload" : CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
+            "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
-            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
+            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title", "filename"], None, True)            
         }
 
     @staticmethod

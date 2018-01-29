@@ -1,0 +1,12 @@
+---
+layout: post
+title: {title}
+---
+
+*{title}*
+
+Solves from {name}
+
+{challenges}
+
+Archived on {date_now}
