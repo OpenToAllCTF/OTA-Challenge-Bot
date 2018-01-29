@@ -253,8 +253,8 @@ class StatusCommand(Command):
             response += "* > Solved*\n" if solved else "\n"
             for challenge in solved:
                 players = []
-                response += ":tada: *{}* (Solved by : {})\n".format(
-                    challenge.name, transliterate(", ".join(challenge.solver)))
+                response += ":tada: *{}*{} (Solved by : {})\n".format(
+                    challenge.name, " ({})".format(challenge.category) if challenge.category else "", transliterate(", ".join(challenge.solver)))
 
             # Unsolved challenges
             response += "* > Unsolved*\n" if unsolved else "\n"
@@ -404,6 +404,7 @@ class SolveCommand(Command):
                         purpose['ctf_id'] = ctf.channel_id
                         purpose['solved'] = solver_list
                         purpose['solve_date'] = chal.solve_date
+                        purpose['category'] = chal.category
 
                         purpose = json.dumps(purpose)
                         slack_wrapper.set_purpose(
