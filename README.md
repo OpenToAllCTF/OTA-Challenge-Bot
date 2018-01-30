@@ -57,8 +57,8 @@ Secondary features :
 
 ## Using git support for uploading solve updates
 
-1. Copy `config_git.json` to `config_git`
-2. Configure the git account, the local repo and the remote path, which should be used to access your git repository
+1. Copy `config_git.json` to `config_git`.
+2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
 
 Example:
 ```{
@@ -69,7 +69,8 @@ Example:
     "git_branch" : "master"
 }```
 
-3. Update the templates in `templates` according to your preferences (or go with the default ones)
+3. Update the templates in `templates` according to your preferences (or go with the default ones).
+4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
 
 

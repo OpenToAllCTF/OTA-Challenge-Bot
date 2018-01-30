@@ -1,5 +1,6 @@
 import pickle
 import re
+import datetime
 
 from bottypes.ctf import *
 from bottypes.challenge import *
@@ -10,6 +11,7 @@ from handlers.base_handler import *
 from util.util import *
 from util.slack_wrapper import *
 from util import githandler
+from util.githandler import *
 from util.ctf_template_resolver import *
 
 
@@ -28,12 +30,23 @@ class PostSolvesCommand(Command):
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
 
-        data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
+        now = datetime.datetime.now()
+
+        post_data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
+        post_filename = "_posts/{}-{}-{}-{}.md".format(now.year, now.month, now.day, postname)
+
+        stat_data = resolve_stats_template(ctf)
+        stat_filename = "_stats/{}.json".format(postname)
 
         try:
-            # TODO: Get posts directory from configuration
-            githandler.upload_post(data, postname, "_posts", "Solve post from {}".format(ctf.name))
+            checkin = GitCheckin()
 
+            checkin.add_file(post_data, post_filename)
+            checkin.add_file(stat_data, stat_filename)
+
+            checkin.commit("Solve post from {}".format(ctf.name))
+            checkin.push()
+            
             message = "Post was successfully uploaded..."
             slack_wrapper.post_message(channel_id, message)
         except Exception as ex:

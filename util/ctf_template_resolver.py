@@ -1,10 +1,7 @@
 import time
-
+import json
 
 def resolve_ctf_template(ctf, title, template_file, solves_template_file):
-    ctf_template_data = None
-    solve_template_data = None
-
     with open(template_file, "r") as f:
         template_data = f.read()
 
@@ -32,3 +29,21 @@ def resolve_ctf_template(ctf, title, template_file, solves_template_file):
     template_data = template_data.replace("{challenges}", "".join(challenge_data))
 
     return template_data
+
+def resolve_stats_template(ctf):
+    stats = {}
+
+    stats["ctfname"] = ctf.name
+    stats["challenges"] = []
+
+    for challenge_obj in filter(lambda c: c.is_solved, ctf.challenges):
+        challenge = {}
+
+        challenge["name"] = challenge_obj.name
+        challenge["solver"] = challenge_obj.solver
+        challenge["solve_date"] = challenge_obj.solve_date
+        challenge["category"] = challenge_obj.category
+
+        stats["challenges"].append(challenge)
+
+    return json.dumps(stats)
