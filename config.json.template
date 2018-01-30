@@ -3,5 +3,5 @@
   "bot_name" : "",
   "send_help_as_dm" : "1",
   "admin_users" : [],
-  "wolfram_app_id" : "" 
+  "wolfram_app_id" : ""
 }
