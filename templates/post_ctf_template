@@ -3,8 +3,6 @@ layout: post
 title: {title}
 ---
 
-Solves from *{name}*
-
 {challenges}
 
-Uploaded on {date_now}
+Updated on {date_now}
