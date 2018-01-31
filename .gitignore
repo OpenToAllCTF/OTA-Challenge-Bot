@@ -1,5 +1,6 @@
 *.pyc
 config.json
+config_git.json
 *.bin
 *.log
 .venv

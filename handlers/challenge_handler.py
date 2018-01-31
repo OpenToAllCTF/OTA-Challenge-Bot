@@ -1,5 +1,6 @@
 import pickle
 import re
+import datetime
 
 from bottypes.ctf import *
 from bottypes.challenge import *
@@ -9,6 +10,46 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from util.util import *
 from util.slack_wrapper import *
+from util import githandler
+from util.githandler import *
+from util.ctf_template_resolver import *
+
+
+class PostSolvesCommand(Command):
+    """Posts the current state of solves to the configured git branch."""
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute PostSolves command."""
+        title = args[0]
+
+        # Validate that the user is in a CTF channel
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not ctf:
+            raise InvalidCommand(
+                "Command failed. You are not in a CTF channel.")
+
+        now = datetime.datetime.now()
+
+        post_data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
+        post_filename = "_posts/{}-{}-{}-{}.md".format(now.year, now.month, now.day, ctf.name)
+
+        stat_data = resolve_stats_template(ctf)
+        stat_filename = "_stats/{}.json".format(ctf.name)
+
+        try:
+            checkin = GitCheckin()
+
+            checkin.add_file(post_data, post_filename)
+            checkin.add_file(stat_data, stat_filename)
+
+            checkin.commit("Solve post from {}".format(ctf.name))
+            checkin.push()
+            
+            message = "Post was successfully uploaded..."
+            slack_wrapper.post_message(channel_id, message)
+        except Exception as ex:
+            raise InvalidCommand(str(ex))
 
 
 class AddCTFCommand(Command):
@@ -550,17 +591,18 @@ class ChallengeHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf",    ["ctf_name"], None),
-            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
+            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name"], None),
+            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
-            "reload" : CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
+            "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
-            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
+            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title"], None, True)
         }
 
     @staticmethod
