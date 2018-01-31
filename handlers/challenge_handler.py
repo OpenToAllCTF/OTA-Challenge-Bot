@@ -21,7 +21,6 @@ class PostSolvesCommand(Command):
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute PostSolves command."""
         title = args[0]
-        postname = args[1]
 
         # Validate that the user is in a CTF channel
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -33,10 +32,10 @@ class PostSolvesCommand(Command):
         now = datetime.datetime.now()
 
         post_data = resolve_ctf_template(ctf, title, "./templates/post_ctf_template", "./templates/post_challenge_template")
-        post_filename = "_posts/{}-{}-{}-{}.md".format(now.year, now.month, now.day, postname)
+        post_filename = "_posts/{}-{}-{}-{}.md".format(now.year, now.month, now.day, ctf.name)
 
         stat_data = resolve_stats_template(ctf)
-        stat_filename = "_stats/{}.json".format(postname)
+        stat_filename = "_stats/{}.json".format(ctf.name)
 
         try:
             checkin = GitCheckin()
@@ -592,8 +591,8 @@ class ChallengeHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf",    ["ctf_name"], None),
-            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
+            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name"], None),
+            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
@@ -603,7 +602,7 @@ class ChallengeHandler(BaseHandler):
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
-            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title", "filename"], None, True)
+            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title"], None, True)
         }
 
     @staticmethod
