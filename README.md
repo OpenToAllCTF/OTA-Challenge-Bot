@@ -16,54 +16,34 @@ Secondary features :
 
 ## Usage
 
-`!ctf addctf <ctf_name>`
-    (Adds a new ctf)
-`!ctf addchallenge <challenge_name> <challenge_category>`
-    (Adds a new challenge for current ctf)
-`!ctf workon [challenge_name]`
-    (Show that you're working on a challenge)
-`!ctf status`
-    (Show the status for all ongoing ctf's)
-`!ctf solve [challenge_name] [support_member]`
-    (Mark a challenge as solved)
-`!ctf renamechallenge <old_challenge_name> <new_challenge_name>`
-    (Renames a challenge)
-`!ctf renamectf <old_ctf_name> <new_ctf_name>`
-    (Renames a ctf)
-`!ctf reload`
-    (Reload ctf information from slack)
-`!ctf archivectf`
-    (Archive the challenges of a ctf)
-`!ctf addcreds <ctf_user> <ctf_pw> [ctf_url]`
-    (Add credentials for current ctf)
-`!ctf showcreds`
-    (Show credentials for current ctf)
-`!ctf postsolves <title>`
-    (Post current solve status to git)
+```
+!ctf addctf <ctf_name>                                          (Adds a new ctf)
+!ctf addchallenge <challenge_name> <challenge_category>         (Adds a new challenge for current ctf)
+!ctf workon [challenge_name]                                    (Show that you're working on a challenge)
+!ctf status                                                     (Show the status for all ongoing ctf's)
+!ctf solve [challenge_name] [support_member]                    (Mark a challenge as solved)
+!ctf renamechallenge <old_challenge_name> <new_challenge_name>  (Renames a challenge)
+!ctf renamectf <old_ctf_name> <new_ctf_name>                    (Renames a ctf)
+!ctf reload                                                     (Reload ctf information from slack)
+!ctf archivectf                                                 (Archive the challenges of a ctf)
+!ctf addcreds <ctf_user> <ctf_pw> [ctf_url]                     (Add credentials for current ctf)
+!ctf showcreds                                                  (Show credentials for current ctf)
+!ctf postsolves <title>                                         (Post current solve status to git)
 
-`!syscalls available`
-    (Shows the available syscall architectures)
-`!syscalls show <arch> <syscall name/syscall id>`
-    (Show information for a specific syscall)
+!syscalls available                                             (Shows the available syscall architectures)
+!syscalls show <arch> <syscall name/syscall id>                 (Show information for a specific syscall)
 
-`!bot ping`
-    (Ping the bot)
-`!bot intro`
-    (Show an introduction message for new members)
-`!bot version`
-    (Show git information about the running version of the bot)
+!bot ping                                                       (Ping the bot)
+!bot intro                                                      (Show an introduction message for new members)
+!bot version                                                    (Show git information about the running version of the bot)
 
-`!admin show_admins`
-    (Show a list of current admin users)
-`!admin add_admin <user_id>`
-    (Add a user to the admin user group)
-`!admin remove_admin <user_id>`
-    (Remove a user from the admin user group)
-`!admin as <@user> <command>`
-    (Execute a command as another user)
+!admin show_admins                                              (Show a list of current admin users)
+!admin add_admin <user_id>                                      (Add a user to the admin user group)
+!admin remove_admin <user_id>                                   (Remove a user from the admin user group)
+!admin as <@user> <command>                                     (Execute a command as another user)
 
-`!wolfram ask <question>`
-    (Ask wolfram alpha a question)
+!wolfram ask <question>                                         (Ask wolfram alpha a question)
+```
 
 ## Installation
 
