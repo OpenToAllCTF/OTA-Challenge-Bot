@@ -57,7 +57,7 @@ Secondary features :
 
 ## Using git support for uploading solve updates
 
-1. Copy `config_git.json` to `config_git`.
+1. Copy `config_solvetracker.json.template` to `config_solvetracker.json`.
 2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
 
 Example:
