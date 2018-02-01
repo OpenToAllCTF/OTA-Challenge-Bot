@@ -1,7 +1,10 @@
+"""Module for resolving ctf data to SolveTracker templates."""
 import time
 import json
 
+
 def resolve_ctf_template(ctf, title, template_file, solves_template_file):
+    """Resolves the placeholder in the ctf template with the specified ctf data."""
     with open(template_file, "r") as f:
         template_data = f.read()
 
@@ -30,7 +33,9 @@ def resolve_ctf_template(ctf, title, template_file, solves_template_file):
 
     return template_data
 
+
 def resolve_stats_template(ctf):
+    """Resolves the statistic json with the data from the specified ctf data."""
     stats = {}
 
     stats["ctfname"] = ctf.name
