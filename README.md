@@ -56,6 +56,15 @@ Secondary features :
 7. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
 
 
+## Development
+
+1. Copy `config.json.template` to `config.json`
+2. Fill the API token and bot name in the config.json file.
+3. Create a virtual env: `python3 -m venv .venv`
+4. Enter the virtual env: `source .venv/bin/activate`
+5. Install requirements: `pip install -r requirements.txt`
+
+
 ## Using git support for uploading solve updates
 
 1. Copy `config_solvetracker.json.template` to `config_solvetracker.json`.
@@ -75,12 +84,3 @@ Example:
 3. Update the templates in `templates` according to your preferences (or go with the default ones).
 4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
-
-
-## Development
-
-1. Copy `config.json.template` to `config.json`
-2. Fill the API token and bot name in the config.json file.
-3. Create a virtual env: `python3 -m venv .venv`
-4. Enter the virtual env: `source .venv/bin/activate`
-5. Install requirements: `pip install -r requirements.txt`
