@@ -18,31 +18,32 @@ Secondary features :
 ## Usage
 
 ```
-!ctf addctf <ctf_name>
-!ctf addchallenge <challenge_name>
-!ctf workon <challenge_name>
-!ctf status
-!ctf solve <challenge_name> [support_member]
-!ctf addcreds <ctf_user> <ctf_pw> (Add credentials for ctf)
-!ctf showcreds (Shows credentials for current ctf)
-!ctf postsolves <title> <filename_postfix> (Post current solve status to git)
-```
-```
-!syscalls available
-!syscalls show <arch> <syscall name/syscall id>
-```
-```
-!bot ping (Ping the bot)
-!bot intro (Show an introduction message for new members)
-```
-```
-!admin show_admins    (Show a list of current admin users)
-!admin add_admin <user_id>    (Add an user to the admin user group)
-!admin remove_admin <user_id>    (Remove an user from the admin user group)
-!admin as <@user> <command>    (Execute a command as another user)
-```
-```
-!wolfram ask [question] (Ask wolfram alpha a question)
+!ctf addctf <ctf_name>                                          (Adds a new ctf)
+!ctf addchallenge <challenge_name> <challenge_category>         (Adds a new challenge for current ctf)
+!ctf workon [challenge_name]                                    (Show that you're working on a challenge)
+!ctf status                                                     (Show the status for all ongoing ctf's)
+!ctf solve [challenge_name] [support_member]                    (Mark a challenge as solved)
+!ctf renamechallenge <old_challenge_name> <new_challenge_name>  (Renames a challenge)
+!ctf renamectf <old_ctf_name> <new_ctf_name>                    (Renames a ctf)
+!ctf reload                                                     (Reload ctf information from slack)
+!ctf archivectf                                                 (Archive the challenges of a ctf)
+!ctf addcreds <ctf_user> <ctf_pw> [ctf_url]                     (Add credentials for current ctf)
+!ctf showcreds                                                  (Show credentials for current ctf)
+!ctf postsolves <title>                                         (Post current solve status to git)
+
+!syscalls available                                             (Shows the available syscall architectures)
+!syscalls show <arch> <syscall name/syscall id>                 (Show information for a specific syscall)
+
+!bot ping                                                       (Ping the bot)
+!bot intro                                                      (Show an introduction message for new members)
+!bot version                                                    (Show git information about the running version of the bot)
+
+!admin show_admins                                              (Show a list of current admin users)
+!admin add_admin <user_id>                                      (Add a user to the admin user group)
+!admin remove_admin <user_id>                                   (Remove a user from the admin user group)
+!admin as <@user> <command>                                     (Execute a command as another user)
+
+!wolfram ask <question>                                         (Ask wolfram alpha a question)
 ```
 ```
 !irc addserver <server_name> <irc_server> [irc_nick] [irc_port]    (Register an IRC server to the known server list)
@@ -112,13 +113,15 @@ or a complete irc server can be stopped (which will also leave all irc channels)
 2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
 
 Example:
-```{
+```
+{
     "git_repopath" : "/home/ota_bot/OTA_Upload",
     "git_repouser" : "otabot",
     "git_repopass" : "password",
     "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
     "git_branch" : "master"
-}```
+}
+```
 
 3. Update the templates in `templates` according to your preferences (or go with the default ones).
 4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
