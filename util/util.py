@@ -203,7 +203,7 @@ def try_parse_int(s, default_value=-1):
     Try to parse the specified string into an integer.
 
     Returns:
-        value : The integer, if the string could be parsed successfully. 
+        value : The integer, if the string could be parsed successfully.
                 The specified default_value otherwise
         success : True, if the intger could be parsed successfully
     """
