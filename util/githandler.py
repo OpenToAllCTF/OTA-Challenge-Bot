@@ -1,6 +1,9 @@
 """GitHandler module - Provides GitHandler with shortcuts for handling git repository access."""
 import os
 import dulwich
+import re
+
+from io import StringIO
 
 from dulwich import porcelain
 from util.loghandler import log
@@ -57,3 +60,20 @@ class GitHandler():
         except Exception:
             log.exception("GitHandler::push()")
             raise InvalidCommand("Upload file failed: Unknown - Please check your log files...")
+
+    def get_version(self):
+        last_log = StringIO()
+
+        # Get current branch
+        current_branch = self.repo.refs.follow(b"HEAD")[0][1].decode().split("/")[-1]
+
+        # Get last commit
+        porcelain.log(self.repo, outstream=last_log, max_entries=1)
+
+        commit_match = re.search('commit: (.+?)\n', last_log.getvalue())
+        commit = commit_match.group(1) if commit_match else ""
+
+        commit_match = re.search("\n\n(.+?)\Z", last_log.getvalue(), flags=re.DOTALL)
+        commit_info = commit_match.group(1).strip() if commit_match else ""
+
+        return "I'm running commit `{}` of branch `{}`\n\n```{}```".format(commit, current_branch, commit_info)
