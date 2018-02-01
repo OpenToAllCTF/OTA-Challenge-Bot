@@ -56,44 +56,6 @@ Secondary features :
 !irc ircstatus                                                  (Shows a list of currently registered irc bridges)
 ```
 
-## Usage for irc bridges
-
-The irc handler supports bridges for multiple irc servers and channels. When an irc bridge is started, it will read
-from the irc channel and post the messages to the slack channel, in which it was created.
-
-1. Edit irc_config.json to change the behaviour of the irc bridges
-
-use_message_queue : Enable message queuing for pushing messages to slack to avoid hitting the slack api rate limit.
-message_queue_interval : Interval, in which messages from the queue will be posted to the slack server
-irc_process_interval : Update interval, in which irc messages will be read
-
-2. Register irc servers and bridges
-
-Before a bridge can be used, the corresponding server must be registered and the bridge must be added to that server.
-
-!addserver freenode irc.freenode.org
-!addirc freenode ctfbridge ctfchannel
-
-The bot will remember the servers and bridges until you remove them explicitly.
-
-!rmirc freenode ctfbridge
-!rmserver freenode
-
-To activate an irc bridge, the server must be connected first.
-
-!startserver freenode
-!startirc freenode ctfbridge (start when server finished connecting.)
-
-After this, the bridge will update the slack channel whenever new messages from irc arrives (and the message queue got
-triggered).
-
-If the irc channel gets to spammy, every bridge can be disconnected separately.
-
-!stopirc freenode ctfbridge
-
-or a complete irc server can be stopped (which will also leave all irc channels)
-
-!stopserver freenode
 
 ## Installation
 
@@ -104,6 +66,15 @@ or a complete irc server can be stopped (which will also leave all irc channels)
 5. Copy `intro_msg.template` to `intro_msg` and set a proper introduction message, which can be shown with `!intro`
 6. `docker build -t ota-challenge-bot .`
 7. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
+
+
+## Development
+
+1. Copy `config.json.template` to `config.json`
+2. Fill the API token and bot name in the config.json file.
+3. Create a virtual env: `python3 -m venv .venv`
+4. Enter the virtual env: `source .venv/bin/activate`
+5. Install requirements: `pip install -r requirements.txt`
 
 
 ## Using git support for uploading solve updates
@@ -127,11 +98,51 @@ Example:
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
 
 
+## Usage for irc bridges
 
-## Development
+The irc handler supports bridges for multiple irc servers and channels. When an irc bridge is started, it will read
+from the irc channel and post the messages to the slack channel, in which it was created.
 
-1. Copy `config.json.template` to `config.json`
-2. Fill the API token and bot name in the config.json file.
-3. Create a virtual env: `python3 -m venv .venv`
-4. Enter the virtual env: `source .venv/bin/activate`
-5. Install requirements: `pip install -r requirements.txt`
+1. Edit irc_config.json to change the behaviour of the irc bridges
+
+`use_message_queue      `: Enable message queuing for pushing messages to slack to avoid hitting the slack api rate limit.
+`message_queue_interval `: Interval, in which messages from the queue will be posted to the slack server
+`irc_process_interval   `: Update interval, in which irc messages will be read
+
+2. Register irc servers and bridges
+
+Before a bridge can be used, the corresponding server must be registered and the bridge must be added to that server.
+
+```
+!addserver freenode irc.freenode.org
+!addirc freenode ctfbridge ctfchannel
+```
+
+The bot will remember the servers and bridges until you remove them explicitly.
+
+```
+!rmirc freenode ctfbridge
+!rmserver freenode
+```
+
+To activate an irc bridge, the server must be connected first.
+
+```
+!startserver freenode
+!startirc freenode ctfbridge (start when server finished connecting.)
+```
+
+After this, the bridge will update the slack channel whenever new messages from irc arrives (and the message queue got
+triggered).
+
+If the irc channel gets to spammy, every bridge can be disconnected separately.
+
+```
+!stopirc freenode ctfbridge
+```
+
+or a complete irc server can be stopped (which will also leave all irc channels)
+
+```
+!stopserver freenode
+```
