@@ -105,44 +105,35 @@ from the irc channel and post the messages to the slack channel, in which it was
 
 1. Edit irc_config.json to change the behaviour of the irc bridges
 
-`use_message_queue      `: Enable message queuing for pushing messages to slack to avoid hitting the slack api rate limit.
-`message_queue_interval `: Interval, in which messages from the queue will be posted to the slack server
-`irc_process_interval   `: Update interval, in which irc messages will be read
+`use_message_queue`: Enable message queuing for pushing messages to slack to avoid hitting the slack api rate limit.
+`message_queue_interval`: Interval, in which messages from the queue will be posted to the slack server
+`irc_process_interval`: Update interval, in which irc messages will be read
 
 2. Register irc servers and bridges
 
 Before a bridge can be used, the corresponding server must be registered and the bridge must be added to that server.
-
 ```
 !addserver freenode irc.freenode.org
 !addirc freenode ctfbridge ctfchannel
 ```
-
 The bot will remember the servers and bridges until you remove them explicitly.
-
 ```
 !rmirc freenode ctfbridge
 !rmserver freenode
 ```
-
 To activate an irc bridge, the server must be connected first.
-
 ```
 !startserver freenode
 !startirc freenode ctfbridge (start when server finished connecting.)
 ```
-
 After this, the bridge will update the slack channel whenever new messages from irc arrives (and the message queue got
 triggered).
 
 If the irc channel gets to spammy, every bridge can be disconnected separately.
-
 ```
 !stopirc freenode ctfbridge
 ```
-
 or a complete irc server can be stopped (which will also leave all irc channels)
-
 ```
 !stopserver freenode
 ```
