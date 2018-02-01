@@ -44,17 +44,16 @@ Secondary features :
 !admin as <@user> <command>                                     (Execute a command as another user)
 
 !wolfram ask <question>                                         (Ask wolfram alpha a question)
-```
-```
-!irc addserver <server_name> <irc_server> [irc_nick] [irc_port]    (Register an IRC server to the known server list)
-!irc rmserver <server_name>    (Remove an IRC server from the known server list (Caution: this will remove all connected bridges also))
-!irc startserver <server_name>    (Connect the specified server thread to the IRC server)
-!irc stopserver <server_name>    (Disconnect the specified server from IRC (and all connected bridges))
-!irc addirc <server_name> <bridge_name> <irc_channel>    (Add an IRC bridge to the current channel)
-!irc rmirc <server_name> <bridge_name>    (Remove an IRC bridge from slack)
-!irc startirc <server_name> <bridge_name>    (Connect a registered IRC bridge)
-!irc stopirc <server_name> <bridge_name>    (Disconnect a registered IRC bridge)
-!irc ircstatus    (Shows a list of currently registered irc bridges)
+
+!irc addserver <server_name> <irc_server> [irc_nick] [irc_port] (Register an IRC server to the known server list)
+!irc rmserver <server_name>                                     (Remove an IRC server from the known server list (Caution: this will remove all connected bridges also))
+!irc startserver <server_name>                                  (Connect the specified server thread to the IRC server)
+!irc stopserver <server_name>                                   (Disconnect the specified server from IRC (and all connected bridges))
+!irc addirc <server_name> <bridge_name> <irc_channel>           (Add an IRC bridge to the current channel)
+!irc rmirc <server_name> <bridge_name>                          (Remove an IRC bridge from slack)
+!irc startirc <server_name> <bridge_name>                       (Connect a registered IRC bridge)
+!irc stopirc <server_name> <bridge_name>                        (Disconnect a registered IRC bridge)
+!irc ircstatus                                                  (Shows a list of currently registered irc bridges)
 ```
 
 ## Usage for irc bridges
