@@ -3,5 +3,6 @@ __all__ = [
     "syscalls_handler",
     "bot_handler",
     "admin_handler",
-    "irc_handler"
+    "irc_handler",
+    "wolfram_handler"
 ]

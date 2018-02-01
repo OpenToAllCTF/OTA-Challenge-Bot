@@ -75,10 +75,10 @@ class BotServer(threading.Thread):
             if msg.get("type") == "message" and "subtype" not in msg:
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.bot_at)[1].strip().lower(), msg['channel'], msg['user']
+                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['user']
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
-                    return msg['text'][1:].strip().lower(), msg['channel'], msg['user']
+                    return msg['text'][1:].strip(), msg['channel'], msg['user']
 
         return None, None, None
 

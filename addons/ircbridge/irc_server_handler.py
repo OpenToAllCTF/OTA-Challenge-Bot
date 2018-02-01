@@ -26,7 +26,7 @@ _msg_queue_lock = threading.Lock()
 _registered_servers = {}
 _message_queue = None
 
-KNOWN_SERVER_FILE = "./databases/irc_servers"
+KNOWN_SERVER_FILE = "./databases/irc_servers.bin"
 IRC_SERVER_CONFIG = "./irc_config.json"
 CONFIG = None
 

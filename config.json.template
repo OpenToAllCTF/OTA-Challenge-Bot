@@ -1,6 +1,7 @@
 {
   "api_key" : "",
   "bot_name" : "",
-  "send_help_as_dm" : "1"
-  "admin_users" : []
+  "send_help_as_dm" : "1",
+  "admin_users" : [],
+  "wolfram_app_id" : ""
 }

@@ -1,5 +1,7 @@
 *.pyc
 config.json
+config_solvetracker.json
 *.bin
 *.log
 .venv
+intro_msg
