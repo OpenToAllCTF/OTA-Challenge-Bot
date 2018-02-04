@@ -36,10 +36,10 @@ class GitHandler():
             log.exception("GitHandler::add_file()")
             raise InvalidCommand("Adding file failed: Please check your log files...")
 
-    def commit(self, commit_message):
+    def commit(self, commit_message, author):
         """Commit the current changeset."""
         try:
-            porcelain.commit(self.repo, bytes(commit_message, "utf-8"))
+            porcelain.commit(self.repo, bytes(commit_message, "utf-8"), bytes(author, "utf-8"), bytes(author, "utf-8"))
         except Exception:
             # Anonymizing exceptions
             log.exception("GitHandler::commit()")
@@ -54,12 +54,31 @@ class GitHandler():
             raise InvalidCommand(
                 "Upload file failed: GitProtocolError - Check your username and password in the git configuration...")
         except KeyError:
+            log.exception("GitHandler::push()")
             raise InvalidCommand("Upload file failed: KeyError - Check your git configuration for missing keys...")
         except TypeError:
+            log.exception("GitHandler::push()")
             raise InvalidCommand("Upload file failed: TypeError - Did you forget to create a git configuration?")
         except Exception:
             log.exception("GitHandler::push()")
             raise InvalidCommand("Upload file failed: Unknown - Please check your log files...")
+
+    def pull(self, repo_remote, repo_branch):
+        """Pull the latest version from git."""
+        try:
+            porcelain.pull(self.repo, "https://{}".format(repo_remote), bytes(repo_branch, "utf-8"))
+        except dulwich.errors.GitProtocolError:
+            raise InvalidCommand(
+                "Pull failed: GitProtocolError - Check your username and password in the git configuration...")
+        except KeyError:
+            log.exception("GitHandler::pull()")
+            raise InvalidCommand("Pull failed: KeyError - Check your git configuration for missing keys...")
+        except TypeError:
+            log.exception("GitHandler::pull()")
+            raise InvalidCommand("Pull failed: TypeError - Did you forget to create a git configuration?")
+        except Exception:
+            log.exception("GitHandler::pull()")
+            raise InvalidCommand("Pull failed: Unknown - Please check your log files...")
 
     def get_version(self):
         last_log = StringIO()

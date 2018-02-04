@@ -3,5 +3,6 @@
     "git_repouser" : "",
     "git_repopass" : "",
     "git_remoteuri" : "",
-    "git_branch" : ""    
+    "git_branch" : "",
+    "git_author" : ""
 }

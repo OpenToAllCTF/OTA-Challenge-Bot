@@ -30,7 +30,7 @@ def post_ctf_data(ctf, title):
         git.add_file(post_data, post_filename)
         git.add_file(stat_data, stat_filename)
 
-        git.commit("Solve post from {}".format(ctf.name))
+        git.commit("Solve post from {}".format(ctf.name), ST_GIT_CONFIG["git_author"])
 
         git.push(ST_GIT_CONFIG["git_repouser"], ST_GIT_CONFIG["git_repopass"],
                  ST_GIT_CONFIG["git_remoteuri"], ST_GIT_CONFIG["git_branch"])

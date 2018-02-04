@@ -68,7 +68,7 @@ Secondary features :
 ## Using git support for uploading solve updates
 
 1. Copy `config_solvetracker.json.template` to `config_solvetracker.json`.
-2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
+2. Configure the git account, the local repo and the remote path, which should be used to access your git repository. The author will be used for committing changes.
 
 Example:
 ```
@@ -77,7 +77,8 @@ Example:
     "git_repouser" : "otabot",
     "git_repopass" : "password",
     "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
-    "git_branch" : "master"
+    "git_branch" : "master",
+    "git_author" : "OTABot <otabot@xyz.com>"
 }
 ```
 
