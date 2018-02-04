@@ -240,9 +240,16 @@ class StatusCommand(Command):
         members = {m["id"]: m["name"]
                    for m in members['members'] if m.get("presence") == "active"}
 
-        response = ""
-        for ctf in ctfs.values():
+        # Check if the user is in a ctf channel
+        current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
+        if current_ctf:
+            ctf_list = [current_ctf]
+        else:
+            ctf_list = ctfs.values()
+
+        response = ""
+        for ctf in ctf_list:
             response += "*============= #{} =============*\n".format(ctf.name)
             solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
             unsolved = [c for c in ctf.challenges if not c.is_solved]
