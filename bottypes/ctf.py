@@ -1,6 +1,6 @@
 class CTF:
 
-    def __init__(self, channel_id, name):
+    def __init__(self, channel_id, name, long_name):
         """
         An object representation of an ongoing CTF.
         channel_id : The slack id for the associated channel
@@ -13,6 +13,7 @@ class CTF:
         self.cred_user = ""
         self.cred_pw = ""
         self.cred_url = ""
+        self.long_name = long_name
 
     def add_challenge(self, challenge):
         """

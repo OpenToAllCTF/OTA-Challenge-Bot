@@ -13,35 +13,13 @@ from util.githandler import *
 from util.ctf_template_resolver import *
 
 
-class PostSolvesCommand(Command):
-    """Posts the current state of solves to the configured git branch."""
-
-    def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute PostSolves command."""
-        title = args[0]
-
-        # Validate that the user is in a CTF channel
-        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
-
-        if not ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
-
-        try:
-            post_ctf_data(ctf, title)
-
-            message = "Post was successfully uploaded..."
-            slack_wrapper.post_message(channel_id, message)
-        except Exception as ex:
-            raise InvalidCommand(str(ex))
-
-
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute AddCTF command."""
         name = args[0].lower()
+        long_name = args[1]
 
         if len(name) > 10:
             raise InvalidCommand(
@@ -58,6 +36,8 @@ class AddCTFCommand(Command):
         # Add purpose tag for persistence
         purpose = dict(ChallengeHandler.CTF_PURPOSE)
         purpose['name'] = name
+        purpose['long_name'] = long_name
+
         purpose = json.dumps(purpose)
         channel = response['channel']['id']
         slack_wrapper.set_purpose(channel, purpose)
@@ -66,7 +46,7 @@ class AddCTFCommand(Command):
         slack_wrapper.invite_user(user_id, channel)
 
         # New CTF object
-        ctf = CTF(channel, name)
+        ctf = CTF(channel, name, long_name)
 
         # Update list of CTFs
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -447,6 +427,21 @@ class ArchiveCTFCommand(Command):
             raise InvalidCommand(
                 "Command failed. You are not in a CTF channel.")
 
+        # Post solves if git support is enabled
+        if ST_GIT_SUPPORT:
+            try:
+                if ctf.long_name:
+                    post_ctf_data(ctf, ctf.long_name)
+
+                    message = "Post was successfully uploaded..."
+                    slack_wrapper.post_message(channel_id, message)
+                else:
+                    raise InvalidCommand(
+                        "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
+
+            except Exception as ex:
+                raise InvalidCommand(str(ex))
+
         # Get list of challenges
         challenges = get_challenges_for_ctf_id(ChallengeHandler.DB, channel_id)
 
@@ -568,7 +563,8 @@ class ChallengeHandler(BaseHandler):
         "type": "CTF",
         "cred_user": "",
         "cred_pw": "",
-        "cred_url": ""
+        "cred_url": "",
+        "long_name": ""
     }
 
     CHALL_PURPOSE = {
@@ -582,7 +578,7 @@ class ChallengeHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name"], None),
+            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name", "long_name"], None),
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
@@ -592,8 +588,7 @@ class ChallengeHandler(BaseHandler):
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
-            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
-            "postsolves": CommandDesc(PostSolvesCommand, "Post current solve status to git", ["title"], None, True)
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
         }
 
     @staticmethod
@@ -609,7 +604,7 @@ class ChallengeHandler(BaseHandler):
             purpose = load_json(channel['purpose']['value'])
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
-                ctf = CTF(channel['id'], purpose['name'])
+                ctf = CTF(channel['id'], purpose['name'], purpose.get("long_name", ""))
 
                 ctf.cred_user = purpose.get("cred_user", "")
                 ctf.cred_pw = purpose.get("cred_pw", "")
