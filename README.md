@@ -9,7 +9,7 @@ Main features :
 - Tracking CTFs
 - Tracking CTF challenges
 - Tracking member participation in challenges
-- Annoucements upon solving a challenge
+- Displaying announcements upon solving a challenge
 
 Secondary features :
 - Syscall table for arm, armthumb, x64 and x86
