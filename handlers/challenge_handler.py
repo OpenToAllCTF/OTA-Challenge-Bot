@@ -33,17 +33,7 @@ class AddCTFCommand(Command):
             raise InvalidCommand(
                 "\"{}\" channel creation failed.\nError : {}".format(name, response['error']))
 
-        # Add purpose tag for persistence
-        purpose = dict(ChallengeHandler.CTF_PURPOSE)
-        purpose['name'] = name
-        purpose['long_name'] = long_name
-
-        purpose = json.dumps(purpose)
         channel = response['channel']['id']
-        slack_wrapper.set_purpose(channel, purpose)
-
-        # Invite user
-        slack_wrapper.invite_user(user_id, channel)
 
         # New CTF object
         ctf = CTF(channel, name, long_name)
@@ -52,6 +42,12 @@ class AddCTFCommand(Command):
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         ctfs[ctf.channel_id] = ctf
         pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+        # Add purpose tag for persistance
+        ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+
+        # Invite user
+        slack_wrapper.invite_user(user_id, channel)
 
         # Notify people of new channel
         message = "Created channel #{}".format(
@@ -495,15 +491,7 @@ class AddCredsCommand(Command):
                 with open(ChallengeHandler.DB, "wb") as f:
                     pickle.dump(ctfs, f)
 
-                purpose = dict(ChallengeHandler.CTF_PURPOSE)
-                purpose["ota_bot"] = "DO_NOT_DELETE_THIS"
-                purpose["name"] = ctf.name
-                purpose["type"] = "CTF"
-                purpose["cred_user"] = ctf.cred_user
-                purpose["cred_pw"] = ctf.cred_pw
-                purpose["cred_url"] = ctf.cred_url
-
-                slack_wrapper.set_purpose(ctf.channel_id, purpose)
+                ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
 
                 message = "Credentials for CTF *{}* updated...".format(
                     ctf.name)
@@ -590,6 +578,22 @@ class ChallengeHandler(BaseHandler):
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
         }
+
+    @staticmethod
+    def update_ctf_purpose(slack_wrapper, ctf):
+        """
+        Update the purpose for the ctf channel.
+        """
+        purpose = dict(ChallengeHandler.CTF_PURPOSE)
+        purpose["ota_bot"] = "DO_NOT_DELETE_THIS"
+        purpose["name"] = ctf.name
+        purpose["type"] = "CTF"
+        purpose["cred_user"] = ctf.cred_user
+        purpose["cred_pw"] = ctf.cred_pw
+        purpose["cred_url"] = ctf.cred_url
+        purpose["long_name"] = ctf.long_name
+
+        slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
     @staticmethod
     def update_database_from_slack(slack_wrapper):
