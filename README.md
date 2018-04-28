@@ -77,7 +77,8 @@ Example:
     "git_repouser" : "otabot",
     "git_repopass" : "password",
     "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
-    "git_branch" : "master"
+    "git_branch" : "master",
+    "git_baseurl" : "https://ota.github.io/SolveTracker"
 }
 ```
 
