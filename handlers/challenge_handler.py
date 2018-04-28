@@ -427,9 +427,9 @@ class ArchiveCTFCommand(Command):
         if ST_GIT_SUPPORT:
             try:
                 if ctf.long_name:
-                    post_ctf_data(ctf, ctf.long_name)
+                    solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
 
-                    message = "Post was successfully uploaded..."
+                    message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
                     slack_wrapper.post_message(channel_id, message)
                 else:
                     raise InvalidCommand(

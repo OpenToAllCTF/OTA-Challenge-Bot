@@ -34,6 +34,9 @@ def post_ctf_data(ctf, title):
 
         git.push(ST_GIT_CONFIG["git_repouser"], ST_GIT_CONFIG["git_repopass"],
                  ST_GIT_CONFIG["git_remoteuri"], ST_GIT_CONFIG["git_branch"])
+        
+        return ST_GIT_CONFIG["git_baseurl"]
+
     except InvalidCommand as invalid_cmd:
         # Just pass invalid commands on
         raise invalid_cmd
