@@ -196,3 +196,18 @@ def resolve_user_by_user_id(slack_wrapper, user_id):
     Resolve a user id to an user object.
     """
     return slack_wrapper.get_member(parse_user_id(user_id))
+
+
+def try_parse_int(s, default_value=-1):
+    """
+    Try to parse the specified string into an integer.
+
+    Returns:
+        value : The integer, if the string could be parsed successfully.
+                The specified default_value otherwise
+        success : True, if the intger could be parsed successfully
+    """
+    try:
+        return int(s), True
+    except ValueError:
+        return default_value, False

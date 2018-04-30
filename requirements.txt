@@ -1,4 +1,6 @@
 unidecode
 slackclient
+irc
+jsonpickle
 wolframalpha
 dulwich
