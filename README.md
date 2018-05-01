@@ -45,6 +45,20 @@ Secondary features :
 !wolfram ask <question>                                         (Ask wolfram alpha a question)
 ```
 
+## Retrieving the API token
+
+Bot applications are not allowed to access all api methods from Slack. Thus, if you create a bot integration on slack, the bot won't be able to create new channels for example. To get around this restriction, you have to create a real slack user and generate an authentication token for it, which can then be used instead of a bot token.
+
+1. Create a new user in slack (this will be the bot user, so give it an appropriate username)
+2. Log into slack with this newly created user
+3. Navigate to https://api.slack.com/custom-integrations/legacy-tokens
+4. The user should show up there together with your slack workspace
+5. Press "Create token"
+6. This should create a token starting with "xoxp-"
+7. Use this token as `api_key` for the bot
+8. Logout and login with your regular user again. After restarting the bot, the bot user should now show up in your slack workspace.
+
+
 ## Installation
 
 1. Copy `config.json.template` to `config.json`
