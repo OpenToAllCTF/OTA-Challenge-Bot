@@ -317,24 +317,7 @@ class SolveCommand(Command):
         challenge = ""
 
         if args:
-            # Multiple arguments: Need to check if a challenge was specified or
-            # not
-            challenge_name = args[0].lower()
-
-            # Check if we're currently in a challenge channel
-            curChallenge = get_challenge_by_channel_id(
-                ChallengeHandler.DB, channel_id)
-
-            if curChallenge:
-                # User is in a challenge channel => Check for challenge by name
-                # in parent ctf channel
-                challenge = get_challenge_by_name(
-                    ChallengeHandler.DB, challenge_name, curChallenge.ctf_channel_id)
-            else:
-                # User is in the ctf channel => Check for challenge by name in
-                # current challenge
-                challenge = get_challenge_by_name(
-                    ChallengeHandler.DB, challenge_name, channel_id)
+            challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
 
             if not challenge:
                 challenge = get_challenge_by_channel_id(
@@ -410,6 +393,60 @@ class SolveCommand(Command):
                         slack_wrapper.post_message(ctf.channel_id, message)
 
                     break
+
+
+class UnsolveCommand(Command):
+    """
+    Mark a solved challenge as unsolved again.
+    """
+
+    def execute(self, slack_wrapper, args, channel_id, user_id):
+        """Execute the Unsolve command."""
+        challenge = ""
+
+        if args:
+            challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+
+        if not challenge:
+            challenge = get_challenge_by_channel_id(
+                ChallengeHandler.DB, channel_id)
+
+        if not challenge:
+            raise InvalidCommand("This challenge does not exist.")
+
+        # Update database
+        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+
+        for ctf in ctfs.values():
+            for chal in ctf.challenges:
+                if chal.channel_id == challenge.channel_id:
+                    if challenge.is_solved:
+                        member = slack_wrapper.get_member(user_id)
+
+                        chal.unmark_as_solved()
+
+                        pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+                        # Update channel purpose
+                        purpose = dict(ChallengeHandler.CHALL_PURPOSE)
+                        purpose['name'] = challenge.name
+                        purpose['ctf_id'] = ctf.channel_id
+                        purpose['category'] = challenge.category
+
+                        purpose = json.dumps(purpose)
+                        slack_wrapper.set_purpose(
+                            challenge.channel_id, purpose, is_private=True)
+
+                        # Announce the CTF channel
+                        help_members = ""
+
+                        message = "@here *{}* : {} has reset the solve on the \"{}\" challenge.".format(
+                            challenge.name, member['user']['name'], challenge.name)
+                        slack_wrapper.post_message(ctf.channel_id, message)
+
+                        return
+                    else:
+                        raise InvalidCommand("This challenge isn't marked as solve.")
 
 
 class ArchiveCTFCommand(Command):
@@ -576,7 +613,8 @@ class ChallengeHandler(BaseHandler):
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
-            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
+            "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"])
         }
 
     @staticmethod
