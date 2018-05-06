@@ -213,7 +213,7 @@ class StatusCommand(Command):
         """Execute the Status command."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
-        members = {m["id"]: m["name"]
+        members = {m["id"]: m["profile"]["display_name"]
                    for m in members['members'] if m.get("presence") == "active"}
 
         # Check if the user is in a ctf channel
@@ -339,14 +339,14 @@ class SolveCommand(Command):
 
         # Get solving member
         member = slack_wrapper.get_member(user_id)
-        solver_list = [member['user']['name']]
+        solver_list = [get_display_name(member)]
 
         # Find additional members to add
         for add_solve in additional_args:
             user_obj = resolve_user_by_user_id(slack_wrapper, add_solve)
 
             if user_obj['ok']:
-                add_solve = user_obj['user']['name']
+                add_solve = get_display_name(user_obj)
 
             if add_solve not in solver_list:
                 solver_list.append(add_solve)
@@ -360,8 +360,7 @@ class SolveCommand(Command):
                 if chal.channel_id == challenge.channel_id:
                     if not challenge.is_solved:
                         member = slack_wrapper.get_member(user_id)
-                        solver_list = [member['user'][
-                            'name']] + additional_solver
+                        solver_list = [get_display_name(member)] + additional_solver
 
                         chal.mark_as_solved(solver_list)
 
@@ -387,7 +386,7 @@ class SolveCommand(Command):
                                 additional_solver))
 
                         message = "@here *{}* : {} has solved the \"{}\" challenge {}".format(
-                            challenge.name, member['user']['name'], challenge.name, help_members)
+                            challenge.name, get_display_name(member), challenge.name, help_members)
                         message += "."
 
                         slack_wrapper.post_message(ctf.channel_id, message)
@@ -441,7 +440,7 @@ class UnsolveCommand(Command):
                         help_members = ""
 
                         message = "@here *{}* : {} has reset the solve on the \"{}\" challenge.".format(
-                            challenge.name, member['user']['name'], challenge.name)
+                            challenge.name, get_display_name(member), challenge.name)
                         slack_wrapper.post_message(ctf.channel_id, message)
 
                         return
