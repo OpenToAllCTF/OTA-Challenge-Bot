@@ -89,6 +89,7 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
 
     return None
 
+
 def get_challenge_from_args(database, args, channel_id):
     """
     Helper method for getting the channel either from arguments or current channel.
@@ -112,6 +113,7 @@ def get_challenge_from_args(database, args, channel_id):
             database, challenge_name, channel_id)
 
     return challenge
+
 
 def get_challenge_by_channel_id(database, challenge_channel_id):
     """
@@ -219,3 +221,7 @@ def resolve_user_by_user_id(slack_wrapper, user_id):
     Resolve a user id to an user object.
     """
     return slack_wrapper.get_member(parse_user_id(user_id))
+
+
+def get_display_name(member):
+    return member['user']['profile']['display_name']
