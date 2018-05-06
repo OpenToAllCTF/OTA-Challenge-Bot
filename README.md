@@ -29,6 +29,7 @@ Secondary features :
 !ctf addcreds <ctf_user> <ctf_pw> [ctf_url]                     (Add credentials for current ctf)
 !ctf showcreds                                                  (Show credentials for current ctf)
 !ctf postsolves <title>                                         (Post current solve status to git)
+!ctf unsolve [challenge_name]                                   (Remove solve of a challenge)
 
 !syscalls available                                             (Shows the available syscall architectures)
 !syscalls show <arch> <syscall name/syscall id>                 (Show information for a specific syscall)

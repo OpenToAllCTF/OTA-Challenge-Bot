@@ -89,6 +89,29 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
 
     return None
 
+def get_challenge_from_args(database, args, channel_id):
+    """
+    Helper method for getting the channel either from arguments or current channel.
+    """
+    # Multiple arguments: Need to check if a challenge was specified or not
+    challenge_name = args[0].lower()
+
+    # Check if we're currently in a challenge channel
+    curChallenge = get_challenge_by_channel_id(
+        database, channel_id)
+
+    if curChallenge:
+        # User is in a challenge channel => Check for challenge by name
+        # in parent ctf channel
+        challenge = get_challenge_by_name(
+            database, challenge_name, curChallenge.ctf_channel_id)
+    else:
+        # User is in the ctf channel => Check for challenge by name in
+        # current challenge
+        challenge = get_challenge_by_name(
+            database, challenge_name, channel_id)
+
+    return challenge
 
 def get_challenge_by_channel_id(database, challenge_channel_id):
     """
