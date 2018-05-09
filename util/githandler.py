@@ -70,10 +70,15 @@ class GitHandler():
         # Get last commit
         porcelain.log(self.repo, outstream=last_log, max_entries=1)
 
-        commit_match = re.search('commit: (.+?)\n', last_log.getvalue())
+        commit_msg = last_log.getvalue()
+
+        commit_match = re.search('commit: (.+?)\n', commit_msg)
         commit = commit_match.group(1) if commit_match else ""
 
-        commit_match = re.search("\n\n(.+?)\Z", last_log.getvalue(), flags=re.DOTALL)
+        commit_match = re.search('Date: (.+?)\n\n', commit_msg)
+        commit_date = commit_match.group(1).strip() if commit_match else ""
+
+        commit_match = re.search("\n\n(.+?)\Z", commit_msg, flags=re.DOTALL)
         commit_info = commit_match.group(1).strip() if commit_match else ""
 
-        return "I'm running commit `{}` of branch `{}`\n\n```{}```".format(commit, current_branch, commit_info)
+        return "I'm running commit `{}` of branch `{}`\n\n*{}*```{}```".format(commit, current_branch, commit_date, commit_info)
