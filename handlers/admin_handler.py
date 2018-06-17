@@ -3,7 +3,7 @@ import re
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from bottypes.invalid_command import *
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
 from util.util import *
@@ -15,7 +15,7 @@ class ShowAdminsCommand(Command):
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the ShowAdmins command."""
 
-        admin_users = HandlerFactory.botserver.get_config_option("admin_users")
+        admin_users = handler_factory.botserver.get_config_option("admin_users")
 
         if admin_users:
             response = "Administrators\n"
@@ -51,13 +51,13 @@ class AddAdminCommand(Command):
         """Execute the AddAdmin command."""
         user_object = resolve_user_by_user_id(slack_wrapper, args[0])
 
-        admin_users = HandlerFactory.botserver.get_config_option("admin_users")
+        admin_users = handler_factory.botserver.get_config_option("admin_users")
 
         if user_object['ok'] and admin_users:
             if user_object['user']['id'] not in admin_users:
                 admin_users.append(user_object['user']['id'])
 
-                HandlerFactory.botserver.set_config_option(
+                handler_factory.botserver.set_config_option(
                     "admin_users", admin_users)
 
                 response = "User *{}* added to the admin group.".format(
@@ -83,11 +83,11 @@ class RemoveAdminCommand(Command):
         """Execute the RemoveAdmin command."""
         user = parse_user_id(args[0])
 
-        admin_users = HandlerFactory.botserver.get_config_option("admin_users")
+        admin_users = handler_factory.botserver.get_config_option("admin_users")
 
         if admin_users and user in admin_users:
             admin_users.remove(user)
-            HandlerFactory.botserver.set_config_option(
+            handler_factory.botserver.set_config_option(
                 "admin_users", admin_users)
 
             response = "User *{}* removed from the admin group.".format(user)
@@ -114,9 +114,9 @@ class AsCommand(Command):
 
         if user_obj['ok']:
             dest_user_id = user_obj['user']['id']
-            
+
             # Redirecting command execution to handler factory
-            HandlerFactory.process_command(slack_wrapper, dest_command, [dest_command] + dest_arguments, channel_id, dest_user_id)
+            handler_factory.process_command(slack_wrapper, dest_command, [dest_command] + dest_arguments, channel_id, dest_user_id)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 
@@ -155,4 +155,4 @@ class AdminHandler(BaseHandler):
         }
 
 
-HandlerFactory.register("admin", AdminHandler())
+handler_factory.register("admin", AdminHandler())

@@ -5,7 +5,7 @@ import wolframalpha
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from bottypes.invalid_command import *
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
 from util.util import *
@@ -16,7 +16,7 @@ class AskCommand(Command):
 
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute the Ask command."""
-        app_id = HandlerFactory.botserver.get_config_option("wolfram_app_id")
+        app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 
         if app_id:
             try:
@@ -67,4 +67,4 @@ class WolframHandler(BaseHandler):
         }
 
 
-HandlerFactory.register("wolfram", WolframHandler())
+handler_factory.register("wolfram", WolframHandler())

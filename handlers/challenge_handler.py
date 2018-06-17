@@ -4,7 +4,7 @@ from bottypes.ctf import *
 from bottypes.challenge import *
 from bottypes.player import *
 from bottypes.command_descriptor import *
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from util.util import *
 from util.slack_wrapper import *
@@ -684,4 +684,4 @@ class ChallengeHandler(BaseHandler):
 
 
 # Register this handler
-HandlerFactory.register("ctf", ChallengeHandler())
+handler_factory.register("ctf", ChallengeHandler())

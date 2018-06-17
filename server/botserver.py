@@ -3,7 +3,7 @@ import threading
 import time
 import websocket
 
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers import *
 from util.loghandler import *
 from util.slack_wrapper import *
@@ -118,7 +118,7 @@ class BotServer(threading.Thread):
 
                     # Might even pass the bot server for handlers?
                     log.info("Initializing handlers...")
-                    HandlerFactory.initialize(
+                    handler_factory.initialize(
                         self.slack_wrapper, self.bot_id, self)
 
                     # Main loop
@@ -131,7 +131,7 @@ class BotServer(threading.Thread):
                         if command:
                             log.debug("Received bot command : {} ({})".format(
                                 command, channel))
-                            HandlerFactory.process(self.slack_wrapper, self,
+                            handler_factory.process(self.slack_wrapper, self,
                                                    command, channel, user)
 
                         time.sleep(READ_WEBSOCKET_DELAY)
