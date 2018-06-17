@@ -10,6 +10,7 @@ from bottypes.command_descriptor import *
 from handlers.handler_factory import *
 from handlers.base_handler import *
 from util.githandler import GitHandler
+from util.loghandler import log
 
 
 class PingCommand(Command):

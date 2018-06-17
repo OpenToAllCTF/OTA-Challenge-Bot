@@ -23,6 +23,7 @@ class ShowAvailableArchCommand(Command):
 
         slack_wrapper.post_message(channel_id, msg)
 
+
 class ShowSyscallCommand(Command):
     """Shows information about the requested syscall."""
 

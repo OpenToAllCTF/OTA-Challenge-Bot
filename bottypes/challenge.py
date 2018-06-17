@@ -47,7 +47,7 @@ class Challenge:
         user ID.
         """
         try:
-            del self.players[player.user_id]
+            del self.players[user_id]
         except KeyError:
             # TODO: Should we allow this to perculate up to the caller?
             pass

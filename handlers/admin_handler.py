@@ -1,3 +1,5 @@
+import re
+
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from bottypes.invalid_command import *
@@ -5,8 +7,6 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
 from util.util import *
-
-import re
 
 
 class ShowAdminsCommand(Command):

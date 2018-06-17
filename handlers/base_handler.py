@@ -5,6 +5,8 @@ from bottypes.invalid_command import *
 
 
 class BaseHandler(ABC):
+    commands = {}  # Overridden by concrete class
+    handler_name = "" # Overridden by concrete class
 
     def can_handle(self, command, user_is_admin):
         cmd_available = command in self.commands
@@ -23,7 +25,7 @@ class BaseHandler(ABC):
     def parse_command_usage(self, command, descriptor):
         """Returns a usage string from a given command and descriptor."""
         msg = "`!{} {}".format(self.handler_name, command)
-        
+
         if descriptor.arguments:
             for arg in descriptor.arguments:
                 msg += " <{}>".format(arg)
