@@ -437,8 +437,6 @@ class UnsolveCommand(Command):
                             challenge.channel_id, purpose, is_private=True)
 
                         # Announce the CTF channel
-                        help_members = ""
-
                         message = "@here *{}* : {} has reset the solve on the \"{}\" challenge.".format(
                             challenge.name, get_display_name(member), challenge.name)
                         slack_wrapper.post_message(ctf.channel_id, message)

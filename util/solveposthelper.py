@@ -34,7 +34,7 @@ def post_ctf_data(ctf, title):
 
         git.push(ST_GIT_CONFIG["git_repouser"], ST_GIT_CONFIG["git_repopass"],
                  ST_GIT_CONFIG["git_remoteuri"], ST_GIT_CONFIG["git_branch"])
-        
+
         return ST_GIT_CONFIG["git_baseurl"]
 
     except InvalidCommand as invalid_cmd:
@@ -51,8 +51,8 @@ def init_solvetracker_config():
     try:
         with open("./config_solvetracker.json") as f:
             return json.load(f), True
-    except:
-        log.info("Solvetracker configuration couldn't be loaded. Deactivating SolveTracker...")
+    except (IOError, FileNotFoundError) as e:
+        log.info("Solvetracker configuration couldn't be loaded: {}. Deactivating SolveTracker...".format(e))
         return None, False
 
 

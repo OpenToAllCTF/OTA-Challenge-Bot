@@ -98,5 +98,5 @@ class HandlerFactory():
         except InvalidCommand as e:
             slack_wrapper.post_message(channel_id, e.message)
 
-        except Exception as ex:
+        except Exception:
             log.exception("An error has occured while processing a command")

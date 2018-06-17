@@ -15,7 +15,7 @@ def load_json(string):
     """
     try:
         json_object = json.loads(string)
-    except ValueError as e:
+    except ValueError:
         return None
     return json_object
 
@@ -98,14 +98,14 @@ def get_challenge_from_args(database, args, channel_id):
     challenge_name = args[0].lower()
 
     # Check if we're currently in a challenge channel
-    curChallenge = get_challenge_by_channel_id(
+    current_chal = get_challenge_by_channel_id(
         database, channel_id)
 
-    if curChallenge:
+    if current_chal:
         # User is in a challenge channel => Check for challenge by name
         # in parent ctf channel
         challenge = get_challenge_by_name(
-            database, challenge_name, curChallenge.ctf_channel_id)
+            database, challenge_name, current_chal.ctf_channel_id)
     else:
         # User is in the ctf channel => Check for challenge by name in
         # current challenge
@@ -140,7 +140,7 @@ def get_challenges_for_user_id(database, user_id, ctf_channel_id):
 
     challenges = []
     for challenge in ctf.challenges:
-        if player.user_id in challenge.players:
+        if user_id in challenge.players:
             challenges.append(challenge)
 
     return challenges
@@ -201,7 +201,6 @@ def remove_ctf_by_channel_id(database, ctf_channel_id):
     Remove a CTF from the database using a given CTF id.
     """
     ctfs = pickle.load(open(database, "rb"))
-    ctf = ctfs[ctf_channel_id]
     ctfs.pop(ctf_channel_id)
     pickle.dump(ctfs, open(database, "wb"))
 

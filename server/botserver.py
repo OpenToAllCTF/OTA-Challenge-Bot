@@ -19,6 +19,12 @@ class BotServer(threading.Thread):
     def __init__(self):
         log.debug("Parse config file and initialize threading...")
         threading.Thread.__init__(self)
+        self.running = False
+        self.config = {}
+        self.bot_name = ""
+        self.bot_id = ""
+        self.bot_at = ""
+        self.slack_wrapper = None
 
     def lock(self):
         """Acquire global lock for working with global (not thread-safe) data."""
