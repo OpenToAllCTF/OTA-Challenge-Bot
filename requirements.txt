@@ -2,3 +2,4 @@ unidecode
 slackclient
 wolframalpha
 dulwich
+pylint
