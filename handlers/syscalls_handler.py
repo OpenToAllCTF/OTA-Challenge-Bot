@@ -1,7 +1,7 @@
 from bottypes.command import *
 from bottypes.command_descriptor import *
 from bottypes.invalid_command import *
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from addons.syscalls.syscallinfo import *
 
@@ -22,6 +22,7 @@ class ShowAvailableArchCommand(Command):
         msg = msg.strip() + "```"
 
         slack_wrapper.post_message(channel_id, msg)
+
 
 class ShowSyscallCommand(Command):
     """Shows information about the requested syscall."""
@@ -96,4 +97,4 @@ class SyscallsHandler(BaseHandler):
             "show": CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),
         }
 
-HandlerFactory.register("syscalls", SyscallsHandler())
+handler_factory.register("syscalls", SyscallsHandler())

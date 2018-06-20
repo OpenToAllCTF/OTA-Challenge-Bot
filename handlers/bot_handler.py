@@ -7,9 +7,10 @@ from unidecode import unidecode
 
 from bottypes.command import *
 from bottypes.command_descriptor import *
-from handlers.handler_factory import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from util.githandler import GitHandler
+from util.loghandler import log
 
 
 class PingCommand(Command):
@@ -61,4 +62,4 @@ class BotHandler(BaseHandler):
         }
 
 
-HandlerFactory.register("bot", BotHandler())
+handler_factory.register("bot", BotHandler())
