@@ -33,10 +33,10 @@ class AddCTFCommand(Command):
             raise InvalidCommand(
                 "\"{}\" channel creation failed.\nError : {}".format(name, response['error']))
 
-        channel = response['channel']['id']
+        channel_id = response['channel']['id']
 
         # New CTF object
-        ctf = CTF(channel, name, long_name)
+        ctf = CTF(channel_id, name, long_name)
 
         # Update list of CTFs
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -47,7 +47,11 @@ class AddCTFCommand(Command):
         ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
 
         # Invite user
-        slack_wrapper.invite_user(user_id, channel)
+        slack_wrapper.invite_user(user_id, channel_id)
+
+        # Invite everyone in the auto-invite list
+        for user_id in HandlerFactory.botserver.get_config_option("auto_invite"):
+            slack_wrapper.invite_user(user_id, channel_id)
 
         # Notify people of new channel
         message = "Created channel #{}".format(
@@ -188,6 +192,10 @@ class AddChallengeCommand(Command):
         purpose = json.dumps(purpose)
         slack_wrapper.set_purpose(
             challenge_channel_id, purpose, is_private=True)
+
+        # Invite everyone in the auto-invite list
+        for user_id in HandlerFactory.botserver.get_config_option("auto_invite"):
+            slack_wrapper.invite_user(user_id, challenge_channel_id, is_private=True)
 
         # New Challenge
         challenge = Challenge(
