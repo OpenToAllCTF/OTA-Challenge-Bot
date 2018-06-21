@@ -19,7 +19,7 @@ class AddCTFCommand(Command):
     def execute(self, slack_wrapper, args, channel_id, user_id):
         """Execute AddCTF command."""
         name = args[0].lower()
-        long_name = args[1]
+        long_name = " ".join(args[1:])
 
         if len(name) > 10:
             raise InvalidCommand(
@@ -651,7 +651,7 @@ class ChallengeHandler(BaseHandler):
             purpose = load_json(channel['purpose']['value'])
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
-                ctf = CTF(channel['id'], purpose['name'], purpose.get("long_name", ""))
+                ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
                 ctf.cred_user = purpose.get("cred_user", "")
                 ctf.cred_pw = purpose.get("cred_pw", "")
