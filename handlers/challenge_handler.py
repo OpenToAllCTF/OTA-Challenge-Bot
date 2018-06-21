@@ -644,10 +644,11 @@ class ChallengeHandler(BaseHandler):
         Reload the ctf and challenge information from slack.
         """
         database = {}
-        response = slack_wrapper.get_public_channels()
+        privchans = slack_wrapper.get_private_channels()["groups"]
+        pubchans = slack_wrapper.get_public_channels()["channels"]
 
         # Find active CTF channels
-        for channel in response['channels']:
+        for channel in [*privchans, *pubchans]:
             purpose = load_json(channel['purpose']['value'])
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
