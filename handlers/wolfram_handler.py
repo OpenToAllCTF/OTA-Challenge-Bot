@@ -14,7 +14,8 @@ from util.util import *
 class AskCommand(Command):
     """Asks wolfram alpha a question and shows the answer."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the Ask command."""
         app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 

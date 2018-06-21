@@ -16,7 +16,8 @@ from util.loghandler import log
 class PingCommand(Command):
     """Ping this server to check for uptime."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Announce the bot's presence in the channel."""
         slack_wrapper.post_message(channel_id, "Pong!")
 
@@ -24,7 +25,8 @@ class PingCommand(Command):
 class IntroCommand(Command):
     """Show an introduction message for new members."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the Intro command."""
         try:
             with open("intro_msg") as f:
@@ -40,7 +42,8 @@ class IntroCommand(Command):
 class VersionCommand(Command):
     """Show git information about the current running version of the bot."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the Version command."""
         try:
             message = GitHandler(".").get_version()

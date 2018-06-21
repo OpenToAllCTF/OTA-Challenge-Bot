@@ -9,12 +9,10 @@ class BaseHandler(ABC):
     handler_name = "" # Overridden by concrete class
 
     def can_handle(self, command, user_is_admin):
-        cmd_available = command in self.commands
-
-        # Check if this is an admin command and hide it for normal users
-        if cmd_available:
+        if command in self.commands:
             cmd_desc = self.commands[command]
-            if (not cmd_desc.is_admin_cmd) or user_is_admin:
+            # Hide admin commands
+            if user_is_admin or not cmd_desc.is_admin_cmd:
                 return True
 
         return False
@@ -69,4 +67,4 @@ class BaseHandler(ABC):
             if len(args) < len(cmd_descriptor.arguments):
                 raise InvalidCommand(
                     self.command_usage(command, cmd_descriptor))
-            cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
+            cmd_descriptor.command.execute(slack_wrapper, args, channel, user)
