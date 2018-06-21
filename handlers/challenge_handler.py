@@ -50,7 +50,7 @@ class AddCTFCommand(Command):
         slack_wrapper.invite_user(user_id, channel_id)
 
         # Invite everyone in the auto-invite list
-        for user_id in HandlerFactory.botserver.get_config_option("auto_invite"):
+        for user_id in handler_factory.botserver.get_config_option("auto_invite"):
             slack_wrapper.invite_user(user_id, channel_id)
 
         # Notify people of new channel
@@ -194,7 +194,7 @@ class AddChallengeCommand(Command):
             challenge_channel_id, purpose, is_private=True)
 
         # Invite everyone in the auto-invite list
-        for user_id in HandlerFactory.botserver.get_config_option("auto_invite"):
+        for user_id in handler_factory.botserver.get_config_option("auto_invite"):
             slack_wrapper.invite_user(user_id, challenge_channel_id, is_private=True)
 
         # New Challenge
