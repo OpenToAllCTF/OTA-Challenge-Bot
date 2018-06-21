@@ -12,7 +12,8 @@ from util.util import *
 class ShowAdminsCommand(Command):
     """Shows list of users in the admin user group."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the ShowAdmins command."""
 
         admin_users = handler_factory.botserver.get_config_option("admin_users")
@@ -47,7 +48,8 @@ class ShowAdminsCommand(Command):
 class AddAdminCommand(Command):
     """Add a user to the admin user group."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the AddAdmin command."""
         user_object = resolve_user_by_user_id(slack_wrapper, args[0])
 
@@ -79,7 +81,8 @@ class AddAdminCommand(Command):
 class RemoveAdminCommand(Command):
     """Remove a user from the admin user group."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the RemoveAdmin command."""
         user = parse_user_id(args[0])
 
@@ -103,7 +106,8 @@ class RemoveAdminCommand(Command):
 class AsCommand(Command):
     """Execute a command as another user."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the As command."""
         dest_user = args[0].lower()
         dest_command = args[1].lower()
