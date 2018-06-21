@@ -26,13 +26,11 @@ class BaseHandler(ABC):
         """Returns a usage string from a given command and descriptor."""
         msg = "`!{} {}".format(self.handler_name, command)
 
-        if descriptor.arguments:
-            for arg in descriptor.arguments:
-                msg += " <{}>".format(arg)
+        for arg in descriptor.arguments:
+            msg += " <{}>".format(arg)
 
-        if descriptor.opt_arguments:
-            for arg in descriptor.opt_arguments:
-                msg += " [{}]".format(arg)
+        for arg in descriptor.opt_arguments:
+            msg += " [{}]".format(arg)
 
         msg += "`"
 
@@ -68,8 +66,7 @@ class BaseHandler(ABC):
         cmd_descriptor = self.commands[command]
 
         if cmd_descriptor:
-            if cmd_descriptor.arguments and len(args) < len(cmd_descriptor.arguments):
+            if len(args) < len(cmd_descriptor.arguments):
                 raise InvalidCommand(
                     self.command_usage(command, cmd_descriptor))
-            else:
-                cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
+            cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
