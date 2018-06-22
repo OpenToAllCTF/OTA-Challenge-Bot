@@ -65,6 +65,5 @@ class BaseHandler(ABC):
 
         if cmd_descriptor:
             if len(args) < len(cmd_descriptor.arguments):
-                raise InvalidCommand(
-                    self.command_usage(command, cmd_descriptor))
+                raise InvalidCommand(self.command_usage(command, cmd_descriptor))
             cmd_descriptor.command.execute(slack_wrapper, args, channel, user)

@@ -26,8 +26,7 @@ class ShowAdminsCommand(Command):
                 user_object = slack_wrapper.get_member(admin_id)
 
                 if user_object['ok']:
-                    response += "*{}* ({})\n".format(
-                        user_object['user']['name'], admin_id)
+                    response += "*{}* ({})\n".format(user_object['user']['name'], admin_id)
 
             response += "==================================="
 
@@ -36,13 +35,11 @@ class ShowAdminsCommand(Command):
             if response == "":  # Response is empty
                 response += "*No entries found*"
 
-            AdminHandler.send_message(
-                slack_wrapper, channel_id, user_id, response)
+            AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
         else:
             response = "No admin_users group found. Please check your configuration."
 
-            AdminHandler.send_message(
-                slack_wrapper, channel_id, user_id, response)
+            AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
 
 
 class AddAdminCommand(Command):
@@ -59,23 +56,16 @@ class AddAdminCommand(Command):
             if user_object['user']['id'] not in admin_users:
                 admin_users.append(user_object['user']['id'])
 
-                handler_factory.botserver.set_config_option(
-                    "admin_users", admin_users)
+                handler_factory.botserver.set_config_option("admin_users", admin_users)
 
-                response = "User *{}* added to the admin group.".format(
-                    user_object['user']['name'])
-                AdminHandler.send_message(
-                    slack_wrapper, channel_id, user_id, response)
+                response = "User *{}* added to the admin group.".format(user_object['user']['name'])
+                AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
             else:
-                response = "User *{}* is already in the admin group.".format(
-                    user_object['user']['name'])
-                AdminHandler.send_message(
-                    slack_wrapper, channel_id, user_id, response)
+                response = "User *{}* is already in the admin group.".format(user_object['user']['name'])
+                AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
         else:
-            response = "User *{}* not found. You must provide the slack user id, not the username.".format(
-                args[0])
-            AdminHandler.send_message(
-                slack_wrapper, channel_id, user_id, response)
+            response = "User *{}* not found. You must provide the slack user id, not the username.".format(args[0])
+            AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
 
 
 class RemoveAdminCommand(Command):
@@ -90,17 +80,13 @@ class RemoveAdminCommand(Command):
 
         if admin_users and user in admin_users:
             admin_users.remove(user)
-            handler_factory.botserver.set_config_option(
-                "admin_users", admin_users)
+            handler_factory.botserver.set_config_option("admin_users", admin_users)
 
             response = "User *{}* removed from the admin group.".format(user)
-            AdminHandler.send_message(
-                slack_wrapper, channel_id, user_id, response)
+            AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
         else:
-            response = "User *{}* doesn't exist in the admin group".format(
-                user)
-            AdminHandler.send_message(
-                slack_wrapper, channel_id, user_id, response)
+            response = "User *{}* doesn't exist in the admin group".format(user)
+            AdminHandler.send_message(slack_wrapper, channel_id, user_id, response)
 
 
 class AsCommand(Command):
