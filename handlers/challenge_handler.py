@@ -251,8 +251,11 @@ class RemoveChallengeCommand(Command):
         remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
         # Show confirmation message
+        member = slack_wrapper.get_member(user_id)
+        display_name = get_display_name(member)
+
         slack_wrapper.post_message(
-            channel_id, "Archived the challenge channel: - #{}-{}\n".format(ctf.name, challenge.name))
+            ctf.channel_id, text="Challenge *{}* was removed by *{}*.".format(challenge.name, display_name))
 
 
 class StatusCommand(Command):
