@@ -504,6 +504,7 @@ class ArchiveCTFCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the ArchiveCTF command."""
+        no_post = args[0].lower() if args else None
 
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not ctf:
@@ -512,14 +513,15 @@ class ArchiveCTFCommand(Command):
         # Post solves if git support is enabled
         if ST_GIT_SUPPORT:
             try:
-                if not ctf.long_name:
-                    raise InvalidCommand(
-                        "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
+                if not no_post:
+                    if not ctf.long_name:
+                        raise InvalidCommand(
+                            "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
 
-                solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
+                    solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
 
-                message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
-                slack_wrapper.post_message(channel_id, message)
+                    message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
+                    slack_wrapper.post_message(channel_id, message)
 
             except Exception as ex:
                 raise InvalidCommand(str(ex))
@@ -659,7 +661,7 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
