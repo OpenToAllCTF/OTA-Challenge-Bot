@@ -19,22 +19,34 @@ class AskCommand(Command):
         """Execute the Ask command."""
         app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 
+        verbose = (args[0] if len(args)>0 else "") == "-v"
+
         if app_id:
             try:
-                question = " ".join(args)
+                if verbose:
+                    question = " ".join(args[1:])
+                else:
+                    question = " ".join(args)
+
                 client = wolframalpha.Client(app_id)
                 res = client.query(question)
 
                 answer = ""
 
-                for pod in res.pods:
-                    for subpod in pod.subpods:
-                        if "plaintext" in subpod.keys() and subpod["plaintext"]:
-                            answer += "```\n"
-                            answer += subpod.plaintext[:512] + "\n"
-                            answer += "```\n"
-                            if (len(subpod.plaintext) > 512):
-                                answer += "*shortened*"
+                if verbose:
+                    for pod in res.pods:
+                        for subpod in pod.subpods:
+                            if "plaintext" in subpod.keys() and subpod["plaintext"]:
+                                answer += "```\n"
+                                answer += subpod.plaintext[:512] + "\n"
+                                answer += "```\n"
+                                if (len(subpod.plaintext) > 512):
+                                    answer += "*shortened*"
+                else:
+                    answer = next(res.results, None)
+
+                    if answer:
+                        answer = answer.text
 
                 WolframHandler.send_message(slack_wrapper, channel_id, user_id, answer)
             except Exception as ex:
@@ -66,7 +78,7 @@ class WolframHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "ask": CommandDesc(AskCommand, "Ask wolfram alpha a question", ["question"], None, False),
+            "ask": CommandDesc(AskCommand, "Ask wolfram alpha a question (add -v for verbose answer)", ["question"], None, False),
         }
 
 
