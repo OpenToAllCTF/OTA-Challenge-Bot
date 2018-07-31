@@ -63,6 +63,27 @@ def get_ctf_by_channel_id(database, channel_id):
     return None
 
 
+def update_ctf(database, channel_id, update_func):
+    """
+    Fetch a CTF object in the database with a given channel ID,
+    and apply update_func on it. Saves the ctf database afterwards.
+    """
+    with open(database, "rb") as f:
+        ctfs = pickle.load(f)
+
+    ctf = ctfs.get(channel_id)
+
+    if ctf:
+        update_func(ctf)
+
+        with open(database, "wb") as f:
+            pickle.dump(ctfs, f)
+
+        return ctf
+
+    return None
+
+
 def get_ctf_by_name(database, name):
     """
     Fetch a CTF object in the database with a given name.

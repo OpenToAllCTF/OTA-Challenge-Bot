@@ -281,17 +281,21 @@ class StatusCommand(Command):
 
         response = ""
         for ctf in ctf_list:
-            response += "*============= #{} =============*\n".format(ctf.name)
+            response += "*============= #{} {} =============*\n".format(ctf.name, "(finished)" if ctf.finished else "")
             solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
             # Check if the CTF has any challenges
             if not solved and not unsolved:
-                response += "*[ No challenges available yet ]*\n"
+                if ctf.finished:
+                    response += "*[ No challenges solved ]*\n"
+                else:
+                    response += "*[ No challenges available yet ]*\n"
+
                 continue
 
             # Solved challenges
-            response += "* > Solved*\n" if solved else "\n"
+            response += "* > Solved*\n" if solved else ""
             for challenge in solved:
                 players = []
                 response += ":tada: *{}*{} (Solved by : {})\n".format(
@@ -300,18 +304,18 @@ class StatusCommand(Command):
                     transliterate(", ".join(challenge.solver)))
 
             # Unsolved challenges
-            response += "* > Unsolved*\n" if unsolved else "\n"
-            for challenge in unsolved:
+            if not ctf.finished:
+                response += "* > Unsolved*\n" if unsolved else "\n"
+                for challenge in unsolved:
 
-                # Get active players
-                players = []
-                for player_id in challenge.players:
-                    if player_id in members:
-                        players.append(members[player_id])
+                    # Get active players
+                    players = []
+                    for player_id in challenge.players:
+                        if player_id in members:
+                            players.append(members[player_id])
 
-                response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
-                                                               if challenge.category else "", transliterate(", ".join(players)))
-            response += "\n"
+                    response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
+                                                                   if challenge.category else "", transliterate(", ".join(players)))
 
         response = response.strip()
 
@@ -543,6 +547,31 @@ class ArchiveCTFCommand(Command):
         slack_wrapper.post_message(channel_id, message)
 
 
+class EndCTFCommand(Command):
+    """
+    Mark the ctf as finished, not allowing new challenges to be added, and don't show the ctf anymore
+    in the status list.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
+        """Execute the EndCTF command."""
+
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not ctf:
+            raise InvalidCommand("End CTF failed: You are not in a CTF channel.")
+
+        def update_func(ctf):
+            ctf.finished = True
+
+        # Update database
+        ctf = update_ctf(ChallengeHandler.DB, ctf.channel_id, update_func)
+
+        if ctf:
+            ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+            slack_wrapper.post_message(channel_id, "CTF *{}* finished...".format(ctf.name))
+
+
 class ReloadCommand(Command):
     """Reload the ctf information from slack to reflect updates of channel purposes."""
 
@@ -566,24 +595,18 @@ class AddCredsCommand(Command):
         if not cur_ctf:
             raise InvalidCommand("Add Creds faile:. You are not in a CTF channel.")
 
+        def update_func(ctf):
+            ctf.cred_user = args[0]
+            ctf.cred_pw = args[1]
+            ctf.cred_url = args[2] if len(args) > 2 else ""
+
         # Update database
-        with open(ChallengeHandler.DB, "rb") as f:
-            ctfs = pickle.load(f)
+        ctf = update_ctf(ChallengeHandler.DB, cur_ctf.channel_id, update_func)
 
-        for ctf in ctfs.values():
-            if ctf.name == cur_ctf.name:
-                ctf.cred_user = args[0]
-                ctf.cred_pw = args[1]
-                ctf.cred_url = args[2] if len(args) > 2 else ""
-
-                with open(ChallengeHandler.DB, "wb") as f:
-                    pickle.dump(ctfs, f)
-
-                ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
-
-                message = "Credentials for CTF *{}* updated...".format(ctf.name)
-                slack_wrapper.post_message(channel_id, message)
-                return
+        if ctf:
+            ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+            message = "Credentials for CTF *{}* updated...".format(ctf.name)
+            slack_wrapper.post_message(channel_id, message)
 
 
 class ShowCredsCommand(Command):
@@ -639,7 +662,8 @@ class ChallengeHandler(BaseHandler):
         "cred_user": "",
         "cred_pw": "",
         "cred_url": "",
-        "long_name": ""
+        "long_name": "",
+        "finished": False
     }
 
     CHALL_PURPOSE = {
@@ -661,7 +685,8 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),          
+            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
@@ -681,6 +706,7 @@ class ChallengeHandler(BaseHandler):
         purpose["cred_pw"] = ctf.cred_pw
         purpose["cred_url"] = ctf.cred_url
         purpose["long_name"] = ctf.long_name
+        purpose["finished"] = ctf.finished
 
         slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
@@ -703,6 +729,7 @@ class ChallengeHandler(BaseHandler):
                 ctf.cred_user = purpose.get("cred_user", "")
                 ctf.cred_pw = purpose.get("cred_pw", "")
                 ctf.cred_url = purpose.get("cred_url", "")
+                ctf.finished = purpose.get("finished", False)
 
                 database[ctf.channel_id] = ctf
 
