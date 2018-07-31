@@ -220,6 +220,44 @@ class AddChallengeCommand(Command):
         slack_wrapper.post_message(channel_id, text)
 
 
+class RemoveChallengeCommand(Command):
+    """
+    Remove a challenge from the CTF.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id):
+        """Execute the RemoveChallenge command."""
+        challenge_name = args[0].lower() if args else None
+
+        # Validate that current channel is a CTF channel
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not ctf:
+            raise InvalidCommand("Remove challenge failed: You are not in a CTF channel.")
+
+        # Get challenge object for challenge name or channel id
+        challenge = ""
+        if challenge_name:
+            challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+        else:
+            challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not challenge:
+            raise InvalidCommand("This challenge does not exist.")
+
+        # Remove the challenge channel and ctf challenge entry
+        slack_wrapper.archive_private_channel(challenge.channel_id)
+        remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
+
+        # Show confirmation message
+        member = slack_wrapper.get_member(user_id)
+        display_name = get_display_name(member)
+
+        slack_wrapper.post_message(
+            ctf.channel_id, text="Challenge *{}* was removed by *{}*.".format(challenge.name, display_name))
+
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
@@ -470,6 +508,7 @@ class ArchiveCTFCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, channel_id, user_id):
         """Execute the ArchiveCTF command."""
+        no_post = args[0].lower() if args else None
 
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not ctf:
@@ -478,14 +517,15 @@ class ArchiveCTFCommand(Command):
         # Post solves if git support is enabled
         if ST_GIT_SUPPORT:
             try:
-                if not ctf.long_name:
-                    raise InvalidCommand(
-                        "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
+                if not no_post:
+                    if not ctf.long_name:
+                        raise InvalidCommand(
+                            "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
 
-                solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
+                    solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
 
-                message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
-                slack_wrapper.post_message(channel_id, message)
+                    message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
+                    slack_wrapper.post_message(channel_id, message)
 
             except Exception as ex:
                 raise InvalidCommand(str(ex))
@@ -645,11 +685,12 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),          
             "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
-            "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"])
+            "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
+            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True)
         }
 
     @staticmethod
