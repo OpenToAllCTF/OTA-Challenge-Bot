@@ -28,11 +28,13 @@ class AskCommand(Command):
                 answer = ""
 
                 for pod in res.pods:
-                    for subpod in pod.subpods:                        
+                    for subpod in pod.subpods:
                         if "plaintext" in subpod.keys() and subpod["plaintext"]:
                             answer += "```\n"
-                            answer += subpod.plaintext + "\n"
+                            answer += subpod.plaintext[:512] + "\n"
                             answer += "```\n"
+                            if (len(subpod.plaintext) > 512):
+                                answer += "*shortened*"
 
                 WolframHandler.send_message(slack_wrapper, channel_id, user_id, answer)
             except Exception as ex:
