@@ -25,16 +25,16 @@ class AskCommand(Command):
                 client = wolframalpha.Client(app_id)
                 res = client.query(question)
 
-                answer = next(res.results, None)
+                answer = ""
 
-                if answer:
-                    response = answer.text
+                for pod in res.pods:
+                    for subpod in pod.subpods:                        
+                        if "plaintext" in subpod.keys() and subpod["plaintext"]:
+                            answer += "```\n"
+                            answer += subpod.plaintext + "\n"
+                            answer += "```\n"
 
-                    WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
-                else:
-                    response = "Wolfram Alpha doesn't seem to know the answer for this :("
-
-                    WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
+                WolframHandler.send_message(slack_wrapper, channel_id, user_id, answer)
             except Exception as ex:
                 if "Invalid appid" in str(ex):
                     response = "Wolfram Alpha app id doesn't seem to be correct (or api is choking)..."
