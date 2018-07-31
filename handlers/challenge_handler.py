@@ -276,8 +276,10 @@ class StatusCommand(Command):
 
         if current_ctf:
             ctf_list = [current_ctf]
+            check_for_finish = False
         else:
             ctf_list = ctfs.values()
+            check_for_finish = True
 
         response = ""
         for ctf in ctf_list:
@@ -286,12 +288,11 @@ class StatusCommand(Command):
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
             # Check if the CTF has any challenges
-            if not solved and not unsolved:
-                if ctf.finished:
-                    response += "*[ No challenges solved ]*\n"
-                else:
-                    response += "*[ No challenges available yet ]*\n"
-
+            if check_for_finish and ctf.finished and not solved:            
+                response += "*[ No challenges solved ]*\n"
+                continue
+            elif not solved and not unsolved:
+                response += "*[ No challenges available yet ]*\n"
                 continue
 
             # Solved challenges
@@ -304,7 +305,7 @@ class StatusCommand(Command):
                     transliterate(", ".join(challenge.solver)))
 
             # Unsolved challenges
-            if not ctf.finished:
+            if not check_for_finish or not ctf.finished:
                 response += "* > Unsolved*\n" if unsolved else "\n"
                 for challenge in unsolved:
 
