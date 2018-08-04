@@ -4,6 +4,7 @@ from bottypes.ctf import *
 from bottypes.challenge import *
 from bottypes.player import *
 from bottypes.command_descriptor import *
+from bottypes.reaction_descriptor import *
 import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from util.util import *
@@ -154,7 +155,8 @@ class RenameCTFCommand(Command):
 
         # Rename all challenge channels for this ctf
         for chall in ctf.challenges:
-            RenameChallengeCommand().execute(slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id, user_is_admin)
+            RenameChallengeCommand().execute(
+                slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id, user_is_admin)
 
         text = "CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name)
         slack_wrapper.post_message(ctf.channel_id, text)
@@ -166,7 +168,7 @@ class AddChallengeCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):        
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddChallenge command."""
         name = args[0].lower()
         category = args[1] if len(args) > 1 else None
@@ -262,14 +264,35 @@ class RemoveChallengeCommand(Command):
             ctf.channel_id, text="Challenge *{}* was removed by *{}*.".format(challenge.name, display_name))
 
 
+class UpdateStatusCommand(Command):
+    """
+    Updates the status information, when the refresh reaction was clicked.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the UpdateStatus command."""
+        timestamp = args["timestamp"]
+
+        # Check message content, if the emoji was placed on a status message
+        # (no tagging atm, so just check it starts like a status message)
+        result = slack_wrapper.get_message(channel_id, timestamp)
+
+        if result["ok"] and result["messages"]:
+            if "==========" in result["messages"][0]["text"]:
+                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin)
+
+                slack_wrapper.update_message(channel_id, timestamp, status)
+
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
-        """Execute the Status command."""
+    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Gathers the ctf information and builds the status response."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
         members = {m["id"]: m["profile"]["display_name"]
@@ -292,7 +315,7 @@ class StatusCommand(Command):
             unsolved = [c for c in ctf.challenges if not c.is_solved]
 
             # Check if the CTF has any challenges
-            if check_for_finish and ctf.finished and not solved:            
+            if check_for_finish and ctf.finished and not solved:
                 response += "*[ No challenges solved ]*\n"
                 continue
             elif not solved and not unsolved:
@@ -327,7 +350,15 @@ class StatusCommand(Command):
         if response == "":  # Response is empty
             response += "*There are currently no running CTFs*"
 
-        slack_wrapper.post_message(channel_id, response)
+        return response
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the Status command."""
+        response = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin)
+
+        #slack_wrapper.post_message(channel_id, response)
+        slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
 
 
 class WorkonCommand(Command):
@@ -398,7 +429,7 @@ class SolveCommand(Command):
 
         if not challenge:
             raise InvalidCommand("This challenge does not exist.")
-         
+
         additional_solver = []
 
         # Get solving member
@@ -694,12 +725,15 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),          
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
             "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True)
+        }
+        self.reactions = {
+            "arrows_clockwise": ReactionDesc(UpdateStatusCommand)
         }
 
     @staticmethod
