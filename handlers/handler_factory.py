@@ -49,7 +49,7 @@ def process(slack_wrapper, botserver, message, channel_id, user_id):
 
     process_command(slack_wrapper, message, args, channel_id, user_id)
 
-def process_command(slack_wrapper, message, args, channel_id, user_id):
+def process_command(slack_wrapper, message, args, channel_id, user_id, admin_override = False):
 
     try:
         handler_name = args[0].lower()
@@ -58,6 +58,9 @@ def process_command(slack_wrapper, message, args, channel_id, user_id):
 
         admin_users = botserver.get_config_option("admin_users")
         user_is_admin = admin_users and user_id in admin_users
+
+        if admin_override:
+            user_is_admin = True
 
         # Call a specific handler with this command
         handler = handlers.get(handler_name)

@@ -23,7 +23,7 @@ class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute AddCTF command."""
         name = args[0].lower()
         long_name = " ".join(args[1:])
@@ -74,7 +74,7 @@ class RenameChallengeCommand(Command):
     """Renames an existing challenge channel."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         old_name = args[0].lower()
         new_name = args[1].lower()
 
@@ -121,7 +121,7 @@ class RenameCTFCommand(Command):
     """Renames an existing challenge channel."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         old_name = args[0].lower()
         new_name = args[1].lower()
 
@@ -154,7 +154,7 @@ class RenameCTFCommand(Command):
 
         # Rename all challenge channels for this ctf
         for chall in ctf.challenges:
-            RenameChallengeCommand().execute(slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id)
+            RenameChallengeCommand().execute(slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id, user_is_admin)
 
         text = "CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name)
         slack_wrapper.post_message(ctf.channel_id, text)
@@ -166,7 +166,7 @@ class AddChallengeCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):        
         """Execute the AddChallenge command."""
         name = args[0].lower()
         category = args[1] if len(args) > 1 else None
@@ -183,6 +183,10 @@ class AddChallengeCommand(Command):
         # Check for invalid characters
         if not is_valid_name(name):
             raise InvalidCommand("Command failed: Invalid characters for challenge name found.")
+
+        # Check for finished ctf
+        if ctf.finished and not user_is_admin:
+            raise InvalidCommand("Add challenge faild: CTF *{}* is over...".format(ctf.name))
 
         # Create the challenge channel
         channel_name = "{}-{}".format(ctf.name, name)
@@ -226,7 +230,7 @@ class RemoveChallengeCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the RemoveChallenge command."""
         challenge_name = args[0].lower() if args else None
 
@@ -264,7 +268,7 @@ class StatusCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Status command."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
@@ -332,7 +336,7 @@ class WorkonCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Workon command."""
         challenge_name = args[0].lower() if args else None
 
@@ -374,7 +378,7 @@ class SolveCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Solve command."""
         challenge = ""
 
@@ -394,7 +398,7 @@ class SolveCommand(Command):
 
         if not challenge:
             raise InvalidCommand("This challenge does not exist.")
-
+         
         additional_solver = []
 
         # Get solving member
@@ -419,6 +423,10 @@ class SolveCommand(Command):
             for chal in ctf.challenges:
                 if chal.channel_id == challenge.channel_id:
                     if not challenge.is_solved:
+                        # Check for finished ctf
+                        if ctf.finished and not user_is_admin:
+                            raise InvalidCommand("Solve challenge faild: CTF *{}* is over...".format(ctf.name))
+
                         member = slack_wrapper.get_member(user_id)
                         solver_list = [get_display_name(member)] + additional_solver
 
@@ -458,7 +466,7 @@ class UnsolveCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Unsolve command."""
         challenge = ""
 
@@ -507,7 +515,7 @@ class ArchiveCTFCommand(Command):
     """Archive the challenge channels for a given CTF."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the ArchiveCTF command."""
         no_post = args[0].lower() if args else None
 
@@ -555,7 +563,7 @@ class EndCTFCommand(Command):
     """
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the EndCTF command."""
 
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -577,7 +585,7 @@ class ReloadCommand(Command):
     """Reload the ctf information from slack to reflect updates of channel purposes."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Reload command."""
 
         slack_wrapper.post_message(channel_id, "Updating CTFs and challenges...")
@@ -589,7 +597,7 @@ class AddCredsCommand(Command):
     """Add credential informations for current ctf."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddCreds command."""
 
         cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
@@ -614,7 +622,7 @@ class ShowCredsCommand(Command):
     """Shows credential informations for current ctf."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the ShowCreds command."""
 
         cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)

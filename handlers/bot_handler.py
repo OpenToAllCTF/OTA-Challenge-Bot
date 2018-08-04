@@ -17,7 +17,7 @@ class PingCommand(Command):
     """Ping this server to check for uptime."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Announce the bot's presence in the channel."""
         slack_wrapper.post_message(channel_id, "Pong!")
 
@@ -26,7 +26,7 @@ class IntroCommand(Command):
     """Show an introduction message for new members."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Intro command."""
         try:
             with open("intro_msg") as f:
@@ -43,7 +43,7 @@ class VersionCommand(Command):
     """Show git information about the current running version of the bot."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id):
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Version command."""
         try:
             message = GitHandler(".").get_version()
