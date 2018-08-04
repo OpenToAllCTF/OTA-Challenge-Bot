@@ -14,11 +14,13 @@ from bottypes.invalid_command import *
 handlers = {}
 botserver = None
 
+
 def register(handler_name, handler):
     log.info("Registering new handler: {} ({})".format(handler_name, handler.__class__.__name__))
 
     handlers[handler_name] = handler
     handler.handler_name = handler_name
+
 
 def initialize(slack_wrapper, bot_id, _botserver):
     """
@@ -31,10 +33,11 @@ def initialize(slack_wrapper, bot_id, _botserver):
     for handler in handlers:
         handlers[handler].init(slack_wrapper)
 
+
 def process(slack_wrapper, botserver, message, channel_id, user_id):
     log.debug("Processing message: {} from {} ({})".format(message, channel_id, user_id))
 
-    try: # Parse command and check for malformed input
+    try:  # Parse command and check for malformed input
         command_line = unidecode(message)
 
         lexer = shlex.shlex(command_line, posix=True)
@@ -49,7 +52,22 @@ def process(slack_wrapper, botserver, message, channel_id, user_id):
 
     process_command(slack_wrapper, message, args, channel_id, user_id)
 
-def process_command(slack_wrapper, message, args, channel_id, user_id, admin_override = False):
+
+def process_reaction(slack_wrapper, reaction, timestamp, channel_id, user_id):
+    log.debug("Processing reaction: {} from {} ({})".format(reaction, channel_id, timestamp))
+
+    processed = False
+
+    admin_users = botserver.get_config_option("admin_users")
+    user_is_admin = admin_users and user_id in admin_users
+
+    for handler_name, handler in handlers.items():
+        if handler.can_handle_reaction(reaction):
+            handler.process_reaction(slack_wrapper, reaction, channel_id, timestamp, user_id, user_is_admin)
+            processed = True
+
+
+def process_command(slack_wrapper, message, args, channel_id, user_id, admin_override=False):
 
     try:
         handler_name = args[0].lower()
@@ -71,13 +89,13 @@ def process_command(slack_wrapper, message, args, channel_id, user_id, admin_ove
                 usage_msg += handler.get_usage(user_is_admin)
                 processed = True
 
-            else: # Send command to specified handler
+            else:  # Send command to specified handler
                 command = args[1].lower()
                 if handler.can_handle(command, user_is_admin):
                     handler.process(slack_wrapper, command, args[2:], channel_id, user_id, user_is_admin)
                     processed = True
 
-        else: # Pass the command to every available handler
+        else:  # Pass the command to every available handler
             command = args[0].lower()
 
             for handler_name, handler in handlers.items():

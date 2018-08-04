@@ -103,6 +103,22 @@ class SlackWrapper:
         self.client.api_call("chat.postMessage", channel=channel_id,
                              text=text, as_user=True, parse=parse)
 
+    def post_message_with_react(self, channel_id, text, reaction, parse="full"):
+        """Post a message in a given channel and add the specified reaction to it."""
+        result = self.client.api_call("chat.postMessage", channel=channel_id, text=text,
+                                      as_user=True, parse=parse)
+
+        if result["ok"]:
+            self.client.api_call("reactions.add", channel=channel_id, name=reaction, timestamp=result["ts"])
+
+    def get_message(self, channel_id, timestamp):
+        """Retrieve a message from the channel with the specified timestamp."""
+        return self.client.api_call("channels.history", channel=channel_id, latest=timestamp, count=1, inclusive=True)
+
+    def update_message(self, channel_id, msg_timestamp, text, parse="full"):
+        """Update a message, identified by the specified timestamp with a new text."""
+        self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
+
     def get_public_channels(self):
         """Fetch all public channels."""
         return self.client.api_call("channels.list")

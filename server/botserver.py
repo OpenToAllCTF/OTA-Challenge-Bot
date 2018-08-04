@@ -87,6 +87,20 @@ class BotServer(threading.Thread):
 
         return None, None, None
 
+    def parse_slack_reaction(self, message_list):
+        for msg in message_list:
+            msgtype = msg.get("type")
+
+            if msgtype == "reaction_removed" or msgtype == "reaction_added":
+                # Ignore reactions from the bot itself
+                if msg["user"] == self.bot_id:
+                    continue
+
+                if msg["item"]:
+                    return msg["reaction"], msg["item"]["channel"], msg["item"]["ts"], msg["user"]
+
+        return None, None, None, None
+
     def load_bot_data(self):
         """
         Fetches the bot user information such as
@@ -122,14 +136,22 @@ class BotServer(threading.Thread):
                     log.info("Bot is running...")
                     while self.running:
                         message = self.slack_wrapper.read()
-                        command, channel, user = self.parse_slack_message(message)
+                        if message:
+                            reaction, channel, ts, reaction_user = self.parse_slack_reaction(message)
 
-                        if command:
-                            log.debug("Received bot command : {} ({})".format(command, channel))
-                            handler_factory.process(self.slack_wrapper, self,
-                                                   command, channel, user)
+                            if reaction:
+                                log.debug("Received reaction : {} ({})".format(reaction, channel))
+                                handler_factory.process_reaction(
+                                    self.slack_wrapper, reaction, ts, channel, reaction_user)
 
-                        time.sleep(READ_WEBSOCKET_DELAY)
+                            command, channel, user = self.parse_slack_message(message)
+
+                            if command:
+                                log.debug("Received bot command : {} ({})".format(command, channel))
+                                handler_factory.process(self.slack_wrapper, self,
+                                                        command, channel, user)
+
+                            time.sleep(READ_WEBSOCKET_DELAY)
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
                     self.running = False

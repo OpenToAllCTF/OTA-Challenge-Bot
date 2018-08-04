@@ -6,7 +6,8 @@ from bottypes.invalid_command import *
 
 class BaseHandler(ABC):
     commands = {}  # Overridden by concrete class
-    handler_name = "" # Overridden by concrete class
+    reactions = {}
+    handler_name = ""  # Overridden by concrete class
 
     def can_handle(self, command, user_is_admin):
         if command in self.commands:
@@ -15,6 +16,11 @@ class BaseHandler(ABC):
             if user_is_admin or not cmd_desc.is_admin_cmd:
                 return True
 
+        return False
+
+    def can_handle_reaction(self, reaction):
+        if reaction in self.reactions:
+            return True
         return False
 
     def init(self, slack_wrapper):
@@ -67,3 +73,10 @@ class BaseHandler(ABC):
             if len(args) < len(cmd_descriptor.arguments):
                 raise InvalidCommand(self.command_usage(command, cmd_descriptor))
             cmd_descriptor.command.execute(slack_wrapper, args, channel, user, user_is_admin)
+
+    def process_reaction(self, slack_wrapper, reaction, channel, timestamp, user, user_is_admin):
+        reaction_descriptor = self.reactions[reaction]
+
+        if reaction_descriptor:
+            reaction_descriptor.command.execute(
+                slack_wrapper, {"reaction": reaction, "timestamp": timestamp}, channel, user, user_is_admin)
