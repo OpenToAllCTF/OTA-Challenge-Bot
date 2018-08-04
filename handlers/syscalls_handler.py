@@ -29,12 +29,6 @@ class ShowSyscallCommand(Command):
     """Shows information about the requested syscall."""
 
     @classmethod
-    def send_message(cls, slack_wrapper, channel_id, user_id, msg):
-        """Send message to user or channel."""
-        dest_channel = channel_id if (SyscallsHandler.MSGMODE == 0) else user_id
-        slack_wrapper.post_message(dest_channel, msg)
-
-    @classmethod
     def parse_syscall_info(cls, syscall_entries):
         """Parse syscall information."""
         msg = "```"
@@ -61,14 +55,12 @@ class ShowSyscallCommand(Command):
                 entry = archObj.getEntryByName(args[1].lower())
 
             if entry:
-                cls.send_message(slack_wrapper, channel_id,
-                                 user_id, cls.parse_syscall_info(entry))
+                slack_wrapper.post_message(channel_id, cls.parse_syscall_info(entry))
             else:
-                cls.send_message(slack_wrapper, channel_id, user_id,
-                                 "Specified syscall not found: `{} (Arch: {})`".format(args[1], args[0]))
+                slack_wrapper.post_message(
+                    channel_id, "Specified syscall not found: `{} (Arch: {})`".format(args[1], args[0]))
         else:
-            cls.send_message(slack_wrapper, channel_id, user_id,
-                             "Specified architecture not available: `{}`".format(args[0]))
+            slack_wrapper.post_message(channel_id, "Specified architecture not available: `{}`".format(args[0]))
 
 
 class SyscallsHandler(BaseHandler):
@@ -77,19 +69,15 @@ class SyscallsHandler(BaseHandler):
 
     Commands :
     # Show available architectures
-    @ota_bot syscalls available
+    !syscalls available
 
     # Show syscall information
-    @ota_bot syscalls show x86 execve
-    @ota_bot syscalls show x86 11
+    !syscalls show x86 execve
+    !syscalls show x86 11
     """
 
     # Specify the base directory, where the syscall tables are located
     BASEDIR = "addons/syscalls/tables"
-
-    # Specify if messages from syscall handler should be posted to channel (0)
-    # or per dm (1)
-    MSGMODE = 0
 
     syscallInfo = None
 
@@ -100,5 +88,6 @@ class SyscallsHandler(BaseHandler):
             "available": CommandDesc(ShowAvailableArchCommand, "Shows the available syscall architectures", None, None),
             "show": CommandDesc(ShowSyscallCommand, "Show information for a specific syscall", ["arch", "syscall name/syscall id"], None),
         }
+
 
 handler_factory.register("syscalls", SyscallsHandler())

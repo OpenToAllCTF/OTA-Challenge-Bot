@@ -19,7 +19,7 @@ class AskCommand(Command):
         """Execute the Ask command."""
         app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 
-        verbose = (args[0] if len(args)>0 else "") == "-v"
+        verbose = (args[0] if len(args) > 0 else "") == "-v"
 
         if app_id:
             try:
@@ -48,18 +48,18 @@ class AskCommand(Command):
                     if answer:
                         answer = answer.text
 
-                WolframHandler.send_message(slack_wrapper, channel_id, user_id, answer)
+                slack_wrapper.post_message(channel_id, answer)
             except Exception as ex:
                 if "Invalid appid" in str(ex):
                     response = "Wolfram Alpha app id doesn't seem to be correct (or api is choking)..."
                 else:
                     response = "Wolfram Alpha doesn't seem to understand you :("
 
-                WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
+                slack_wrapper.post_message(channel_id, response)
         else:
             response = "It seems you have no valid wolfram alpha app id. Contact an admin about this..."
 
-            WolframHandler.send_message(slack_wrapper, channel_id, user_id, response)
+            slack_wrapper.post_message(channel_id, response)
 
 
 class WolframHandler(BaseHandler):
@@ -70,11 +70,6 @@ class WolframHandler(BaseHandler):
     # Ask wolfram alpha a question
     !wolfram ask
     """
-
-    @staticmethod
-    def send_message(slack_wrapper, channel_id, user_id, msg):
-        """Send message to user or channel, depending on configuration."""
-        slack_wrapper.post_message(channel_id, msg)
 
     def __init__(self):
         self.commands = {
