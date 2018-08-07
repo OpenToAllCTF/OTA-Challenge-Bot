@@ -295,6 +295,11 @@ class StatusCommand(Command):
         """Gathers the ctf information and builds the status response."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
+
+        # Bail out, if we couldn't read member list
+        if not "members" in members:
+            raise InvalidCommand("Status failed. Could not refresh member list...")
+
         members = {m["id"]: m["profile"]["display_name"]
                    for m in members['members'] if m.get("presence") == "active"}
 
