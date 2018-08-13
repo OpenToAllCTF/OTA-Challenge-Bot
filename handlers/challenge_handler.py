@@ -330,8 +330,9 @@ class StatusCommand(Command):
         for ctf in ctf_list:
             # Build short status list
             solved = [c for c in ctf.challenges if c.is_solved]
-            
-            response += "*#{} : _{}_ {} [{} solved / {} total]*\n".format(ctf.name, ctf.long_name, "(finished)" if ctf.finished else "", len(solved), len(ctf.challenges))
+
+            response += "*#{} : _{}_ {} [{} solved / {} total]*\n".format(
+                ctf.name, ctf.long_name, "(finished)" if ctf.finished else "", len(solved), len(ctf.challenges))
 
         response = response.strip()
 
@@ -339,7 +340,6 @@ class StatusCommand(Command):
             response += "*There are currently no running CTFs*"
 
         return response
-
 
     @classmethod
     def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish):
@@ -402,7 +402,7 @@ class StatusCommand(Command):
     def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, verbose=True):
         """Gathers the ctf information and builds the status response."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        
+
         # Check if the user is in a ctf channel
         current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
@@ -432,7 +432,7 @@ class StatusCommand(Command):
         if verbose:
             slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
         else:
-            slack_wrapper.post_message_with_react(channel_id, response, "arrows_counterclockwise")            
+            slack_wrapper.post_message_with_react(channel_id, response, "arrows_counterclockwise")
 
 
 class WorkonCommand(Command):
