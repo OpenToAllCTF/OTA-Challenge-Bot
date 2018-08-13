@@ -96,7 +96,7 @@ class AsCommand(Command):
     def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the As command."""
         dest_user = args[0].lower()
-        dest_command = args[1].lower()
+        dest_command = args[1].lower().lstrip("!")
 
         dest_arguments = args[2:]
 
