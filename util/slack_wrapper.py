@@ -1,5 +1,6 @@
 from slackclient import SlackClient
 from util.util import *
+from util.loghandler import *
 import time
 
 class SlackWrapper:
@@ -49,7 +50,12 @@ class SlackWrapper:
         """
         Return a list of all members.
         """
-        return self.client.api_call("users.list", presence=True)
+        response = self.client.api_call("users.list", presence=True)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call("users.list", presence=True)
+
+        return response
 
     def get_member(self, user_id):
         """
@@ -59,7 +65,8 @@ class SlackWrapper:
 
     def check_rate_limit(self, response):
         if not response["ok"] and response["error"] == "ratelimited":
-            time.sleep(2)
+            log.error("Hit ratelimit, gonna take a nap...")            
+            time.sleep(20)
             return True
 
         return False
@@ -158,7 +165,12 @@ class SlackWrapper:
 
     def update_message(self, channel_id, msg_timestamp, text, parse="full"):
         """Update a message, identified by the specified timestamp with a new text."""
-        self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
+        response = self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
+
+        return response
 
     def get_public_channels(self):
         """Fetch all public channels."""
