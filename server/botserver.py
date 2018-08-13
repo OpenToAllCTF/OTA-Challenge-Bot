@@ -25,6 +25,7 @@ class BotServer(threading.Thread):
         self.bot_id = ""
         self.bot_at = ""
         self.slack_wrapper = None
+        self.READ_WEBSOCKET_DELAY = 1.0  # 1 second delay between reading from firehose
 
     def lock(self):
         """Acquire global lock for working with global (not thread-safe) data."""
@@ -113,6 +114,17 @@ class BotServer(threading.Thread):
         log.debug("Found bot user {} ({})".format(self.bot_name, self.bot_id))
         self.running = True
 
+    def check_for_rate_limit(self):
+        now = time.time()
+
+        log.info("Rate check: {}".format(now - self.last_read))
+
+        if now - self.last_read < self.READ_WEBSOCKET_DELAY:
+            log.info("Rate limit could be hit => sleep")
+            time.sleep(1)
+
+        self.last_read = now
+
     def run(self):
         log.info("Starting server thread...")
 
@@ -126,7 +138,6 @@ class BotServer(threading.Thread):
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
                     self.load_bot_data()
-                    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
 
                     # Might even pass the bot server for handlers?
                     log.info("Initializing handlers...")
@@ -134,12 +145,18 @@ class BotServer(threading.Thread):
 
                     # Main loop
                     log.info("Bot is running...")
+
+                    self.last_read = time.time() - self.READ_WEBSOCKET_DELAY
+
                     while self.running:
                         message = self.slack_wrapper.read()
+
                         if message:
                             reaction, channel, ts, reaction_user = self.parse_slack_reaction(message)
 
                             if reaction:
+                                self.check_for_rate_limit()
+
                                 log.debug("Received reaction : {} ({})".format(reaction, channel))
                                 handler_factory.process_reaction(
                                     self.slack_wrapper, reaction, ts, channel, reaction_user)
@@ -147,11 +164,11 @@ class BotServer(threading.Thread):
                             command, channel, user = self.parse_slack_message(message)
 
                             if command:
+                                self.check_for_rate_limit()
+
                                 log.debug("Received bot command : {} ({})".format(command, channel))
                                 handler_factory.process(self.slack_wrapper, self,
                                                         command, channel, user)
-
-                            # time.sleep(READ_WEBSOCKET_DELAY)
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
                     self.running = False
