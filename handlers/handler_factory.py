@@ -54,17 +54,23 @@ def process(slack_wrapper, botserver, message, channel_id, user_id):
 
 
 def process_reaction(slack_wrapper, reaction, timestamp, channel_id, user_id):
-    log.debug("Processing reaction: {} from {} ({})".format(reaction, channel_id, timestamp))
+    try:
+        log.debug("Processing reaction: {} from {} ({})".format(reaction, channel_id, timestamp))
 
-    processed = False
+        processed = False
 
-    admin_users = botserver.get_config_option("admin_users")
-    user_is_admin = admin_users and user_id in admin_users
+        admin_users = botserver.get_config_option("admin_users")
+        user_is_admin = admin_users and user_id in admin_users
 
-    for handler_name, handler in handlers.items():
-        if handler.can_handle_reaction(reaction):
-            handler.process_reaction(slack_wrapper, reaction, channel_id, timestamp, user_id, user_is_admin)
-            processed = True
+        for handler_name, handler in handlers.items():
+            if handler.can_handle_reaction(reaction):
+                handler.process_reaction(slack_wrapper, reaction, channel_id, timestamp, user_id, user_is_admin)
+                processed = True
+    except InvalidCommand as e:
+        slack_wrapper.post_message(channel_id, e.message)
+
+    except Exception:
+        log.exception("An error has occured while processing a command")
 
 
 def process_command(slack_wrapper, message, args, channel_id, user_id, admin_override=False):
