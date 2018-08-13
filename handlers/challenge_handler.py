@@ -291,7 +291,28 @@ class UpdateStatusCommand(Command):
 
         if result["ok"] and result["messages"]:
             if "==========" in result["messages"][0]["text"]:
-                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin)
+                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True)
+
+                slack_wrapper.update_message(channel_id, timestamp, status)
+
+
+class UpdateShortStatusCommand(Command):
+    """
+    Updates short status information, when the refresh reaction was clicked.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the UpdateStatus command."""
+        timestamp = args["timestamp"]
+
+        # Check message content, if the emoji was placed on a status message
+        # (no tagging atm, so just check it starts like a status message)
+        result = slack_wrapper.get_message(channel_id, timestamp)
+
+        if result["ok"] and result["messages"]:
+            if "solved /" in result["messages"][0]["text"]:
+                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -302,9 +323,27 @@ class StatusCommand(Command):
     """
 
     @classmethod
-    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, long_status=True):
-        """Gathers the ctf information and builds the status response."""
-        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+    def build_short_status(cls, ctf_list, check_for_finish):
+        """Build short status list."""
+        response = ""
+
+        for ctf in ctf_list:
+            # Build short status list
+            solved = [c for c in ctf.challenges if c.is_solved]
+            
+            response += "*#{} : _{}_ {} [{} solved / {} total]*\n".format(ctf.name, ctf.long_name, "(finished)" if ctf.finished else "", len(solved), len(ctf.challenges))
+
+        response = response.strip()
+
+        if response == "":  # Response is empty
+            response += "*There are currently no running CTFs*"
+
+        return response
+
+
+    @classmethod
+    def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish):
+        """Build verbose status list."""
         members = slack_wrapper.get_members()
 
         # Bail out, if we couldn't read member list
@@ -314,23 +353,8 @@ class StatusCommand(Command):
         members = {m["id"]: m["profile"]["display_name"]
                    for m in members['members'] if m.get("presence") == "active"}
 
-        # Check if the user is in a ctf channel
-        current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
-
-        if current_ctf:
-            ctf_list = [current_ctf]
-            check_for_finish = False
-        else:
-            ctf_list = ctfs.values()
-            check_for_finish = True
-
         response = ""
         for ctf in ctf_list:
-            # Build short status list
-            if not long_status:
-                response += "*#{} : _{}_ {}*\n".format(ctf.name, ctf.long_name, "(finished)" if ctf.finished else "")
-                continue
-
             # Build long status list
             response += "*============= #{} {} =============*\n".format(ctf.name, "(finished)" if ctf.finished else "")
             solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
@@ -375,24 +399,40 @@ class StatusCommand(Command):
         return response
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
-        """Execute the Status command."""
-        response = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin)
+    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, verbose=True):
+        """Gathers the ctf information and builds the status response."""
+        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+        
+        # Check if the user is in a ctf channel
+        current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
-        #slack_wrapper.post_message(channel_id, response)
-        slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
+        if current_ctf:
+            ctf_list = [current_ctf]
+            check_for_finish = False
+            verbose = True              # override verbose for ctf channels
+        else:
+            ctf_list = ctfs.values()
+            check_for_finish = True
 
+        if verbose:
+            response = cls.build_verbose_status(slack_wrapper, ctf_list, check_for_finish)
+        else:
+            response = cls.build_short_status(ctf_list, check_for_finish)
 
-class ShortStatusCommand(Command):
-    """
-    Show short status list.
-    """
+        return response
 
     @classmethod
     def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
-        response = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
+        """Execute the Status command."""
+        verbose = args[0] == "-v" if len(args) > 0 else False
 
-        slack_wrapper.post_message(channel_id, response)
+        response = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin, verbose)
+
+        #slack_wrapper.post_message(channel_id, response)
+        if verbose:
+            slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
+        else:
+            slack_wrapper.post_message_with_react(channel_id, response, "arrows_counterclockwise")            
 
 
 class WorkonCommand(Command):
@@ -759,7 +799,6 @@ class ChallengeHandler(BaseHandler):
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
-            "shortstatus": CommandDesc(ShortStatusCommand, "Show ongoing ctf's without challenge information", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
@@ -772,7 +811,8 @@ class ChallengeHandler(BaseHandler):
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True)
         }
         self.reactions = {
-            "arrows_clockwise": ReactionDesc(UpdateStatusCommand)
+            "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
+            "arrows_counterclockwise": ReactionDesc(UpdateShortStatusCommand)
         }
 
     @staticmethod
