@@ -151,7 +151,7 @@ class BotServer(threading.Thread):
                                 handler_factory.process(self.slack_wrapper, self,
                                                         command, channel, user)
 
-                            time.sleep(READ_WEBSOCKET_DELAY)
+                            # time.sleep(READ_WEBSOCKET_DELAY)
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
                     self.running = False

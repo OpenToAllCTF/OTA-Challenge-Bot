@@ -1,6 +1,6 @@
 from slackclient import SlackClient
 from util.util import *
-
+import time
 
 class SlackWrapper:
     """
@@ -57,12 +57,25 @@ class SlackWrapper:
         """
         return self.client.api_call("users.info", user=user_id)
 
+    def check_rate_limit(self, response):
+        if not response["ok"] and response["error"] == "ratelimited":
+            time.sleep(2)
+            return True
+
+        return False
+
     def create_channel(self, name, is_private=False):
         """
         Create a channel with a given name.
         """
         api_call = "groups.create" if is_private else "channels.create"
-        return self.client.api_call(api_call, name=name, validate=False)
+        response = self.client.api_call(api_call, name=name, validate=False)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call(api_call, name=name, validate=False)
+
+        return response
+        
 
     def rename_channel(self, channel_id, new_name, is_private=False):
         """
@@ -70,7 +83,12 @@ class SlackWrapper:
         """
         api_call = "groups.rename" if is_private else "channels.rename"
 
-        return self.client.api_call(api_call, channel=channel_id, name=new_name, validate=False)
+        response = self.client.api_call(api_call, channel=channel_id, name=new_name, validate=False)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call(api_call, channel=channel_id, name=new_name, validate=False)
+
+        return response
 
     def get_channel_info(self, channel_id, is_private=False):
         """
@@ -78,7 +96,12 @@ class SlackWrapper:
         """
 
         api_call = "groups.info" if is_private else "channels.info"
-        return self.client.api_call(api_call, channel=channel_id)
+        response = self.client.api_call(api_call, channel=channel_id)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call(api_call, channel=channel_id)
+
+        return response
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
@@ -100,20 +123,38 @@ class SlackWrapper:
         Post a message in a given channel.
         channel_id can also be a user_id for private messages.
         """
-        self.client.api_call("chat.postMessage", channel=channel_id,
-                             text=text, as_user=True, parse=parse)
+        response = self.client.api_call("chat.postMessage", channel=channel_id,
+                                text=text, as_user=True, parse=parse)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call("chat.postMessage", channel=channel_id,
+                                text=text, as_user=True, parse=parse)
+
+        return response
 
     def post_message_with_react(self, channel_id, text, reaction, parse="full"):
         """Post a message in a given channel and add the specified reaction to it."""
         result = self.client.api_call("chat.postMessage", channel=channel_id, text=text,
                                       as_user=True, parse=parse)
 
+        if self.check_rate_limit(result):
+            result = self.client.api_call("chat.postMessage", channel=channel_id, text=text,
+                                      as_user=True, parse=parse)
+
         if result["ok"]:
-            self.client.api_call("reactions.add", channel=channel_id, name=reaction, timestamp=result["ts"])
+            result = self.client.api_call("reactions.add", channel=channel_id, name=reaction, timestamp=result["ts"])
+
+            if self.check_rate_limit(result):
+                result = self.client.api_call("reactions.add", channel=channel_id, name=reaction, timestamp=result["ts"])
 
     def get_message(self, channel_id, timestamp):
         """Retrieve a message from the channel with the specified timestamp."""
-        return self.client.api_call("channels.history", channel=channel_id, latest=timestamp, count=1, inclusive=True)
+        response = self.client.api_call("channels.history", channel=channel_id, latest=timestamp, count=1, inclusive=True)
+
+        if self.check_rate_limit(response):
+            response = self.client.api_call("channels.history", channel=channel_id, latest=timestamp, count=1, inclusive=True)
+
+        return response
 
     def update_message(self, channel_id, msg_timestamp, text, parse="full"):
         """Update a message, identified by the specified timestamp with a new text."""
