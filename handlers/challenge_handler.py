@@ -85,8 +85,9 @@ class RenameChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand("Rename challenge failed: You are not in a CTF channel.")
 
-        if len(new_name) > 10:
-            raise InvalidCommand("Rename challenge failed: Challenge name must be <= 10 characters.")
+        if len(new_name) > (20 - len(ctf.name)):
+            raise InvalidCommand(
+                "Rename challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
 
         # Check for invalid characters
         if not is_valid_name(new_name):
@@ -131,6 +132,14 @@ class RenameCTFCommand(Command):
         if not ctf:
             raise InvalidCommand("Rename CTF failed: CTF '{}' not found.".format(old_name))
 
+        ctflen = len(new_name)
+        
+        # pre-check challenges, if renaming would break channel name length
+        for chall in ctf.challenges:
+            if len(chall.name)+ctflen > 20:
+                raise InvalidCommand("Rename CTF failed: Challenge {} would break channel name length restriction.".format(chall.name))
+
+        # still ctf name shouldn't be longer than 10 characters for allowing reasonable challenge names
         if len(new_name) > 10:
             raise InvalidCommand("Rename CTF failed: CTF name must be <= 10 characters.")
 
@@ -179,8 +188,9 @@ class AddChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand("Add challenge failed: You are not in a CTF channel.")
 
-        if len(name) > 10:
-            raise InvalidCommand("Add challenge failed: Challenge name must be <= 10 characters.")
+        if len(name) > (20 - len(ctf.name)):
+            raise InvalidCommand(
+                "Add challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
 
         # Check for invalid characters
         if not is_valid_name(name):
