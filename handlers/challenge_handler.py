@@ -133,11 +133,12 @@ class RenameCTFCommand(Command):
             raise InvalidCommand("Rename CTF failed: CTF '{}' not found.".format(old_name))
 
         ctflen = len(new_name)
-        
+
         # pre-check challenges, if renaming would break channel name length
         for chall in ctf.challenges:
-            if len(chall.name)+ctflen > 20:
-                raise InvalidCommand("Rename CTF failed: Challenge {} would break channel name length restriction.".format(chall.name))
+            if len(chall.name) + ctflen > 20:
+                raise InvalidCommand(
+                    "Rename CTF failed: Challenge {} would break channel name length restriction.".format(chall.name))
 
         # still ctf name shouldn't be longer than 10 characters for allowing reasonable challenge names
         if len(new_name) > 10:
@@ -301,7 +302,7 @@ class StatusCommand(Command):
     """
 
     @classmethod
-    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, long_status=True):
         """Gathers the ctf information and builds the status response."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
         members = slack_wrapper.get_members()
@@ -325,6 +326,12 @@ class StatusCommand(Command):
 
         response = ""
         for ctf in ctf_list:
+            # Build short status list
+            if not long_status:
+                response += "*#{} : _{}_ {}*\n".format(ctf.name, ctf.long_name, "(finished)" if ctf.finished else "")
+                continue
+
+            # Build long status list
             response += "*============= #{} {} =============*\n".format(ctf.name, "(finished)" if ctf.finished else "")
             solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
             unsolved = [c for c in ctf.challenges if not c.is_solved]
@@ -374,6 +381,18 @@ class StatusCommand(Command):
 
         #slack_wrapper.post_message(channel_id, response)
         slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
+
+
+class ShortStatusCommand(Command):
+    """
+    Show short status list.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        response = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
+
+        slack_wrapper.post_message(channel_id, response)
 
 
 class WorkonCommand(Command):
@@ -740,6 +759,7 @@ class ChallengeHandler(BaseHandler):
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
+            "shortstatus": CommandDesc(ShortStatusCommand, "Show ongoing ctf's without challenge information", None, None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
