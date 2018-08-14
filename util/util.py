@@ -2,6 +2,7 @@ import json
 import pickle
 
 from util.loghandler import *
+from bottypes.invalid_command import *
 
 #######
 # Helper functions
@@ -104,6 +105,10 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
     Return the matching Challenge object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
+
+    if ctf_channel_id not in ctfs:
+        raise InvalidCommand("Could not find corresponding ctf channel. Try reloading ctf data.")
+
     for challenge in ctfs[ctf_channel_id].challenges:
         if challenge.name == challenge_name:
             return challenge
