@@ -8,6 +8,7 @@ from handlers import *
 from util.loghandler import *
 from util.slack_wrapper import *
 from bottypes.invalid_console_command import *
+from slackclient.server import SlackConnectionError
 
 
 class BotServer(threading.Thread):
@@ -157,5 +158,10 @@ class BotServer(threading.Thread):
                     self.running = False
             except websocket._exceptions.WebSocketConnectionClosedException:
                 log.exception("Web socket error. Executing reconnect...")
+            except SlackConnectionError:
+                # Try to reconnect if slackclient auto_reconnect didn't work out. Keep an eye on the logfiles,
+                # and remove the superfluous exception handling if auto_reconnect works.
+                log.exception("Slack connection error. Trying manual reconnect in 5 seconds...")
+                time.sleep(5)
 
         log.info("Shutdown complete...")

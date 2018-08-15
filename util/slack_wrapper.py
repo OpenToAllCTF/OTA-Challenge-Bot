@@ -15,7 +15,7 @@ class SlackWrapper:
         """
         self.api_key = api_key
         self.client = SlackClient(self.api_key)
-        self.connected = self.client.rtm_connect()
+        self.connected = self.client.rtm_connect(auto_reconnect=True)
         self.server = None
         self.username = None
         self.user_id = None
