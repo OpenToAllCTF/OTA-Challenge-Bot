@@ -291,7 +291,7 @@ class UpdateStatusCommand(Command):
 
         if result["ok"] and result["messages"]:
             if "==========" in result["messages"][0]["text"]:
-                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True)
+                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -312,7 +312,7 @@ class UpdateShortStatusCommand(Command):
 
         if result["ok"] and result["messages"]:
             if "solved /" in result["messages"][0]["text"]:
-                status = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
+                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -419,14 +419,14 @@ class StatusCommand(Command):
         else:
             response = cls.build_short_status(ctf_list, check_for_finish)
 
-        return response
+        return response, verbose
 
     @classmethod
     def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Status command."""
         verbose = args[0] == "-v" if len(args) > 0 else False
 
-        response = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin, verbose)
+        response, verbose = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin, verbose)
 
         #slack_wrapper.post_message(channel_id, response)
         if verbose:
