@@ -62,7 +62,7 @@ class AddCTFCommand(Command):
         # Invite everyone in the auto-invite list
         auto_invite_list = handler_factory.botserver.get_config_option("auto_invite")
 
-        if auto_invite_list:
+        if type(auto_invite_list) == list:
             for user_id in auto_invite_list:
                 slack_wrapper.invite_user(user_id, ctf_channel_id)
 
