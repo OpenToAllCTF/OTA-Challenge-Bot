@@ -12,12 +12,29 @@ from util.slack_wrapper import *
 from util.solveposthelper import *
 from util.githandler import *
 from util.ctf_template_resolver import *
+from random import randint
 
 
 def is_valid_name(name):
     if re.match(r"^[\w\-_]+$", name):
         return True
     return False
+
+
+class RollCommand(Command):
+    """Roll the dice. ;)"""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute Roll command."""
+        val = randint(0, 100)
+
+        member = slack_wrapper.get_member(user_id)
+        display_name = get_display_name(member)
+
+        message = "*{}* rolled the dice... *{}*".format(display_name, val)
+
+        slack_wrapper.post_message(channel_id, message)
 
 
 class AddCTFCommand(Command):
@@ -808,7 +825,8 @@ class ChallengeHandler(BaseHandler):
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
-            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True)
+            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
+            "roll": CommandDesc(RollCommand, "Roll the dice", None, None, True)
         }
         self.reactions = {
             "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
