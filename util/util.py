@@ -230,6 +230,52 @@ def remove_ctf_by_channel_id(database, ctf_channel_id):
     ctfs.pop(ctf_channel_id)
     pickle.dump(ctfs, open(database, "wb"))
 
+def get_tournament_by_channel_id(database, channel_id):
+    """
+    Fetch a Tournament object in the database with a given channel ID.
+    Return the matching Tournament object if found, or None otherwise.
+    """
+    tournaments = pickle.load(open(database, "rb"))
+    for c_id, tournament in tournaments.items():
+        if c_id == channel_id:
+            return tournament
+
+    return None
+
+
+def update_tournament(database, channel_id, update_func):
+    """
+    Fetch a Tournament object in the database with a given channel ID,
+    and apply update_func on it. Saves the ctf database afterwards.
+    """
+    with open(database, "rb") as f:
+        tournaments = pickle.load(f)
+
+    tournament = tournaments.get(channel_id)
+
+    if tournament:
+        update_func(tournament)
+
+        with open(database, "wb") as f:
+            pickle.dump(tournaments, f)
+
+        return tournament
+
+    return None
+
+
+def get_tournament_by_name(database, name):
+    """
+    Fetch a Tournament object in the database with a given name.
+    Return the matching Tournament object if found, or None otherwise.
+    """
+    tournaments = pickle.load(open(database, "rb"))
+    for tournament in tournaments.values():
+        if tournament.name == name:
+            return tournament
+
+    return None
+
 
 def parse_user_id(user_id):
     """
