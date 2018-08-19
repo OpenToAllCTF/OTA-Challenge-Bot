@@ -826,7 +826,7 @@ class ChallengeHandler(BaseHandler):
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
-            "roll": CommandDesc(RollCommand, "Roll the dice", None, None, True)
+            "roll": CommandDesc(RollCommand, "Roll the dice", None, None)
         }
         self.reactions = {
             "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
