@@ -3,6 +3,7 @@
   "bot_name" : "",
   "send_help_as_dm" : "1",
   "admin_users" : [],
+  "delete_watch_users" : [],
   "auto_invite" : [],
   "wolfram_app_id" : ""
 }

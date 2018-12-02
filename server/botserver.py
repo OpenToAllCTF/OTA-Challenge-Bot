@@ -78,13 +78,23 @@ class BotServer(threading.Thread):
         otherwise return (None, None, None).
         """
         for msg in message_list:
-            if msg.get("type") == "message" and "subtype" not in msg:
-                if self.bot_at in msg.get("text", ""):
-                    # Return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['user']
-                elif msg.get("text", "").startswith("!"):
-                    # Return text after the !
-                    return msg['text'][1:].strip(), msg['channel'], msg['user']
+            if msg.get("type") == "message":
+                if "subtype" not in msg:
+                    if self.bot_at in msg.get("text", ""):
+                        # Return text after the @ mention, whitespace removed
+                        return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['user']
+                    elif msg.get("text", "").startswith("!"):
+                        # Return text after the !
+                        return msg['text'][1:].strip(), msg['channel'], msg['user']
+                else:
+                    if msg['subtype'] == "message_deleted":
+                        if msg['previous_message']['user'] in self.config["delete_watch_users"]:
+                            try:
+                                user_name = self.slack_wrapper.get_member(msg['previous_message']['user'])
+                                display_name = get_display_name(user_name)
+                                self.slack_wrapper.post_message(msg['channel'], "*{}* just deleted : `{}`".format(display_name, msg['previous_message']['text']))
+                            except:
+                                pass
 
         return None, None, None
 
