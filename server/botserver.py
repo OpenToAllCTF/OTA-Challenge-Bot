@@ -163,5 +163,8 @@ class BotServer(threading.Thread):
                 # and remove the superfluous exception handling if auto_reconnect works.
                 log.exception("Slack connection error. Trying manual reconnect in 5 seconds...")
                 time.sleep(5)
+            except:                
+                log.exception("Unhandled error. Try reconnect...")
+                time.sleep(5)
 
         log.info("Shutdown complete...")
