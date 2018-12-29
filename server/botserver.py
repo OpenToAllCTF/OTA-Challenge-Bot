@@ -74,19 +74,19 @@ class BotServer(threading.Thread):
     def parse_slack_message(self, message_list):
         """
         The Slack Real Time Messaging API is an events firehose.
-        Return (message, channel, user) if the message is directed at the bot,
-        otherwise return (None, None, None).
+        Return (message, channel, ts, user) if the message is directed at the bot,
+        otherwise return (None, None, None, None).
         """
         for msg in message_list:
             if msg.get("type") == "message" and "subtype" not in msg:
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['user']
+                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
-                    return msg['text'][1:].strip(), msg['channel'], msg['user']
+                    return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
 
-        return None, None, None
+        return None, None, None, None
 
     def parse_slack_reaction(self, message_list):
         for msg in message_list:
@@ -145,12 +145,12 @@ class BotServer(threading.Thread):
                                 handler_factory.process_reaction(
                                     self.slack_wrapper, reaction, ts, channel, reaction_user)
 
-                            command, channel, user = self.parse_slack_message(message)
+                            command, channel, ts, user = self.parse_slack_message(message)
 
                             if command:
                                 log.debug("Received bot command : {} ({})".format(command, channel))
                                 handler_factory.process(self.slack_wrapper, self,
-                                                        command, channel, user)
+                                                        command, ts, channel, user)
 
                             time.sleep(READ_WEBSOCKET_DELAY)
                 else:
