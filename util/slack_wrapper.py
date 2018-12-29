@@ -95,13 +95,14 @@ class SlackWrapper:
 
             self.set_purpose(channel_id, json.dumps(purpose), is_private)
 
-    def post_message(self, channel_id, text, parse="full"):
+    def post_message(self, channel_id, text, timestamp="", parse="full"):
         """
         Post a message in a given channel.
         channel_id can also be a user_id for private messages.
+        Add timestamp for replying to a specific message.
         """
         self.client.api_call("chat.postMessage", channel=channel_id,
-                             text=text, as_user=True, parse=parse)
+                             text=text, as_user=True, parse=parse, thread_ts=timestamp)
 
     def post_message_with_react(self, channel_id, text, reaction, parse="full"):
         """Post a message in a given channel and add the specified reaction to it."""
