@@ -4,39 +4,66 @@ from bottypes.ctf import *
 from bottypes.challenge import *
 from bottypes.player import *
 from bottypes.command_descriptor import *
-from handlers.handler_factory import *
+from bottypes.reaction_descriptor import *
+import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
 from util.util import *
 from util.slack_wrapper import *
 from util.solveposthelper import *
 from util.githandler import *
 from util.ctf_template_resolver import *
+from random import randint
+
+
+def is_valid_name(name):
+    if re.match(r"^[\w\-_]+$", name):
+        return True
+    return False
+
+
+class RollCommand(Command):
+    """Roll the dice. ;)"""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute Roll command."""
+        val = randint(0, 100)
+
+        member = slack_wrapper.get_member(user_id)
+        display_name = get_display_name(member)
+
+        message = "*{}* rolled the dice... *{}*".format(display_name, val)
+
+        slack_wrapper.post_message(channel_id, message)
 
 
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute AddCTF command."""
         name = args[0].lower()
-        long_name = args[1]
+        long_name = " ".join(args[1:])
 
         if len(name) > 10:
-            raise InvalidCommand(
-                "Command failed. CTF name must be <= 10 characters.")
+            raise InvalidCommand("Add CTF failed: CTF name must be <= 10 characters.")
+
+        # Check for invalid characters
+        if not is_valid_name(name):
+            raise InvalidCommand("Add CTF failed: Invalid characters for CTF name found.")
 
         # Create the channel
         response = slack_wrapper.create_channel(name)
 
         # Validate that the channel was successfully created.
         if response['ok'] == False:
-            raise InvalidCommand(
-                "\"{}\" channel creation failed.\nError : {}".format(name, response['error']))
+            raise InvalidCommand("\"{}\" channel creation failed:\nError : {}".format(name, response['error']))
 
-        channel = response['channel']['id']
+        ctf_channel_id = response['channel']['id']
 
         # New CTF object
-        ctf = CTF(channel, name, long_name)
+        ctf = CTF(ctf_channel_id, name, long_name)
 
         # Update list of CTFs
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -47,18 +74,25 @@ class AddCTFCommand(Command):
         ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
 
         # Invite user
-        slack_wrapper.invite_user(user_id, channel)
+        slack_wrapper.invite_user(user_id, ctf_channel_id)
+
+        # Invite everyone in the auto-invite list
+        auto_invite_list = handler_factory.botserver.get_config_option("auto_invite")
+
+        if type(auto_invite_list) == list:
+            for user_id in auto_invite_list:
+                slack_wrapper.invite_user(user_id, ctf_channel_id)
 
         # Notify people of new channel
-        message = "Created channel #{}".format(
-            response['channel']['name']).strip()
+        message = "Created channel #{}".format(response['channel']['name']).strip()
         slack_wrapper.post_message(channel_id, message)
 
 
 class RenameChallengeCommand(Command):
     """Renames an existing challenge channel."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         old_name = args[0].lower()
         new_name = args[1].lower()
 
@@ -66,61 +100,70 @@ class RenameChallengeCommand(Command):
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
         if not ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Rename challenge failed: You are not in a CTF channel.")
 
-        if len(new_name) > 10:
+        if len(new_name) > (20 - len(ctf.name)):
             raise InvalidCommand(
-                "Command failed. Challenge name must be <= 10 characters.")
+                "Rename challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
+
+        # Check for invalid characters
+        if not is_valid_name(new_name):
+            raise InvalidCommand("Command failed: Invalid characters for challenge name found.")
 
         old_channel_name = "{}-{}".format(ctf.name, old_name)
         new_channel_name = "{}-{}".format(ctf.name, new_name)
 
         # Get the channel id for the channel to rename
-        challenge = get_challenge_by_name(
-            ChallengeHandler.DB, old_name, ctf.channel_id)
+        challenge = get_challenge_by_name(ChallengeHandler.DB, old_name, ctf.channel_id)
 
         if not challenge:
-            raise InvalidCommand(
-                "Command failed. Challenge '{}' not found.".format(old_name))
+            raise InvalidCommand("Rename challenge failed: Challenge '{}' not found.".format(old_name))
 
         log.debug("Renaming channel {} to {}".format(channel_id, new_name))
-        response = slack_wrapper.rename_channel(
-            challenge.channel_id, new_channel_name, is_private=True)
+        response = slack_wrapper.rename_channel(challenge.channel_id, new_channel_name, is_private=True)
 
         if not response['ok']:
-            raise InvalidCommand("\"{}\" channel rename failed.\nError : {}".format(
-                old_channel_name, response['error']))
+            raise InvalidCommand("\"{}\" channel rename failed:\nError: {}".format(old_channel_name, response['error']))
 
         # Update channel purpose
-        slack_wrapper.update_channel_purpose_name(
-            challenge.channel_id, new_name, is_private=True)
+        slack_wrapper.update_channel_purpose_name(challenge.channel_id, new_name, is_private=True)
 
         # Update database
         update_challenge_name(ChallengeHandler.DB,
                               challenge.channel_id, new_name)
 
-        text = "Challenge `{}` renamed to `{}` (#{})".format(
-            old_name, new_name, new_channel_name)
+        text = "Challenge `{}` renamed to `{}` (#{})".format(old_name, new_name, new_channel_name)
         slack_wrapper.post_message(channel_id, text)
 
 
 class RenameCTFCommand(Command):
     """Renames an existing challenge channel."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         old_name = args[0].lower()
         new_name = args[1].lower()
 
         ctf = get_ctf_by_name(ChallengeHandler.DB, old_name)
 
         if not ctf:
-            raise InvalidCommand(
-                "Command failed. CTF '{}' not found.".format(old_name))
+            raise InvalidCommand("Rename CTF failed: CTF '{}' not found.".format(old_name))
 
+        ctflen = len(new_name)
+
+        # pre-check challenges, if renaming would break channel name length
+        for chall in ctf.challenges:
+            if len(chall.name) + ctflen > 20:
+                raise InvalidCommand(
+                    "Rename CTF failed: Challenge {} would break channel name length restriction.".format(chall.name))
+
+        # still ctf name shouldn't be longer than 10 characters for allowing reasonable challenge names
         if len(new_name) > 10:
-            raise InvalidCommand(
-                "Command failed. CTF name must be <= 10 characters.")
+            raise InvalidCommand("Rename CTF failed: CTF name must be <= 10 characters.")
+
+        # Check for invalid characters
+        if not is_valid_name(new_name):
+            raise InvalidCommand("Rename CTF failed: Invalid characters for CTF name found.")
 
         text = "Renaming the CTF might take some time depending on active channels..."
         slack_wrapper.post_message(ctf.channel_id, text)
@@ -129,8 +172,7 @@ class RenameCTFCommand(Command):
         response = slack_wrapper.rename_channel(ctf.channel_id, new_name)
 
         if not response['ok']:
-            raise InvalidCommand("\"{}\" channel rename failed.\nError : {}".format(
-                old_name, response['error']))
+            raise InvalidCommand("\"{}\" channel rename failed:\nError : {}".format(old_name, response['error']))
 
         # Update channel purpose
         slack_wrapper.update_channel_purpose_name(ctf.channel_id, new_name)
@@ -141,10 +183,9 @@ class RenameCTFCommand(Command):
         # Rename all challenge channels for this ctf
         for chall in ctf.challenges:
             RenameChallengeCommand().execute(
-                slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id)
+                slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id, user_is_admin)
 
-        text = "CTF `{}` renamed to `{}` (#{})".format(
-            old_name, new_name, new_name)
+        text = "CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name)
         slack_wrapper.post_message(ctf.channel_id, text)
 
 
@@ -153,7 +194,8 @@ class AddChallengeCommand(Command):
     Add and keep track of a new challenge for a given CTF.
     """
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddChallenge command."""
         name = args[0].lower()
         category = args[1] if len(args) > 1 else None
@@ -162,12 +204,19 @@ class AddChallengeCommand(Command):
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
         if not ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Add challenge failed: You are not in a CTF channel.")
 
-        if len(name) > 10:
+        if len(name) > (20 - len(ctf.name)):
             raise InvalidCommand(
-                "Command failed. Challenge name must be <= 10 characters.")
+                "Add challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
+
+        # Check for invalid characters
+        if not is_valid_name(name):
+            raise InvalidCommand("Command failed: Invalid characters for challenge name found.")
+
+        # Check for finished ctf
+        if ctf.finished and not user_is_admin:
+            raise InvalidCommand("Add challenge faild: CTF *{}* is over...".format(ctf.name))
 
         # Create the challenge channel
         channel_name = "{}-{}".format(ctf.name, name)
@@ -175,8 +224,7 @@ class AddChallengeCommand(Command):
 
         # Validate that the channel was created successfully
         if not response['ok']:
-            raise InvalidCommand(
-                "\"{}\" channel creation failed.\nError : {}".format(channel_name, response['error']))
+            raise InvalidCommand("\"{}\" channel creation failed:\nError : {}".format(channel_name, response['error']))
 
         # Add purpose tag for persistence
         challenge_channel_id = response['group']['id']
@@ -186,12 +234,14 @@ class AddChallengeCommand(Command):
         purpose['category'] = category
 
         purpose = json.dumps(purpose)
-        slack_wrapper.set_purpose(
-            challenge_channel_id, purpose, is_private=True)
+        slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
+
+        # Invite everyone in the auto-invite list
+        for user_id in handler_factory.botserver.get_config_option("auto_invite"):
+            slack_wrapper.invite_user(user_id, challenge_channel_id, is_private=True)
 
         # New Challenge
-        challenge = Challenge(
-            ctf.channel_id, challenge_channel_id, name, category)
+        challenge = Challenge(ctf.channel_id, challenge_channel_id, name, category)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -204,64 +254,202 @@ class AddChallengeCommand(Command):
         slack_wrapper.post_message(channel_id, text)
 
 
+class RemoveChallengeCommand(Command):
+    """
+    Remove a challenge from the CTF.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the RemoveChallenge command."""
+        challenge_name = args[0].lower() if args else None
+
+        # Validate that current channel is a CTF channel
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not ctf:
+            raise InvalidCommand("Remove challenge failed: You are not in a CTF channel.")
+
+        # Get challenge object for challenge name or channel id
+        challenge = ""
+        if challenge_name:
+            challenge = get_challenge_by_name(ChallengeHandler.DB, challenge_name, channel_id)
+        else:
+            challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not challenge:
+            raise InvalidCommand("This challenge does not exist.")
+
+        # Remove the challenge channel and ctf challenge entry
+        slack_wrapper.archive_private_channel(challenge.channel_id)
+        remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
+
+        # Show confirmation message
+        member = slack_wrapper.get_member(user_id)
+        display_name = get_display_name(member)
+
+        slack_wrapper.post_message(
+            ctf.channel_id, text="Challenge *{}* was removed by *{}*.".format(challenge.name, display_name))
+
+
+class UpdateStatusCommand(Command):
+    """
+    Updates the status information, when the refresh reaction was clicked.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the UpdateStatus command."""
+        timestamp = args["timestamp"]
+
+        # Check message content, if the emoji was placed on a status message
+        # (no tagging atm, so just check it starts like a status message)
+        result = slack_wrapper.get_message(channel_id, timestamp)
+
+        if result["ok"] and result["messages"]:
+            if "==========" in result["messages"][0]["text"]:
+                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True)
+
+                slack_wrapper.update_message(channel_id, timestamp, status)
+
+
+class UpdateShortStatusCommand(Command):
+    """
+    Updates short status information, when the refresh reaction was clicked.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the UpdateStatus command."""
+        timestamp = args["timestamp"]
+
+        # Check message content, if the emoji was placed on a status message
+        # (no tagging atm, so just check it starts like a status message)
+        result = slack_wrapper.get_message(channel_id, timestamp)
+
+        if result["ok"] and result["messages"]:
+            if "solved /" in result["messages"][0]["text"]:
+                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
+
+                slack_wrapper.update_message(channel_id, timestamp, status)
+
+
 class StatusCommand(Command):
     """
     Get a status of the currently running CTFs.
     """
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
-        """Execute the Status command."""
-        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
-        members = slack_wrapper.get_members()
-        members = {m["id"]: m["name"]
-                   for m in members['members'] if m.get("presence") == "active"}
-
-        # Check if the user is in a ctf channel
-        current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
-
-        if current_ctf:
-            ctf_list = [current_ctf]
-        else:
-            ctf_list = ctfs.values()
-
+    @classmethod
+    def build_short_status(cls, ctf_list, check_for_finish):
+        """Build short status list."""
         response = ""
+
         for ctf in ctf_list:
-            response += "*============= #{} =============*\n".format(ctf.name)
-            solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
-            unsolved = [c for c in ctf.challenges if not c.is_solved]
+            # Build short status list
+            solved = [c for c in ctf.challenges if c.is_solved]
 
-            # Check if the CTF has any challenges
-            if not solved and not unsolved:
-                response += "*[ No challenges available yet ]*\n"
-                continue
-
-            # Solved challenges
-            response += "* > Solved*\n" if solved else "\n"
-            for challenge in solved:
-                players = []
-                response += ":tada: *{}*{} (Solved by : {})\n".format(
-                    challenge.name, " ({})".format(challenge.category) if challenge.category else "", transliterate(", ".join(challenge.solver)))
-
-            # Unsolved challenges
-            response += "* > Unsolved*\n" if unsolved else "\n"
-            for challenge in unsolved:
-
-                # Get active players
-                players = []
-                for player_id in challenge.players:
-                    if player_id in members:
-                        players.append(members[player_id])
-
-                response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
-                                                               if challenge.category else "", transliterate(", ".join(players)))
-            response += "\n"
+            response += "*#{} : _{}_ {} [{} solved / {} total]*\n".format(
+                ctf.name, ctf.long_name, "(finished)" if ctf.finished else "", len(solved), len(ctf.challenges))
 
         response = response.strip()
 
         if response == "":  # Response is empty
             response += "*There are currently no running CTFs*"
 
-        slack_wrapper.post_message(channel_id, response)
+        return response
+
+    @classmethod
+    def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish):
+        """Build verbose status list."""
+        members = slack_wrapper.get_members()
+
+        # Bail out, if we couldn't read member list
+        if not "members" in members:
+            raise InvalidCommand("Status failed. Could not refresh member list...")
+
+        members = {m["id"]: m["profile"]["display_name"]
+                   for m in members['members'] if m.get("presence") == "active"}
+
+        response = ""
+        for ctf in ctf_list:
+            # Build long status list
+            response += "*============= #{} {} =============*\n".format(ctf.name, "(finished)" if ctf.finished else "")
+            solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
+            unsolved = [c for c in ctf.challenges if not c.is_solved]
+
+            # Check if the CTF has any challenges
+            if check_for_finish and ctf.finished and not solved:
+                response += "*[ No challenges solved ]*\n"
+                continue
+            elif not solved and not unsolved:
+                response += "*[ No challenges available yet ]*\n"
+                continue
+
+            # Solved challenges
+            response += "* > Solved*\n" if solved else ""
+            for challenge in solved:
+                players = []
+                response += ":tada: *{}*{} (Solved by : {})\n".format(
+                    challenge.name,
+                    " ({})".format(challenge.category) if challenge.category else "",
+                    transliterate(", ".join(challenge.solver)))
+
+            # Unsolved challenges
+            if not check_for_finish or not ctf.finished:
+                response += "* > Unsolved*\n" if unsolved else "\n"
+                for challenge in unsolved:
+
+                    # Get active players
+                    players = []
+                    for player_id in challenge.players:
+                        if player_id in members:
+                            players.append(members[player_id])
+
+                    response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
+                                                                   if challenge.category else "", transliterate(", ".join(players)))
+
+        response = response.strip()
+
+        if response == "":  # Response is empty
+            response += "*There are currently no running CTFs*"
+
+        return response
+
+    @classmethod
+    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, verbose=True):
+        """Gathers the ctf information and builds the status response."""
+        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+
+        # Check if the user is in a ctf channel
+        current_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if current_ctf:
+            ctf_list = [current_ctf]
+            check_for_finish = False
+            verbose = True              # override verbose for ctf channels
+        else:
+            ctf_list = ctfs.values()
+            check_for_finish = True
+
+        if verbose:
+            response = cls.build_verbose_status(slack_wrapper, ctf_list, check_for_finish)
+        else:
+            response = cls.build_short_status(ctf_list, check_for_finish)
+
+        return response, verbose
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the Status command."""
+        verbose = args[0] == "-v" if len(args) > 0 else False
+
+        response, verbose = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin, verbose)
+
+        #slack_wrapper.post_message(channel_id, response)
+        if verbose:
+            slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
+        else:
+            slack_wrapper.post_message_with_react(channel_id, response, "arrows_counterclockwise")
 
 
 class WorkonCommand(Command):
@@ -269,7 +457,8 @@ class WorkonCommand(Command):
     Mark a player as "working" on a challenge.
     """
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Workon command."""
         challenge_name = args[0].lower() if args else None
 
@@ -277,8 +466,7 @@ class WorkonCommand(Command):
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
 
         if not ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Workon failed: You are not in a CTF channel.")
 
         # Get challenge object for challenge name or channel id
         challenge = ""
@@ -292,9 +480,12 @@ class WorkonCommand(Command):
         if not challenge:
             raise InvalidCommand("This challenge does not exist.")
 
+        # Don't allow joining already solved challenges (except after finish or for admins)
+        if challenge.is_solved and not ctf.finished and not user_is_admin:
+            raise InvalidCommand("This challenge is already solved.")
+
         # Invite user to challenge channel
-        slack_wrapper.invite_user(
-            user_id, challenge.channel_id, is_private=True)
+        slack_wrapper.invite_user(user_id, challenge.channel_id, is_private=True)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -312,40 +503,22 @@ class SolveCommand(Command):
     Mark a challenge as solved.
     """
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Solve command."""
         challenge = ""
 
         if args:
-            # Multiple arguments: Need to check if a challenge was specified or
-            # not
-            challenge_name = args[0].lower()
-
-            # Check if we're currently in a challenge channel
-            curChallenge = get_challenge_by_channel_id(
-                ChallengeHandler.DB, channel_id)
-
-            if curChallenge:
-                # User is in a challenge channel => Check for challenge by name
-                # in parent ctf channel
-                challenge = get_challenge_by_name(
-                    ChallengeHandler.DB, challenge_name, curChallenge.ctf_channel_id)
-            else:
-                # User is in the ctf channel => Check for challenge by name in
-                # current challenge
-                challenge = get_challenge_by_name(
-                    ChallengeHandler.DB, challenge_name, channel_id)
+            challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
 
             if not challenge:
-                challenge = get_challenge_by_channel_id(
-                    ChallengeHandler.DB, channel_id)
+                challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
                 additional_args = args if args else []
             else:
                 additional_args = args[1:] if len(args) > 1 else []
         else:
             # No arguments => direct way of resolving challenge
-            challenge = get_challenge_by_channel_id(
-                ChallengeHandler.DB, channel_id)
+            challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
 
             additional_args = []
 
@@ -356,14 +529,14 @@ class SolveCommand(Command):
 
         # Get solving member
         member = slack_wrapper.get_member(user_id)
-        solver_list = [member['user']['name']]
+        solver_list = [get_display_name(member)]
 
         # Find additional members to add
         for add_solve in additional_args:
             user_obj = resolve_user_by_user_id(slack_wrapper, add_solve)
 
             if user_obj['ok']:
-                add_solve = user_obj['user']['name']
+                add_solve = get_display_name(user_obj)
 
             if add_solve not in solver_list:
                 solver_list.append(add_solve)
@@ -376,9 +549,12 @@ class SolveCommand(Command):
             for chal in ctf.challenges:
                 if chal.channel_id == challenge.channel_id:
                     if not challenge.is_solved:
+                        # Check for finished ctf
+                        if ctf.finished and not user_is_admin:
+                            raise InvalidCommand("Solve challenge faild: CTF *{}* is over...".format(ctf.name))
+
                         member = slack_wrapper.get_member(user_id)
-                        solver_list = [member['user'][
-                            'name']] + additional_solver
+                        solver_list = [get_display_name(member)] + additional_solver
 
                         chal.mark_as_solved(solver_list)
 
@@ -393,18 +569,16 @@ class SolveCommand(Command):
                         purpose['category'] = chal.category
 
                         purpose = json.dumps(purpose)
-                        slack_wrapper.set_purpose(
-                            challenge.channel_id, purpose, is_private=True)
+                        slack_wrapper.set_purpose(challenge.channel_id, purpose, is_private=True)
 
                         # Announce the CTF channel
                         help_members = ""
 
                         if additional_solver:
-                            help_members = "(together with {})".format(", ".join(
-                                additional_solver))
+                            help_members = "(together with {})".format(", ".join(additional_solver))
 
                         message = "@here *{}* : {} has solved the \"{}\" challenge {}".format(
-                            challenge.name, member['user']['name'], challenge.name, help_members)
+                            challenge.name, get_display_name(member), challenge.name, help_members)
                         message += "."
 
                         slack_wrapper.post_message(ctf.channel_id, message)
@@ -412,28 +586,81 @@ class SolveCommand(Command):
                     break
 
 
+class UnsolveCommand(Command):
+    """
+    Mark a solved challenge as unsolved again.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the Unsolve command."""
+        challenge = ""
+
+        if args:
+            challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+
+        if not challenge:
+            challenge = get_challenge_by_channel_id(ChallengeHandler.DB, channel_id)
+
+        if not challenge:
+            raise InvalidCommand("This challenge does not exist.")
+
+        # Update database
+        ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
+
+        for ctf in ctfs.values():
+            for chal in ctf.challenges:
+                if chal.channel_id == challenge.channel_id:
+                    if challenge.is_solved:
+                        member = slack_wrapper.get_member(user_id)
+
+                        chal.unmark_as_solved()
+
+                        pickle.dump(ctfs, open(ChallengeHandler.DB, "wb"))
+
+                        # Update channel purpose
+                        purpose = dict(ChallengeHandler.CHALL_PURPOSE)
+                        purpose['name'] = challenge.name
+                        purpose['ctf_id'] = ctf.channel_id
+                        purpose['category'] = challenge.category
+
+                        purpose = json.dumps(purpose)
+                        slack_wrapper.set_purpose(challenge.channel_id, purpose, is_private=True)
+
+                        # Announce the CTF channel
+                        message = "@here *{}* : {} has reset the solve on the \"{}\" challenge.".format(
+                            challenge.name, get_display_name(member), challenge.name)
+                        slack_wrapper.post_message(ctf.channel_id, message)
+
+                        return
+                    else:
+                        raise InvalidCommand("This challenge isn't marked as solve.")
+
+
 class ArchiveCTFCommand(Command):
     """Archive the challenge channels for a given CTF."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the ArchiveCTF command."""
+        no_post = args[0].lower() if args else None
 
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Archive CTF failed: You are not in a CTF channel.")
 
         # Post solves if git support is enabled
         if ST_GIT_SUPPORT:
             try:
-                if ctf.long_name:
-                    post_ctf_data(ctf, ctf.long_name)
+                if not no_post:
+                    if not ctf.long_name:
+                        raise InvalidCommand(
+                            "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
 
-                    message = "Post was successfully uploaded..."
+                    solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
+
+                    message = "Post was successfully uploaded to: {}".format(solve_tracker_url)
                     slack_wrapper.post_message(channel_id, message)
-                else:
-                    raise InvalidCommand(
-                        "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
 
             except Exception as ex:
                 raise InvalidCommand(str(ex))
@@ -445,8 +672,7 @@ class ArchiveCTFCommand(Command):
         for challenge in challenges:
             message += "- #{}-{}\n".format(ctf.name, challenge.name)
             slack_wrapper.archive_private_channel(challenge.channel_id)
-            remove_challenge_by_channel_id(
-                ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
+            remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
         # Stop tracking the main CTF channel
         slack_wrapper.set_purpose(channel_id, "")
@@ -456,10 +682,36 @@ class ArchiveCTFCommand(Command):
         slack_wrapper.post_message(channel_id, message)
 
 
+class EndCTFCommand(Command):
+    """
+    Mark the ctf as finished, not allowing new challenges to be added, and don't show the ctf anymore
+    in the status list.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+        """Execute the EndCTF command."""
+
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not ctf:
+            raise InvalidCommand("End CTF failed: You are not in a CTF channel.")
+
+        def update_func(ctf):
+            ctf.finished = True
+
+        # Update database
+        ctf = update_ctf(ChallengeHandler.DB, ctf.channel_id, update_func)
+
+        if ctf:
+            ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+            slack_wrapper.post_message(channel_id, "CTF *{}* finished...".format(ctf.name))
+
+
 class ReloadCommand(Command):
     """Reload the ctf information from slack to reflect updates of channel purposes."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the Reload command."""
 
         slack_wrapper.post_message(channel_id, "Updating CTFs and challenges...")
@@ -470,45 +722,38 @@ class ReloadCommand(Command):
 class AddCredsCommand(Command):
     """Add credential informations for current ctf."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddCreds command."""
 
         cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not cur_ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Add Creds faile:. You are not in a CTF channel.")
+
+        def update_func(ctf):
+            ctf.cred_user = args[0]
+            ctf.cred_pw = args[1]
+            ctf.cred_url = args[2] if len(args) > 2 else ""
 
         # Update database
-        with open(ChallengeHandler.DB, "rb") as f:
-            ctfs = pickle.load(f)
+        ctf = update_ctf(ChallengeHandler.DB, cur_ctf.channel_id, update_func)
 
-        for ctf in ctfs.values():
-            if ctf.name == cur_ctf.name:
-                ctf.cred_user = args[0]
-                ctf.cred_pw = args[1]
-                ctf.cred_url = args[2] if len(args) > 2 else ""
-
-                with open(ChallengeHandler.DB, "wb") as f:
-                    pickle.dump(ctfs, f)
-
-                ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
-
-                message = "Credentials for CTF *{}* updated...".format(
-                    ctf.name)
-                slack_wrapper.post_message(channel_id, message)
-                return
+        if ctf:
+            ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+            message = "Credentials for CTF *{}* updated...".format(ctf.name)
+            slack_wrapper.post_message(channel_id, message)
 
 
 class ShowCredsCommand(Command):
     """Shows credential informations for current ctf."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the ShowCreds command."""
 
         cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not cur_ctf:
-            raise InvalidCommand(
-                "Command failed. You are not in a CTF channel.")
+            raise InvalidCommand("Show creds failed: You are not in a CTF channel.")
 
         if cur_ctf.cred_user and cur_ctf.cred_pw:
             message = "Credentials for CTF *{}*\n".format(cur_ctf.name)
@@ -552,7 +797,8 @@ class ChallengeHandler(BaseHandler):
         "cred_user": "",
         "cred_pw": "",
         "cred_url": "",
-        "long_name": ""
+        "long_name": "",
+        "finished": False
     }
 
     CHALL_PURPOSE = {
@@ -574,9 +820,18 @@ class ChallengeHandler(BaseHandler):
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
-            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, None, True),
+            "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
+            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
+            "finishctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
-            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None)
+            "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
+            "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
+            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
+            "roll": CommandDesc(RollCommand, "Roll the dice", None, None)
+        }
+        self.reactions = {
+            "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
+            "arrows_counterclockwise": ReactionDesc(UpdateShortStatusCommand)
         }
 
     @staticmethod
@@ -592,6 +847,7 @@ class ChallengeHandler(BaseHandler):
         purpose["cred_pw"] = ctf.cred_pw
         purpose["cred_url"] = ctf.cred_url
         purpose["long_name"] = ctf.long_name
+        purpose["finished"] = ctf.finished
 
         slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
@@ -601,18 +857,20 @@ class ChallengeHandler(BaseHandler):
         Reload the ctf and challenge information from slack.
         """
         database = {}
-        response = slack_wrapper.get_public_channels()
+        privchans = slack_wrapper.get_private_channels()["groups"]
+        pubchans = slack_wrapper.get_public_channels()["channels"]
 
         # Find active CTF channels
-        for channel in response['channels']:
+        for channel in [*privchans, *pubchans]:
             purpose = load_json(channel['purpose']['value'])
 
             if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
-                ctf = CTF(channel['id'], purpose['name'], purpose.get("long_name", ""))
+                ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
                 ctf.cred_user = purpose.get("cred_user", "")
                 ctf.cred_pw = purpose.get("cred_pw", "")
                 ctf.cred_url = purpose.get("cred_url", "")
+                ctf.finished = purpose.get("finished", False)
 
                 database[ctf.channel_id] = ctf
 
@@ -624,8 +882,7 @@ class ChallengeHandler(BaseHandler):
             if not channel['is_archived'] and \
                purpose and "ota_bot" in purpose and \
                purpose["type"] == "CHALLENGE":
-                challenge = Challenge(
-                    purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
+                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
                 ctf_channel_id = purpose["ctf_id"]
                 solvers = purpose["solved"]
                 ctf = database.get(ctf_channel_id)
@@ -649,4 +906,4 @@ class ChallengeHandler(BaseHandler):
 
 
 # Register this handler
-HandlerFactory.register("ctf", ChallengeHandler())
+handler_factory.register("ctf", ChallengeHandler())

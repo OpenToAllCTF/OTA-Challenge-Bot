@@ -30,6 +30,7 @@ Secondary features :
 !ctf addcreds <ctf_user> <ctf_pw> [ctf_url]                     (Add credentials for current ctf)
 !ctf showcreds                                                  (Show credentials for current ctf)
 !ctf postsolves <title>                                         (Post current solve status to git)
+!ctf unsolve [challenge_name]                                   (Remove solve of a challenge)
 
 !syscalls available                                             (Shows the available syscall architectures)
 !syscalls show <arch> <syscall name/syscall id>                 (Show information for a specific syscall)
@@ -55,6 +56,25 @@ Secondary features :
 !irc stopirc <server_name> <bridge_name>                        (Disconnect a registered IRC bridge)
 !irc ircstatus                                                  (Shows a list of currently registered irc bridges)
 ```
+
+## Retrieving the API token
+
+Bot applications are not allowed to access all api methods from Slack. Thus, if
+you create a bot integration on slack, the bot won't be able to create new
+channels for example. To get around this restriction, you have to create a real
+slack user and generate an authentication token for it, which can then be used
+instead of a bot token.
+
+1. Create a new user in slack (this will be the bot user, so give it an appropriate username)
+2. Log into slack with this newly created user
+3. Navigate to https://api.slack.com/custom-integrations/legacy-tokens
+  * The user should show up there together with your slack workspace
+5. Press "Create token"
+  * This should create a token starting with "xoxp-"
+7. Use this token as the `api_key` for the bot
+8. Logout and login with your regular user again.
+
+After restarting the bot, the bot user should now show up in your slack workspace.
 
 
 ## Installation
@@ -89,7 +109,8 @@ Example:
     "git_repouser" : "otabot",
     "git_repopass" : "password",
     "git_remoteuri" : "github.com/ota_bot/OTA_Upload.git",
-    "git_branch" : "master"
+    "git_branch" : "master",
+    "git_baseurl" : "https://ota.github.io/SolveTracker"
 }
 ```
 

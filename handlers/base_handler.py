@@ -5,16 +5,22 @@ from bottypes.invalid_command import *
 
 
 class BaseHandler(ABC):
+    commands = {}  # Overridden by concrete class
+    reactions = {}
+    handler_name = ""  # Overridden by concrete class
 
     def can_handle(self, command, user_is_admin):
-        cmd_available = command in self.commands
-
-        # Check if this is an admin command and hide it for normal users
-        if cmd_available:
+        if command in self.commands:
             cmd_desc = self.commands[command]
-            if (not cmd_desc.is_admin_cmd) or user_is_admin:
+            # Hide admin commands
+            if user_is_admin or not cmd_desc.is_admin_cmd:
                 return True
 
+        return False
+
+    def can_handle_reaction(self, reaction):
+        if reaction in self.reactions:
+            return True
         return False
 
     def init(self, slack_wrapper):
@@ -23,14 +29,12 @@ class BaseHandler(ABC):
     def parse_command_usage(self, command, descriptor):
         """Returns a usage string from a given command and descriptor."""
         msg = "`!{} {}".format(self.handler_name, command)
-        
-        if descriptor.arguments:
-            for arg in descriptor.arguments:
-                msg += " <{}>".format(arg)
 
-        if descriptor.opt_arguments:
-            for arg in descriptor.opt_arguments:
-                msg += " [{}]".format(arg)
+        for arg in descriptor.arguments:
+            msg += " <{}>".format(arg)
+
+        for arg in descriptor.opt_arguments:
+            msg += " [{}]".format(arg)
 
         msg += "`"
 
@@ -66,8 +70,13 @@ class BaseHandler(ABC):
         cmd_descriptor = self.commands[command]
 
         if cmd_descriptor:
-            if cmd_descriptor.arguments and len(args) < len(cmd_descriptor.arguments):
-                raise InvalidCommand(
-                    self.command_usage(command, cmd_descriptor))
-            else:
-                cmd_descriptor.command().execute(slack_wrapper, args, channel, user)
+            if len(args) < len(cmd_descriptor.arguments):
+                raise InvalidCommand(self.command_usage(command, cmd_descriptor))
+            cmd_descriptor.command.execute(slack_wrapper, args, channel, user, user_is_admin)
+
+    def process_reaction(self, slack_wrapper, reaction, channel, timestamp, user, user_is_admin):
+        reaction_descriptor = self.reactions[reaction]
+
+        if reaction_descriptor:
+            reaction_descriptor.command.execute(
+                slack_wrapper, {"reaction": reaction, "timestamp": timestamp}, channel, user, user_is_admin)

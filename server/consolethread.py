@@ -63,5 +63,4 @@ class ConsoleThread(threading.Thread):
                     else:
                         self.update_config(parts[1], parts[2])
             except Exception:
-                log.exception(
-                    "An error has occured while processing a console command")
+                log.exception("An error has occured while processing a console command")
