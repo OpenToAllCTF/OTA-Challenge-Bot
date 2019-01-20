@@ -13,20 +13,22 @@ from handlers.handler_factory import *
 from handlers.base_handler import *
 from addons.ircbridge import irc_server_handler
 from util.util import *
-
+import handlers.handler_factory as handler_factory
 
 class AddIRCServerCommand(Command):
     """Add irc server to known server list."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddIRCServerCommand command."""
 
         server_name = args[0]
         irc_server = args[1]
 
         irc_nick = args[2] if len(args) > 2 else "OTA"
-        irc_port = try_parse_int(args[3])[0] if len(args) > 3 else 6667
-        irc_realname = args[4] if len(args) > 4 else "OTA IRC Bridge"
+        irc_realname = args[3] if len(args) > 3 else "OTA IRC Bridge"
+        irc_port = try_parse_int(args[4])[0] if len(args) > 4 else 6667
+        
 
         res = irc_server_handler.add_irc_server(
             server_name, slack_wrapper, irc_server, irc_port, irc_nick, irc_realname)
@@ -38,7 +40,8 @@ class AddIRCServerCommand(Command):
 class RemoveIRCServerCommand(Command):
     """Remove irc server from known server list."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the RemoveIRCServerCommand command."""
 
         server_name = args[0]
@@ -52,7 +55,8 @@ class RemoveIRCServerCommand(Command):
 class ConnectIRCServerCommand(Command):
     """Connect an IRC bridge to the specified IRC server/channel."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the StartIRC command."""
 
         server_name = args[0]
@@ -66,7 +70,8 @@ class ConnectIRCServerCommand(Command):
 class DisconnectIRCServerCommand(Command):
     """Disconnect an IRC bridge from IRC."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the StopIRC command."""
 
         server_name = args[0]
@@ -80,7 +85,8 @@ class DisconnectIRCServerCommand(Command):
 class AddIRCCommand(Command):
     """Add irc bridge to current channel."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the AddIRC command."""
 
         server_name = args[0]
@@ -99,7 +105,8 @@ class AddIRCCommand(Command):
 class RemoveIRCCommand(Command):
     """Stop and remove specified irc bridge."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the RemoveIRC command."""
 
         server_name = args[0]
@@ -114,7 +121,8 @@ class RemoveIRCCommand(Command):
 class StartIRCCommand(Command):
     """Connect an IRC bridge to the specified IRC server/channel."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the StartIRC command."""
 
         server_name = args[0]
@@ -129,7 +137,8 @@ class StartIRCCommand(Command):
 class StopIRCCommand(Command):
     """Disconnect an IRC bridge from IRC."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the StopIRC command."""
 
         server_name = args[0]
@@ -144,7 +153,8 @@ class StopIRCCommand(Command):
 class IRCStatusCommand(Command):
     """Shows a list of currently registered bridges."""
 
-    def execute(self, slack_wrapper, args, channel_id, user_id):
+    @classmethod
+    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
         """Execute the IRCStatusCommand command."""
 
         server_list = irc_server_handler.get_registered_servers()
@@ -176,7 +186,7 @@ class IrcHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "addserver": CommandDesc(AddIRCServerCommand, "Register an IRC server to the known server list", ["server_name", "irc_server"], ["irc_nick", "irc_port"], True),
+            "addserver": CommandDesc(AddIRCServerCommand, "Register an IRC server to the known server list", ["server_name", "irc_server"], ["irc_nick", "irc_realname", "irc_port"], True),
             "rmserver": CommandDesc(RemoveIRCServerCommand, "Remove an IRC server from the known server list (Caution: this will remove all connected bridges also)", ["server_name"], None, True),
             "startserver": CommandDesc(ConnectIRCServerCommand, "Connect the specified server thread to the IRC server", ["server_name"], None, True),
             "stopserver": CommandDesc(DisconnectIRCServerCommand, "Disconnect the specified server from IRC (and all connected bridges)", ["server_name"], None, True),
@@ -191,4 +201,4 @@ class IrcHandler(BaseHandler):
         irc_server_handler.initialize_server_handler(slack_wrapper)
 
 
-HandlerFactory.register("irc", IrcHandler())
+handler_factory.register("irc", IrcHandler())
