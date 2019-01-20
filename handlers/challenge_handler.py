@@ -833,6 +833,10 @@ class ChallengeHandler(BaseHandler):
             "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
             "arrows_counterclockwise": ReactionDesc(UpdateShortStatusCommand)
         }
+        self.aliases = {
+            "finishctf": "endctf",
+            "addchall": "addchallenge",
+        }
 
     @staticmethod
     def update_ctf_purpose(slack_wrapper, ctf):
