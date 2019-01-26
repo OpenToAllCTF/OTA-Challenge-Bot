@@ -13,7 +13,7 @@ class ShowAdminsCommand(Command):
     """Shows list of users in the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the ShowAdmins command."""
 
         admin_users = handler_factory.botserver.get_config_option("admin_users")
@@ -46,7 +46,7 @@ class AddAdminCommand(Command):
     """Add a user to the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the AddAdmin command."""
         user_object = resolve_user_by_user_id(slack_wrapper, args[0])
 
@@ -72,7 +72,7 @@ class RemoveAdminCommand(Command):
     """Remove a user from the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the RemoveAdmin command."""
         user = parse_user_id(args[0])
 
@@ -93,7 +93,7 @@ class AsCommand(Command):
     """Execute a command as another user."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the As command."""
         dest_user = args[0].lower()
         dest_command = args[1].lower().lstrip("!")
@@ -107,7 +107,7 @@ class AsCommand(Command):
 
             # Redirecting command execution to handler factory
             handler_factory.process_command(slack_wrapper, dest_command, [
-                                            dest_command] + dest_arguments, channel_id, dest_user_id, user_is_admin)
+                                            dest_command] + dest_arguments, timestamp, channel_id, dest_user_id, user_is_admin)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 
