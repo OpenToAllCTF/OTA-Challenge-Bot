@@ -65,14 +65,14 @@ class BaseHandler(ABC):
 
         return msg
 
-    def process(self, slack_wrapper, command, args, channel, user, user_is_admin):
+    def process(self, slack_wrapper, command, args, timestamp, channel, user, user_is_admin):
         """Check if enough arguments were passed for this command."""
         cmd_descriptor = self.commands[command]
 
         if cmd_descriptor:
             if len(args) < len(cmd_descriptor.arguments):
                 raise InvalidCommand(self.command_usage(command, cmd_descriptor))
-            cmd_descriptor.command.execute(slack_wrapper, args, channel, user, user_is_admin)
+            cmd_descriptor.command.execute(slack_wrapper, args, timestamp, channel, user, user_is_admin)
 
     def process_reaction(self, slack_wrapper, reaction, channel, timestamp, user, user_is_admin):
         reaction_descriptor = self.reactions[reaction]
