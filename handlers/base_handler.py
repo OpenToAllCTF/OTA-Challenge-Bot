@@ -79,4 +79,4 @@ class BaseHandler(ABC):
 
         if reaction_descriptor:
             reaction_descriptor.command.execute(
-                slack_wrapper, {"reaction": reaction, "timestamp": timestamp}, channel, user, user_is_admin)
+                slack_wrapper, {"reaction": reaction, "timestamp": timestamp}, timestamp, channel, user, user_is_admin)
