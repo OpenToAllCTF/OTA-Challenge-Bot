@@ -183,7 +183,7 @@ class RenameCTFCommand(Command):
         # Rename all challenge channels for this ctf
         for chall in ctf.challenges:
             RenameChallengeCommand().execute(
-                slack_wrapper, [chall.name, chall.name], ctf.channel_id, user_id, user_is_admin)
+                slack_wrapper, [chall.name, chall.name], timestamp, ctf.channel_id, user_id, user_is_admin)
 
         text = "CTF `{}` renamed to `{}` (#{})".format(old_name, new_name, new_name)
         slack_wrapper.post_message(ctf.channel_id, text)
