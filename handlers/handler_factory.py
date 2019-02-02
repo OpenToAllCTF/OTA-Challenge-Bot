@@ -98,7 +98,7 @@ def process_command(slack_wrapper, message, args, timestamp, channel_id, user_id
             else:  # Send command to specified handler
                 command = args[1].lower()
                 if handler.can_handle(command, user_is_admin):
-                    handler.process(slack_wrapper, command, args[2:], channel_id, user_id, user_is_admin)
+                    handler.process(slack_wrapper, command, args[2:], timestamp, channel_id, user_id, user_is_admin)
                     processed = True
 
         else:  # Pass the command to every available handler
@@ -111,7 +111,7 @@ def process_command(slack_wrapper, message, args, timestamp, channel_id, user_id
 
                 elif handler.can_handle(command, user_is_admin):  # Send command to handler
                     handler.process(slack_wrapper, command,
-                                    args[1:], channel_id, user_id, user_is_admin)
+                                    args[1:], timestamp, channel_id, user_id, user_is_admin)
                     processed = True
 
         if not processed:  # Send error message
