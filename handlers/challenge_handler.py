@@ -821,8 +821,7 @@ class ChallengeHandler(BaseHandler):
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
-            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
-            "finishctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
+            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),            
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
@@ -832,6 +831,10 @@ class ChallengeHandler(BaseHandler):
         self.reactions = {
             "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
             "arrows_counterclockwise": ReactionDesc(UpdateShortStatusCommand)
+        }
+        self.aliases = {
+            "finishctf": "endctf",
+            "addchall": "addchallenge",
         }
 
     @staticmethod
