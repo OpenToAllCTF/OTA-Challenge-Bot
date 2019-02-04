@@ -54,6 +54,17 @@ class VersionCommand(Command):
             raise InvalidCommand("Sorry, couldn't retrieve the git information for the bot...")
 
 
+class SayCommand(Command):
+    """ Says something as bot. """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        """ Execute the Say command. """
+        message = args[0]
+        dest_channel = args[1]
+
+        slack_wrapper.post_message(dest_channel, message, parse="full")
+
 class BotHandler(BaseHandler):
     """Handler for generic bot commands."""
 
@@ -61,7 +72,8 @@ class BotHandler(BaseHandler):
         self.commands = {
             "ping": CommandDesc(PingCommand, "Ping the bot", None, None),
             "intro": CommandDesc(IntroCommand, "Show an introduction message for new members", None, None),
-            "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot", None, None)
+            "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot", None, None),
+            "say": CommandDesc(SayCommand, "Say something as otabot", ["message", "channel"], None, True)
         }
 
 
