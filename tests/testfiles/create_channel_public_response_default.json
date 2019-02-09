@@ -1,0 +1,38 @@
+{
+    "ok": true,
+    "channel": {
+        "id": "CG2419ZND",
+        "name": "NAME_PH",
+        "is_channel": true,
+        "created": 1549722260,
+        "is_archived": false,
+        "is_general": false,
+        "unlinked": 0,
+        "creator": "UNITTESTID1",
+        "name_normalized": "NAME_PH",
+        "is_shared": false,
+        "is_org_shared": false,
+        "is_member": true,
+        "is_private": false,
+        "is_mpim": false,
+        "last_read": "0000000000.000000",
+        "latest": null,
+        "unread_count": 0,
+        "unread_count_display": 0,
+        "members": [
+            "UNITTESTID1"
+        ],
+        "topic": {
+            "value": "",
+            "creator": "",
+            "last_set": 0
+        },
+        "purpose": {
+            "value": "",
+            "creator": "",
+            "last_set": 0
+        },
+        "previous_names": [],
+        "priority": 0
+    }
+}

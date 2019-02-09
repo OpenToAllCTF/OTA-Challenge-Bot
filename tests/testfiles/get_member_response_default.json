@@ -1,0 +1,41 @@
+{
+    "ok": true,
+    "user": {
+        "id": "UNITTESTID1",
+        "team_id": "UNITTEAMID1",
+        "name": "unittest_user1",
+        "deleted": false,
+        "color": "9f69e7",
+        "real_name": "unittest_user1",
+        "tz": "Europe/Amsterdam",
+        "tz_label": "Central European Time",
+        "tz_offset": 3600,
+        "profile": {
+            "title": "",
+            "phone": "",
+            "skype": "",
+            "real_name": "unittest_user1",
+            "real_name_normalized": "unittest_user1",
+            "display_name": "",
+            "display_name_normalized": "",
+            "fields": [],
+            "status_text": "",
+            "status_emoji": "",
+            "status_expiration": 0,
+            "avatar_hash": "",
+            "email": "unittest_user1@gmail.com",
+            "first_name": "unittest_user1",
+            "last_name": "",
+            "status_text_canonical": "",
+            "team": "UNITTEAMID1"
+        },
+        "is_admin": true,
+        "is_owner": true,
+        "is_primary_owner": true,
+        "is_restricted": false,
+        "is_ultra_restricted": false,
+        "is_bot": false,
+        "is_app_user": false,
+        "updated": 1544960731
+    }
+}
