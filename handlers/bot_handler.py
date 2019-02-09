@@ -70,8 +70,9 @@ class InviteCommand(Command):
             # remove already present members
             invited_users = [user for user in invited_users if user not in current_members]
             for member in invited_users:
-                slack_wrapper.invite_user(member, channel_id)
-        except:
+                if not slack_wrapper.invite_user(member, channel_id)["ok"]:
+                    raise SlackClientError
+        except SlackClientError:
             log.exception("BotHandler::InviteCommand")
             raise InvalidCommand("Sorry, couldn't invite the given members to the channel")
 
