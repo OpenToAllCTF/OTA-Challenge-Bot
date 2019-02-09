@@ -46,7 +46,7 @@ class SlackWrapper:
         return self.client.api_call(api_call, purpose=purpose, channel=channel)
 
     def set_topic(self, channel, topic, is_private=False):
-        """ Set the topic of a given channel. """
+        """Set the topic of a given channel."""
 
         api_call = "groups.setTopic" if is_private else "channels.setTopic"
         return self.client.api_call(api_call, topic=topic, channel=channel)
