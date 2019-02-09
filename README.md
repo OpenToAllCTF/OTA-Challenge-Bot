@@ -106,3 +106,9 @@ Example:
 3. Update the templates in `templates` according to your preferences (or go with the default ones).
 4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
+
+
+## Using Link saver
+
+1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links)
+2. Set GITHUB_REPO (owner/repo-name) and GITHUB_BRANCH (master) variables in `save_handler.py`
