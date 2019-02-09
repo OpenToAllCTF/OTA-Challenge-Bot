@@ -17,5 +17,3 @@ background: image
 
 stop:
 	docker stop otabot
-	docker rm otabot
-
