@@ -80,8 +80,7 @@ class BotServer(threading.Thread):
         for msg in message_list:
             if msg.get("type") == "message" and "subtype" not in msg:
                 if self.bot_at in msg.get("text", ""):
-                    # Return text after the @ mention, whitespace removed
-                    # leading ! removed
+                    # Return text after the @ mention, whitespace removed, leading ! removed
                     return msg['text'].split(self.bot_at)[1].lstrip("! ").strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
@@ -164,7 +163,7 @@ class BotServer(threading.Thread):
                 # and remove the superfluous exception handling if auto_reconnect works.
                 log.exception("Slack connection error. Trying manual reconnect in 5 seconds...")
                 time.sleep(5)
-            except:                
+            except:
                 log.exception("Unhandled error. Try reconnect...")
                 time.sleep(5)
 
