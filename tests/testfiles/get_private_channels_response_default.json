@@ -2,16 +2,16 @@
     "ok": true,
     "groups": [
         {
-            "id": "GC0B1E7RB",
+            "id": "UNITTEST_GROUP_ID1",
             "name": "testctf1-testchall1",
             "is_group": true,
             "created": 1533056140,
-            "creator": "UNITUSERID1",
+            "creator": "UNITTEST_USER_ID1",
             "is_archived": true,
             "name_normalized": "testctf1-testchall1",
             "is_mpim": false,
             "members": [
-                "UNITUSERID1"
+                "UNITTEST_USER_ID1"
             ],
             "topic": {
                 "value": "",
@@ -19,23 +19,23 @@
                 "last_set": 0
             },
             "purpose": {
-                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"CC0B18H1B\", \"name\": \"pwn1\", \"solved\": [\"someone\"], \"category\": \"pwn\", \"type\": \"CHALLENGE\", \"solve_date\":1533056159}",
-                "creator": "UNITUSERID1",
+                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn1\", \"solved\": [\"someone\"], \"category\": \"pwn\", \"type\": \"CHALLENGE\", \"solve_date\":1533056159}",
+                "creator": "UNITTEST_USER_ID1",
                 "last_set": 1533056159
             },
             "priority": 0
         },
         {
-            "id": "GC0B1H50V",
+            "id": "UNITTEST_CHANNEL_ID1",
             "name": "testctf1-testchall2",
             "is_group": true,
             "created": 1533056148,
-            "creator": "UNITUSERID1",
+            "creator": "UNITTEST_USER_ID1",
             "is_archived": true,
             "name_normalized": "testctf1-testchall2",
             "is_mpim": false,
             "members": [
-                "UNITUSERID1"
+                "UNITTEST_USER_ID1"
             ],
             "topic": {
                 "value": "",
@@ -43,8 +43,8 @@
                 "last_set": 0
             },
             "purpose": {
-                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"CC0B18H1B\", \"name\": \"pwn2\", \"solved\": \"\", \"category\": \"pwn\", \"type\": \"CHALLENGE\"}",
-                "creator": "UNITUSERID1",
+                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn2\", \"solved\": \"\", \"category\": \"pwn\", \"type\": \"CHALLENGE\"}",
+                "creator": "UNITTEST_USER_ID1",
                 "last_set": 1533056149
             },
             "priority": 0

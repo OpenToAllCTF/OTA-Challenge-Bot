@@ -1,11 +1,11 @@
 {
     "ok": true,
     "group": {
-        "id": "GG2H3CUSG",
+        "id": "UNITTEST_GROUP_ID1",
         "name": "NAME_PH",
         "is_group": true,
         "created": 1549722166,
-        "creator": "UNITTESTID1",
+        "creator": "UNITTEST_USER_ID1",
         "is_archived": false,
         "name_normalized": "NAMEPH",
         "is_mpim": false,
@@ -15,7 +15,7 @@
         "unread_count": 0,
         "unread_count_display": 0,
         "members": [
-            "UNITTESTID1"
+            "UNITTEST_USER_ID1"
         ],
         "topic": {
             "value": "",

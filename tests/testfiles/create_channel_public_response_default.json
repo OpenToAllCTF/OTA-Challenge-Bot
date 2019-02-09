@@ -1,14 +1,14 @@
 {
     "ok": true,
     "channel": {
-        "id": "CG2419ZND",
+        "id": "UNITTEST_CHANNEL_ID1",
         "name": "NAME_PH",
         "is_channel": true,
         "created": 1549722260,
         "is_archived": false,
         "is_general": false,
         "unlinked": 0,
-        "creator": "UNITTESTID1",
+        "creator": "UNITTEST_USER_ID1",
         "name_normalized": "NAME_PH",
         "is_shared": false,
         "is_org_shared": false,
@@ -20,7 +20,7 @@
         "unread_count": 0,
         "unread_count_display": 0,
         "members": [
-            "UNITTESTID1"
+            "UNITTEST_USER_ID1"
         ],
         "topic": {
             "value": "",
