@@ -11,3 +11,9 @@ run: image
 
 runlocal:
 	docker run --rm -it -v ${PWD}/:/src/ otabot
+
+background: image
+	docker run --rm -d --name otabot otabot
+
+stop:
+	docker stop otabot
