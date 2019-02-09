@@ -741,7 +741,7 @@ class AddCredsCommand(Command):
         if ctf:
             ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
             if ctf.cred_url:
-                ChallengeHandler.set_ctf_topic(slack_wrapper, ctf)
+                ChallengeHandler.set_ctf_topic(slack_wrapper, ctf.cred_url)
             message = "Credentials for CTF *{}* updated...".format(ctf.name)
             slack_wrapper.post_message(channel_id, message)
 
@@ -857,11 +857,11 @@ class ChallengeHandler(BaseHandler):
         slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
     @staticmethod
-    def set_ctf_topic(slack_wrapper, ctf):
+    def set_ctf_topic(slack_wrapper, topic):
         """
-        Add the ctf url to the channel topic.
+        Set the channel topic.
         """
-        slack_wrapper.set_topic(ctf.channel_id, ctf.cred_url)
+        slack_wrapper.set_topic(ctf.channel_id, topic)
 
     @staticmethod
     def update_database_from_slack(slack_wrapper):
