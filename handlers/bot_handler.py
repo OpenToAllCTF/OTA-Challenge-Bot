@@ -56,13 +56,12 @@ class VersionCommand(Command):
 
 class InviteCommand(Command):
     """
-    Invite a list of members to the current channel, parses out members already
-    present
+    Invite a list of members to the current channel, ignores members already
+    present.
     """
 
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
-        """Execute the Invite command"""
         try:
             current_members = slack_wrapper.get_channel_members(channel_id)
             # strip uid formatting
