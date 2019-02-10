@@ -110,5 +110,6 @@ Example:
 
 ## Using Link saver
 
-1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links)
-2. Set GITHUB_REPO (owner/repo-name) and GITHUB_BRANCH (master) variables in `save_handler.py`
+1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links).
+2. Copy `config_savelink.json.template` to `config_savelink.json`.
+3. Configure the git repo and branch to be used.

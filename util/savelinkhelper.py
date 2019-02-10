@@ -1,7 +1,11 @@
 """Helper module for save_handler to fetch details of a url."""
 import re
+import json
+
 import requests
 from bs4 import BeautifulSoup
+
+from util.loghandler import log
 
 
 def get_title(soup: BeautifulSoup):
@@ -25,10 +29,39 @@ def get_desc(soup: BeautifulSoup):
         return ""
 
 
+def get_content(url: str):
+    resp = requests.get("https://urlembed.com/json/url/{}".format(url))
+    if not resp.ok:
+        return "", ""
+    resp = resp.json()
+    content = BeautifulSoup(resp["content"], "html.parser").prettify()
+    return content, resp["url"]  # resp["url"] is image's URL
+
+
 def unfurl(url: str):
-    details = {}
+    details = {
+        "title": "",
+        "desc": "",
+        "content": "",
+        "img": ""
+    }
     resp = requests.get(url).text
     soup = BeautifulSoup(resp, "html.parser")
     details["title"] = get_title(soup)
     details["desc"] = get_desc(soup)
+    details["content"], details["img"] = get_content(url)
     return details
+
+
+def init_savelink_config():
+    """Initialize the Save handler configuration"""
+    try:
+        with open("./config_savelink.json") as f:
+            conf = json.load(f)
+            return conf["git_repo"], conf["git_branch"]
+    except (IOError, FileNotFoundError) as e:
+        log.info("Save handler configuration couldn't be loaded: {}.".format(e))
+        return None, None
+
+
+GITHUB_REPO, GITHUB_BRANCH = init_savelink_config()
