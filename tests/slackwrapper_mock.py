@@ -48,63 +48,35 @@ class SlackWrapperMock:
         return "mocked response"
 
     def invite_user(self, user, channel, is_private=False):
-        """
-        Invite a user to a given channel.
-        """
-        api_call = "groups.invite" if is_private else "channels.invite"
-
         # TODO: Add test response for invite_user
         return None
 
     def set_purpose(self, channel, purpose, is_private=False):
-        """
-        Set the purpose of a given channel.
-        """
+        """Set the purpose of a given channel."""
 
         return json.loads(self.set_purpose_response.replace("PURPOSE_PH", json.dumps(purpose)))
 
     def get_members(self):
-        """
-        Return a list of all members.
-        """
         return json.loads(self.get_members_response)
 
     def get_member(self, user_id):
-        """
-        Return a member for a given user_id.
-        """
         return json.loads(self.get_member_response)
 
     def create_channel(self, name, is_private=False):
-        """
-        Create a channel with a given name.
-        """
-
         if is_private:
             return json.loads(self.create_channel_private_response.replace("NAME_PH", name))
         else:
             return json.loads(self.create_channel_public_response.replace("NAME_PH", name))
 
     def rename_channel(self, channel_id, new_name, is_private=False):
-        """
-        Rename an existing channel.
-        """
         # TODO: Add test response for rename_channel
         return None
 
     def get_channel_info(self, channel_id, is_private=False):
-        """
-        Return the channel info of a given channel ID.
-        """
-
         # TODO: Add test response for get_channel_info
         return ""
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
-        """
-        Updates the channel purpose 'name' field for a given channel ID.
-        """
-
         # Update channel purpose
         channel_info = self.get_channel_info(channel_id, is_private)
         key = "group" if is_private else "channel"
