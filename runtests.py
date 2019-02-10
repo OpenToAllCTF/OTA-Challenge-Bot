@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from unittest import TestCase
-from unittest.mock import patch
 from tests.slackwrapper_mock import SlackWrapperMock
 import unittest
 from util.loghandler import log, logging
 from server.botserver import BotServer
+from bottypes.invalid_command import InvalidCommand
 
 
 class BotBaseTest(TestCase):
@@ -24,6 +24,15 @@ class BotBaseTest(TestCase):
 
         self.botserver.slack_wrapper = SlackWrapperMock("testapikey")
         self.botserver.init_bot_data()
+
+        # replace set_config_option to avoid overwriting original bot configuration.
+        self.botserver.set_config_option = self.set_config_option_mock
+
+    def set_config_option_mock(self, option, value):
+        if option in self.botserver.config:
+            self.botserver.config[option] = value
+        else:
+            raise InvalidCommand("The specified configuration option doesn't exist: {}".format(option))
 
     def create_slack_wrapper_mock(self, api_key):
         return SlackWrapperMock(api_key)
