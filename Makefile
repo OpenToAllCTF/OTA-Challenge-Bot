@@ -14,3 +14,9 @@ runlocal:
 
 test:
 	docker run --rm -v ${PWD}/:/src/ otabot python3 runtests.py
+
+background: image
+	docker run --rm -d --name otabot otabot
+
+stop:
+	docker stop otabot
