@@ -80,6 +80,11 @@ class SlackWrapper:
         api_call = "groups.info" if is_private else "channels.info"
         return self.client.api_call(api_call, channel=channel_id)
 
+    def get_channel_members(self, channel_id, is_private=False):
+        """ Return list of member ids in a given channel ID. """
+
+        return self.get_channel_info(channel_id, is_private)['channel']['members']
+
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
         Updates the channel purpose 'name' field for a given channel ID.
