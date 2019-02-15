@@ -26,6 +26,7 @@ class BotServer(threading.Thread):
         self.bot_id = ""
         self.bot_at = ""
         self.slack_wrapper = None
+        self.read_websocket_delay = 1
 
     def lock(self):
         """Acquire global lock for working with global (not thread-safe) data."""
@@ -102,7 +103,7 @@ class BotServer(threading.Thread):
 
         return None, None, None, None
 
-    def load_bot_data(self):
+    def init_bot_data(self):
         """
         Fetches the bot user information such as
         bot_name, bot_id and bot_at.
@@ -113,6 +114,23 @@ class BotServer(threading.Thread):
         self.bot_at = "<@{}>".format(self.bot_id)
         log.debug("Found bot user {} ({})".format(self.bot_name, self.bot_id))
         self.running = True
+
+        # Might even pass the bot server for handlers?
+        log.info("Initializing handlers...")
+        handler_factory.initialize(self.slack_wrapper, self.bot_id, self)
+
+    def handle_message(self, message):
+        reaction, channel, ts, reaction_user = self.parse_slack_reaction(message)
+
+        if reaction:
+            log.debug("Received reaction : {} ({})".format(reaction, channel))
+            handler_factory.process_reaction(self.slack_wrapper, reaction, ts, channel, reaction_user)
+
+        command, channel, ts, user = self.parse_slack_message(message)
+
+        if command:
+            log.debug("Received bot command : {} ({})".format(command, channel))
+            handler_factory.process(self.slack_wrapper, self, command, ts, channel, user)
 
     def run(self):
         log.info("Starting server thread...")
@@ -126,33 +144,17 @@ class BotServer(threading.Thread):
 
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
-                    self.load_bot_data()
-                    READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
-
-                    # Might even pass the bot server for handlers?
-                    log.info("Initializing handlers...")
-                    handler_factory.initialize(self.slack_wrapper, self.bot_id, self)
+                    self.init_bot_data()
 
                     # Main loop
                     log.info("Bot is running...")
                     while self.running:
                         message = self.slack_wrapper.read()
                         if message:
-                            reaction, channel, ts, reaction_user = self.parse_slack_reaction(message)
+                            self.handle_message(message)
 
-                            if reaction:
-                                log.debug("Received reaction : {} ({})".format(reaction, channel))
-                                handler_factory.process_reaction(
-                                    self.slack_wrapper, reaction, ts, channel, reaction_user)
+                            time.sleep(self.read_websocket_delay)
 
-                            command, channel, ts, user = self.parse_slack_message(message)
-
-                            if command:
-                                log.debug("Received bot command : {} ({})".format(command, channel))
-                                handler_factory.process(self.slack_wrapper, self,
-                                                        command, ts, channel, user)
-
-                            time.sleep(READ_WEBSOCKET_DELAY)
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
                     self.running = False
@@ -163,7 +165,7 @@ class BotServer(threading.Thread):
                 # and remove the superfluous exception handling if auto_reconnect works.
                 log.exception("Slack connection error. Trying manual reconnect in 5 seconds...")
                 time.sleep(5)
-            except:                
+            except:
                 log.exception("Unhandled error. Try reconnect...")
                 time.sleep(5)
 

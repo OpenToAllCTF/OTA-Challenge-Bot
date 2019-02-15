@@ -1,0 +1,32 @@
+{
+    "ok": true,
+    "group": {
+        "id": "UNITTEST_GROUP_ID1",
+        "name": "NAME_PH",
+        "is_group": true,
+        "created": 1549722166,
+        "creator": "UNITTEST_USER_ID1",
+        "is_archived": false,
+        "name_normalized": "NAMEPH",
+        "is_mpim": false,
+        "is_open": true,
+        "last_read": "0000000000.000000",
+        "latest": null,
+        "unread_count": 0,
+        "unread_count_display": 0,
+        "members": [
+            "UNITTEST_USER_ID1"
+        ],
+        "topic": {
+            "value": "",
+            "creator": "",
+            "last_set": 0
+        },
+        "purpose": {
+            "value": "",
+            "creator": "",
+            "last_set": 0
+        },
+        "priority": 0
+    }
+}

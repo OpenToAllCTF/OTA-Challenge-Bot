@@ -15,6 +15,9 @@ run: build
 runlocal: image
 	docker run --rm -it -v ${PWD}/:/src/ otabot
 
+test:
+	docker run --rm -v ${PWD}/:/src/ otabot python3 runtests.py
+
 background: image
 	docker run --rm -d --name otabot otabot
 
