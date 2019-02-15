@@ -84,7 +84,7 @@ class BotHandler(BaseHandler):
             "ping": CommandDesc(PingCommand, "Ping the bot", None, None),
             "intro": CommandDesc(IntroCommand, "Show an introduction message for new members", None, None),
             "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot", None, None),
-            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel (smarter than /invite)", user_list, None)
+            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel (smarter than /invite)", ["user_list"], None)
         }
 
 
