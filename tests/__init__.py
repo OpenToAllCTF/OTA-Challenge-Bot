@@ -1,4 +1,3 @@
-__all__ = [
-    "botserver_mock",
+__all__ = [    
     "slackwrapper_mock"
 ]
