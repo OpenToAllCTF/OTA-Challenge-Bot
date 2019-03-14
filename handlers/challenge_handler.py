@@ -308,7 +308,11 @@ class UpdateStatusCommand(Command):
 
         if result["ok"] and result["messages"]:
             if "==========" in result["messages"][0]["text"]:
-                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True)
+                # check if status contained a category and only update for category then
+                category_match = re.search("=== .*? \[(.*?)\] ====", result["messages"][0]["text"], re.S)
+                category = category_match.group(1) if category_match else ""
+
+                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True, category)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -359,7 +363,7 @@ class StatusCommand(Command):
         return response
 
     @classmethod
-    def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish):
+    def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish, category):
         """Build verbose status list."""
         members = slack_wrapper.get_members()
 
@@ -373,9 +377,14 @@ class StatusCommand(Command):
         response = ""
         for ctf in ctf_list:
             # Build long status list
-            response += "*============= #{} {} =============*\n".format(ctf.name, "(finished)" if ctf.finished else "")
-            solved = sorted([c for c in ctf.challenges if c.is_solved], key=lambda x: x.solve_date)
-            unsolved = [c for c in ctf.challenges if not c.is_solved]
+            solved = sorted([c for c in ctf.challenges if c.is_solved and (not category or c.category == category)], key=lambda x: x.solve_date)
+            unsolved = [c for c in ctf.challenges if not c.is_solved and (not category or c.category == category)]
+
+            # Don't show ctfs not having a category challenge if filter is active
+            if category and not solved and not unsolved:
+                continue
+
+            response += "*============= #{} {} {}=============*\n".format(ctf.name, "(finished)" if ctf.finished else "", "[{}] ".format(category) if category else "")
 
             # Check if the CTF has any challenges
             if check_for_finish and ctf.finished and not solved:
@@ -416,7 +425,7 @@ class StatusCommand(Command):
         return response
 
     @classmethod
-    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, verbose=True):
+    def build_status_message(cls, slack_wrapper, args, channel_id, user_id, user_is_admin, verbose=True, category=""):
         """Gathers the ctf information and builds the status response."""
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
 
@@ -432,7 +441,7 @@ class StatusCommand(Command):
             check_for_finish = True
 
         if verbose:
-            response = cls.build_verbose_status(slack_wrapper, ctf_list, check_for_finish)
+            response = cls.build_verbose_status(slack_wrapper, ctf_list, check_for_finish, category)
         else:
             response = cls.build_short_status(ctf_list, check_for_finish)
 
@@ -443,9 +452,14 @@ class StatusCommand(Command):
         """Execute the Status command."""
         verbose = args[0] == "-v" if len(args) > 0 else False
 
-        response, verbose = cls.build_status_message(slack_wrapper, args, channel_id, user_id, user_is_admin, verbose)
+        if verbose:
+            category = args[1] if len(args) > 1 else ""
+        else:
+            category = args[0] if len(args) > 0 else ""
 
-        #slack_wrapper.post_message(channel_id, response)
+        response, verbose = cls.build_status_message(
+            slack_wrapper, args, channel_id, user_id, user_is_admin, verbose, category)
+
         if verbose:
             slack_wrapper.post_message_with_react(channel_id, response, "arrows_clockwise")
         else:
@@ -817,13 +831,13 @@ class ChallengeHandler(BaseHandler):
             "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name", "long_name"], None),
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
-            "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, None),
+            "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, ["category"]),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
-            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),            
+            "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
