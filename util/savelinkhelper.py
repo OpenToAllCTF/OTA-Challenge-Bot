@@ -39,17 +39,17 @@ def get_content(url: str):
 
 
 def unfurl(url: str):
-    details = {
-        "title": "",
-        "desc": "",
-        "content": "",
-        "img": ""
-    }
     resp = requests.get(url).text
     soup = BeautifulSoup(resp, "html.parser")
-    details["title"] = get_title(soup)
-    details["desc"] = get_desc(soup)
-    details["content"], details["img"] = get_content(url)
+    content, img = get_content(url)
+
+    details = {
+        "title": get_title(soup),
+        "desc": get_desc(soup),
+        "content": content,
+        "img": img
+    }
+
     return details
 
 
@@ -58,10 +58,10 @@ def init_savelink_config():
     try:
         with open("./config_savelink.json") as f:
             conf = json.load(f)
-            return conf["git_repo"], conf["git_branch"]
+            return conf, True
     except (IOError, FileNotFoundError) as e:
         log.info("Save handler configuration couldn't be loaded: {}.".format(e))
-        return None, None
+        return None, False
 
 
-GITHUB_REPO, GITHUB_BRANCH = init_savelink_config()
+SAVE_CONFIG, SAVE_SUPPORT = init_savelink_config()

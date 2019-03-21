@@ -113,3 +113,4 @@ Example:
 1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links).
 2. Copy `config_savelink.json.template` to `config_savelink.json`.
 3. Configure the git repo and branch to be used.
+4. Add the decrypted staticman-token used in `staticman.yml` in the config.

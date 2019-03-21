@@ -5,7 +5,7 @@ import requests
 from bottypes.command_descriptor import *
 import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
-from util.savelinkhelper import unfurl, GITHUB_BRANCH, GITHUB_REPO
+from util.savelinkhelper import unfurl, SAVE_CONFIG, SAVE_SUPPORT
 from util.loghandler import log
 
 CATEGORIES = ["web", "pwn", "re", "crypto", "misc"]
@@ -18,7 +18,7 @@ class SaveCommand(Command):
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the save command."""
 
-        if not GITHUB_REPO or not GITHUB_BRANCH:
+        if not SAVE_SUPPORT:
             raise InvalidCommand("Link saver not configured.")
         if args[0] not in CATEGORIES:
             raise InvalidCommand("Invalid Category.")
@@ -34,20 +34,17 @@ class SaveCommand(Command):
         url_data = unfurl(url.group())
 
         data = {
+            "options[staticman-token]": SAVE_CONFIG["staticman-token"],
             "fields[title]": url_data["title"],
             "fields[link]": url.group(),
             "fields[excerpt]": url_data["desc"],
             "fields[category]": args[0],
-
-            # https://github.com/eduardoboucas/staticman/issues/267
-            "fields[content]": "{} ...".format(url_data["content"][:10000]),
-
+            "fields[content]": url_data["content"],
             "fields[header][overlay_image]": url_data["img"]
         }
         resp = requests.post(
-            "https://dev.staticman.net/v3/entry/github/{}/{}/links".format(
-                GITHUB_REPO,
-                GITHUB_BRANCH
+            "https://mystaticmanapp.herokuapp.com/v2/entry/{git_repo}/{git_branch}/links".format_map(
+                SAVE_CONFIG
             ),
             data=data
         ).json()
