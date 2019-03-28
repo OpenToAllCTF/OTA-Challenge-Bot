@@ -1,5 +1,6 @@
 {
   "git_repo": "user/repo",
   "git_branch": "master",
-  "staticman-token": ""
+  "staticman-token": "",
+  "allowed_users": []
 }

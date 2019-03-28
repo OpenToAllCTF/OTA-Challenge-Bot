@@ -19,9 +19,11 @@ class SaveCommand(Command):
         """Execute the save command."""
 
         if not SAVE_SUPPORT:
-            raise InvalidCommand("Link saver not configured.")
+            raise InvalidCommand("Save Link failed: Link saver not configured.")
         if args[0] not in CATEGORIES:
-            raise InvalidCommand("Invalid Category.")
+            raise InvalidCommand("Save Link failed: Invalid Category.")
+        if SAVE_CONFIG["allowed_users"] and user_id not in SAVE_CONFIG["allowed_users"]:
+            raise InvalidCommand("Save Link failed: User not allowed to save links")
 
         message = slack_wrapper.get_message(channel_id, timestamp)["messages"][0]["text"]
         profile_details = slack_wrapper.get_member(user_id)["user"]["profile"]
@@ -29,7 +31,7 @@ class SaveCommand(Command):
         url = re.search(url_regex, message)
 
         if not url:
-            slack_wrapper.post_message(channel_id, "Error: `Unable to extract URL`", timestamp)
+            slack_wrapper.post_message(channel_id, "Save Link failed: Unable to extract URL", timestamp)
             return
 
         url_data = unfurl(url.group())
