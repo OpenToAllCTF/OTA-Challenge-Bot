@@ -7,4 +7,4 @@ class Command(ABC):
     def __init__(self): pass
 
     @classmethod
-    def execute(cls, slack_client, args, channel_id, user, user_is_admin): pass
+    def execute(cls, slack_client, args, timestamp, channel_id, user, user_is_admin): pass
