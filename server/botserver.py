@@ -86,6 +86,11 @@ class BotServer(threading.Thread):
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
                     return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
+            # Check if user tampers with channel purpose
+            elif msg.get("type") == "message" and msg["subtype"] == "channel_purpose" and msg["user"] != self.bot_id:                
+                source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg['user']))
+                warning = "*User '{}' changed the channel purpose ```{}```*".format(source_user, msg['text'])
+                self.slack_wrapper.post_message(msg['channel'], warning)
 
         return None, None, None, None
 
