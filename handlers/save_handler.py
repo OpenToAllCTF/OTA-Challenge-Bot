@@ -24,6 +24,7 @@ class SaveCommand(Command):
             raise InvalidCommand("Invalid Category.")
 
         message = slack_wrapper.get_message(channel_id, timestamp)["messages"][0]["text"]
+        profile_details = slack_wrapper.get_member(user_id)["user"]["profile"]
         url_regex = "((https?):\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?"
         url = re.search(url_regex, message)
 
@@ -40,7 +41,8 @@ class SaveCommand(Command):
             "fields[excerpt]": url_data["desc"],
             "fields[category]": args[0],
             "fields[content]": url_data["content"],
-            "fields[header][overlay_image]": url_data["img"]
+            "fields[header][overlay_image]": url_data["img"],
+            "fields[user]": profile_details["display_name"] or profile_details["real_name"]
         }
         resp = requests.post(
             "https://mystaticmanapp.herokuapp.com/v2/entry/{git_repo}/{git_branch}/links".format_map(
