@@ -60,6 +60,19 @@ class SaveLinkCommand(Command):
             log.error(resp)
 
 
+class ShowLinkSaveURLCommand(Command):
+    """Show the url for the link saver repo."""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        url = LINKSAVE_CONFIG["repo_link_url"]
+
+        if not url:
+            raise InvalidCommand("Link saver: URL for link repository not configured.")
+
+        slack_wrapper.post_message(channel_id, "Link saver: {}".format(url))
+
+
 class LinkSaveHandler(BaseHandler):
     """Handler for saving links."""
 
@@ -67,6 +80,7 @@ class LinkSaveHandler(BaseHandler):
         if LINKSAVE_SUPPORT:
             self.commands = {
                 "link": CommandDesc(SaveLinkCommand, "Save a link in one of the categories: {}".format(", ".join(CATEGORIES)), ["category"], None),
+                "showlinkurl": CommandDesc(ShowLinkSaveURLCommand, "Show the url for linksaver repo", None, None)
             }
 
 

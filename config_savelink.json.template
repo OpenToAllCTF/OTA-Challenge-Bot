@@ -2,5 +2,6 @@
   "git_repo": "user/repo",
   "git_branch": "master",
   "staticman-token": "",
-  "allowed_users": []
+  "allowed_users": [],
+  "repo_link_url": ""
 }

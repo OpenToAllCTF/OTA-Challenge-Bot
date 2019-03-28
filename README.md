@@ -114,3 +114,15 @@ Example:
 2. Copy `config_savelink.json.template` to `config_savelink.json`.
 3. Configure the git repo and branch to be used.
 4. Add the decrypted staticman-token used in `staticman.yml` in the config.
+5. Add a link to your repo, so people can look it up via `showlinkurl`
+
+Example:
+```
+{
+    "git_repo": "reponame/links",
+    "git_branch": "gh-pages",
+    "staticman-token": "9d837771-945a-489d-cd80-13abcdefa112",
+    "allowed_users": [],
+    "repo_link_url": "https://reponame.github.io/links/"
+}
+```
