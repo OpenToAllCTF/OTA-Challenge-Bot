@@ -5,24 +5,24 @@ import requests
 from bottypes.command_descriptor import *
 import handlers.handler_factory as handler_factory
 from handlers.base_handler import *
-from util.savelinkhelper import unfurl, SAVE_CONFIG, SAVE_SUPPORT
+from util.savelinkhelper import unfurl, LINKSAVE_CONFIG, LINKSAVE_SUPPORT
 from util.loghandler import log
 
 CATEGORIES = ["web", "pwn", "re", "crypto", "misc"]
 
 
-class SaveCommand(Command):
+class SaveLinkCommand(Command):
     """Save a url from a slack message according to a specific category."""
 
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the save command."""
 
-        if not SAVE_SUPPORT:
+        if not LINKSAVE_SUPPORT:
             raise InvalidCommand("Save Link failed: Link saver not configured.")
         if args[0] not in CATEGORIES:
             raise InvalidCommand("Save Link failed: Invalid Category.")
-        if SAVE_CONFIG["allowed_users"] and user_id not in SAVE_CONFIG["allowed_users"]:
+        if LINKSAVE_CONFIG["allowed_users"] and user_id not in LINKSAVE_CONFIG["allowed_users"]:
             raise InvalidCommand("Save Link failed: User not allowed to save links")
 
         message = slack_wrapper.get_message(channel_id, timestamp)["messages"][0]["text"]
@@ -37,7 +37,7 @@ class SaveCommand(Command):
         url_data = unfurl(url.group())
 
         data = {
-            "options[staticman-token]": SAVE_CONFIG["staticman-token"],
+            "options[staticman-token]": LINKSAVE_CONFIG["staticman-token"],
             "fields[title]": url_data["title"],
             "fields[link]": url.group(),
             "fields[excerpt]": url_data["desc"],
@@ -48,7 +48,7 @@ class SaveCommand(Command):
         }
         resp = requests.post(
             "https://mystaticmanapp.herokuapp.com/v2/entry/{git_repo}/{git_branch}/links".format_map(
-                SAVE_CONFIG
+                LINKSAVE_CONFIG
             ),
             data=data
         ).json()
@@ -60,17 +60,14 @@ class SaveCommand(Command):
             log.error(resp)
 
 
-class SaveHandler(BaseHandler):
+class LinkSaveHandler(BaseHandler):
     """Handler for saving links."""
 
     def __init__(self):
-        self.commands = {
-            "link": CommandDesc(
-                SaveCommand,
-                "Save a link in one of the categories: {}".format(", ".join(CATEGORIES)),
-                ["category"], None
-            ),
-        }
+        if LINKSAVE_SUPPORT:
+            self.commands = {
+                "link": CommandDesc(SaveLinkCommand, "Save a link in one of the categories: {}".format(", ".join(CATEGORIES)), ["category"], None),
+            }
 
 
-handler_factory.register("save", SaveHandler())
+handler_factory.register("linksave", LinkSaveHandler())

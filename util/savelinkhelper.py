@@ -64,4 +64,4 @@ def init_savelink_config():
         return None, False
 
 
-SAVE_CONFIG, SAVE_SUPPORT = init_savelink_config()
+LINKSAVE_CONFIG, LINKSAVE_SUPPORT = init_savelink_config()
