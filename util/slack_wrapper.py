@@ -142,3 +142,7 @@ class SlackWrapper:
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""
         return self.client.api_call("groups.archive", channel=channel_id)
+
+    def archive_public_channel(self, channel_id):
+        """Archive a public channel"""
+        return self.client.api_call("channels.archive", channel=channel_id)

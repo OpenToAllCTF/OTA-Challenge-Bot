@@ -660,7 +660,7 @@ class ArchiveCTFCommand(Command):
         no_post = args[0].lower() if args else None
 
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
-        if not ctf:
+        if not ctf or ctf.channel_id != channel_id:
             raise InvalidCommand("Archive CTF failed: You are not in a CTF channel.")
 
         # Post solves if git support is enabled
@@ -694,6 +694,9 @@ class ArchiveCTFCommand(Command):
 
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
+
+        # Archive the main CTF channel also to cleanup
+        slack_wrapper.archive_public_channel(channel_id)
 
 
 class EndCTFCommand(Command):
