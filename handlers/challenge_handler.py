@@ -713,6 +713,9 @@ class EndCTFCommand(Command):
         if not ctf:
             raise InvalidCommand("End CTF failed: You are not in a CTF channel.")
 
+        if ctf.finished:
+            raise InvalidCommand("CTF is already marked as finished...")
+
         def update_func(ctf):
             ctf.finished = True
 
