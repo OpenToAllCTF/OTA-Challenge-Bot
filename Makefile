@@ -9,6 +9,9 @@ image:
 lint: image
 	docker run --rm -v ${PWD}/:/src/ otabot pylint **/*.py -E
 
+checklint: image
+	docker run --rm -v ${PWD}/:/src/ otabot pylint **/*.py --exit-zero
+
 run: build
 	docker run --rm -it otabot
 
