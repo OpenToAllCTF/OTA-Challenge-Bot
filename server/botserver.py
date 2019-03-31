@@ -1,14 +1,16 @@
 import json
 import threading
 import time
-import websocket
 
-import handlers.handler_factory as handler_factory
-from handlers import *
-from util.loghandler import *
-from util.slack_wrapper import *
-from bottypes.invalid_console_command import *
+import websocket
 from slackclient.server import SlackConnectionError
+
+from bottypes.invalid_console_command import InvalidConsoleCommand
+from handlers import *
+from handlers import handler_factory
+from util.loghandler import log
+from util.slack_wrapper import SlackWrapper
+from util.util import get_display_name, resolve_user_by_user_id
 
 
 class BotServer(threading.Thread):
@@ -63,7 +65,7 @@ class BotServer(threading.Thread):
         try:
             if option in self.config:
                 self.config[option] = value
-                log.info("Updated configuration: {} => {}".format(option, value))
+                log.info("Updated configuration: %s => %s", option, value)
 
                 with open("./config.json", "w") as f:
                     json.dump(self.config, f)
@@ -87,7 +89,7 @@ class BotServer(threading.Thread):
                     # Return text after the !
                     return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
             # Check if user tampers with channel purpose
-            elif msg.get("type") == "message" and msg["subtype"] == "channel_purpose" and msg["user"] != self.bot_id:                
+            elif msg.get("type") == "message" and msg["subtype"] == "channel_purpose" and msg["user"] != self.bot_id:
                 source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg['user']))
                 warning = "*User '{}' changed the channel purpose ```{}```*".format(source_user, msg['text'])
                 self.slack_wrapper.post_message(msg['channel'], warning)
@@ -98,7 +100,7 @@ class BotServer(threading.Thread):
         for msg in message_list:
             msgtype = msg.get("type")
 
-            if msgtype == "reaction_removed" or msgtype == "reaction_added":
+            if msgtype in("reaction_removed", "reaction_added"):
                 # Ignore reactions from the bot itself
                 if msg["user"] == self.bot_id:
                     continue
@@ -117,25 +119,25 @@ class BotServer(threading.Thread):
         self.bot_name = self.slack_wrapper.username
         self.bot_id = self.slack_wrapper.user_id
         self.bot_at = "<@{}>".format(self.bot_id)
-        log.debug("Found bot user {} ({})".format(self.bot_name, self.bot_id))
+        log.debug("Found bot user %s (%s)", self.bot_name, self.bot_id)
         self.running = True
 
         # Might even pass the bot server for handlers?
         log.info("Initializing handlers...")
-        handler_factory.initialize(self.slack_wrapper, self.bot_id, self)
+        handler_factory.initialize(self.slack_wrapper, self)
 
     def handle_message(self, message):
-        reaction, channel, ts, reaction_user = self.parse_slack_reaction(message)
+        reaction, channel, time_stamp, reaction_user = self.parse_slack_reaction(message)
 
         if reaction:
-            log.debug("Received reaction : {} ({})".format(reaction, channel))
-            handler_factory.process_reaction(self.slack_wrapper, reaction, ts, channel, reaction_user)
+            log.debug("Received reaction : %s (%s)", reaction, channel)
+            handler_factory.process_reaction(self.slack_wrapper, reaction, time_stamp, channel, reaction_user)
 
-        command, channel, ts, user = self.parse_slack_message(message)
+        command, channel, time_stamp, user = self.parse_slack_message(message)
 
         if command:
-            log.debug("Received bot command : {} ({})".format(command, channel))
-            handler_factory.process(self.slack_wrapper, self, command, ts, channel, user)
+            log.debug("Received bot command : %s (%s)", command, channel)
+            handler_factory.process(self.slack_wrapper, self, command, time_stamp, channel, user)
 
     def run(self):
         log.info("Starting server thread...")

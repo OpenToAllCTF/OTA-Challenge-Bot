@@ -1,12 +1,10 @@
-import re
-
-from bottypes.command import *
-from bottypes.command_descriptor import *
-from bottypes.invalid_command import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from addons.syscalls.syscallinfo import *
-from util.util import *
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from bottypes.invalid_command import InvalidCommand
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
+from util.util import (get_display_name_from_user, parse_user_id,
+                       resolve_user_by_user_id)
 
 
 class ShowAdminsCommand(Command):
@@ -106,8 +104,8 @@ class AsCommand(Command):
             dest_user_id = user_obj['user']['id']
 
             # Redirecting command execution to handler factory
-            handler_factory.process_command(slack_wrapper, dest_command, [
-                                            dest_command] + dest_arguments, timestamp, channel_id, dest_user_id, user_is_admin)
+            handler_factory.process_command(slack_wrapper, dest_command,
+                                            [dest_command] + dest_arguments, timestamp, channel_id, dest_user_id, user_is_admin)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 

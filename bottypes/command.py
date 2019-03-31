@@ -1,10 +1,12 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class Command(ABC):
     """Defines the command interface."""
 
-    def __init__(self): pass
+    def __init__(self):
+        pass
 
     @classmethod
-    def execute(cls, slack_client, args, timestamp, channel_id, user, user_is_admin): pass
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        pass

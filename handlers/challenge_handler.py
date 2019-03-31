@@ -1,24 +1,17 @@
 import pickle
-
-from bottypes.ctf import *
-from bottypes.challenge import *
-from bottypes.player import *
-from bottypes.command_descriptor import *
-from bottypes.reaction_descriptor import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from util.util import *
-from util.slack_wrapper import *
-from util.solveposthelper import *
-from util.githandler import *
-from util.ctf_template_resolver import *
 from random import randint
 
-
-def is_valid_name(name):
-    if re.match(r"^[\w\-_]+$", name):
-        return True
-    return False
+from bottypes.challenge import Challenge
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from bottypes.ctf import CTF
+from bottypes.player import Player
+from bottypes.reaction_descriptor import ReactionDesc
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
+from util.loghandler import log
+from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
+from util.util import *
 
 
 class RollCommand(Command):
@@ -57,7 +50,7 @@ class AddCTFCommand(Command):
         response = slack_wrapper.create_channel(name)
 
         # Validate that the channel was successfully created.
-        if response['ok'] == False:
+        if not response['ok']:
             raise InvalidCommand("\"{}\" channel creation failed:\nError : {}".format(name, response['error']))
 
         ctf_channel_id = response['channel']['id']
@@ -80,8 +73,8 @@ class AddCTFCommand(Command):
         auto_invite_list = handler_factory.botserver.get_config_option("auto_invite")
 
         if type(auto_invite_list) == list:
-            for user_id in auto_invite_list:
-                slack_wrapper.invite_user(user_id, ctf_channel_id)
+            for invite_user_id in auto_invite_list:
+                slack_wrapper.invite_user(invite_user_id, ctf_channel_id)
 
         # Notify people of new channel
         message = "Created channel #{}".format(response['channel']['name']).strip()
@@ -119,7 +112,7 @@ class RenameChallengeCommand(Command):
         if not challenge:
             raise InvalidCommand("Rename challenge failed: Challenge '{}' not found.".format(old_name))
 
-        log.debug("Renaming channel {} to {}".format(channel_id, new_name))
+        log.debug("Renaming channel %s to %s", channel_id, new_name)
         response = slack_wrapper.rename_channel(challenge.channel_id, new_channel_name, is_private=True)
 
         if not response['ok']:
@@ -237,8 +230,8 @@ class AddChallengeCommand(Command):
         slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
 
         # Invite everyone in the auto-invite list
-        for user_id in handler_factory.botserver.get_config_option("auto_invite"):
-            slack_wrapper.invite_user(user_id, challenge_channel_id, is_private=True)
+        for invite_user_id in handler_factory.botserver.get_config_option("auto_invite"):
+            slack_wrapper.invite_user(invite_user_id, challenge_channel_id, is_private=True)
 
         # New Challenge
         challenge = Challenge(ctf.channel_id, challenge_channel_id, name, category)
@@ -344,7 +337,7 @@ class StatusCommand(Command):
     """
 
     @classmethod
-    def build_short_status(cls, ctf_list, check_for_finish):
+    def build_short_status(cls, ctf_list):
         """Build short status list."""
         response = ""
 
@@ -377,14 +370,16 @@ class StatusCommand(Command):
         response = ""
         for ctf in ctf_list:
             # Build long status list
-            solved = sorted([c for c in ctf.challenges if c.is_solved and (not category or c.category == category)], key=lambda x: x.solve_date)
+            solved = sorted([c for c in ctf.challenges if c.is_solved and (
+                not category or c.category == category)], key=lambda x: x.solve_date)
             unsolved = [c for c in ctf.challenges if not c.is_solved and (not category or c.category == category)]
 
             # Don't show ctfs not having a category challenge if filter is active
             if category and not solved and not unsolved:
                 continue
 
-            response += "*============= #{} {} {}=============*\n".format(ctf.name, "(finished)" if ctf.finished else "", "[{}] ".format(category) if category else "")
+            response += "*============= #{} {} {}=============*\n".format(
+                ctf.name, "(finished)" if ctf.finished else "", "[{}] ".format(category) if category else "")
 
             # Check if the CTF has any challenges
             if check_for_finish and ctf.finished and not solved:
@@ -443,19 +438,19 @@ class StatusCommand(Command):
         if verbose:
             response = cls.build_verbose_status(slack_wrapper, ctf_list, check_for_finish, category)
         else:
-            response = cls.build_short_status(ctf_list, check_for_finish)
+            response = cls.build_short_status(ctf_list)
 
         return response, verbose
 
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Status command."""
-        verbose = args[0] == "-v" if len(args) > 0 else False
+        verbose = args[0] == "-v" if args else False
 
         if verbose:
             category = args[1] if len(args) > 1 else ""
         else:
-            category = args[0] if len(args) > 0 else ""
+            category = args[0] if args else ""
 
         response, verbose = cls.build_status_message(
             slack_wrapper, args, channel_id, user_id, user_is_admin, verbose, category)
@@ -647,8 +642,8 @@ class UnsolveCommand(Command):
                         slack_wrapper.post_message(ctf.channel_id, message)
 
                         return
-                    else:
-                        raise InvalidCommand("This challenge isn't marked as solve.")
+
+                    raise InvalidCommand("This challenge isn't marked as solve.")
 
 
 class ArchiveCTFCommand(Command):

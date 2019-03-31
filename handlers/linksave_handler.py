@@ -2,11 +2,13 @@ import re
 
 import requests
 
-from bottypes.command_descriptor import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from util.savelinkhelper import unfurl, LINKSAVE_CONFIG, LINKSAVE_SUPPORT
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from bottypes.invalid_command import InvalidCommand
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
 from util.loghandler import log
+from util.savelinkhelper import LINKSAVE_CONFIG, LINKSAVE_SUPPORT, unfurl
 
 CATEGORIES = ["web", "pwn", "re", "crypto", "misc"]
 

@@ -1,12 +1,7 @@
-import json
 import threading
-import time
-from util.loghandler import *
-from util.util import *
-from bottypes.invalid_console_command import *
 
-# This should also be refactored to a "ConsoleHandler" and work with Commands like the BotHandlers.
-# Would make a much cleaner design, than using if/else
+from bottypes.invalid_console_command import InvalidConsoleCommand
+from util.loghandler import log
 
 
 class ConsoleThread(threading.Thread):

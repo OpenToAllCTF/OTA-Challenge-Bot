@@ -10,7 +10,7 @@ from util.loghandler import log
 
 def get_title(soup: BeautifulSoup):
     title = soup.find("meta", property=re.compile("title", re.I)) or \
-            soup.find("meta", attrs={"name": re.compile("title", re.I)})
+        soup.find("meta", attrs={"name": re.compile("title", re.I)})
     if title:
         title = title["content"]
     else:
@@ -22,11 +22,11 @@ def get_title(soup: BeautifulSoup):
 
 def get_desc(soup: BeautifulSoup):
     desc = soup.find("meta", property=re.compile("desc", re.I)) or \
-           soup.find("meta", attrs={"name": re.compile("desc", re.I)})
+        soup.find("meta", attrs={"name": re.compile("desc", re.I)})
     if desc:
         return desc["content"].strip()
-    else:
-        return ""
+
+    return ""
 
 
 def get_content(url: str):
@@ -60,7 +60,7 @@ def init_savelink_config():
             conf = json.load(f)
             return conf, True
     except (IOError, FileNotFoundError) as e:
-        log.info("Save handler configuration couldn't be loaded: {}.".format(e))
+        log.info("Save handler configuration couldn't be loaded: %s.", e)
         return None, False
 
 

@@ -1,14 +1,9 @@
-import re
-
 import wolframalpha
 
-from bottypes.command import *
-from bottypes.command_descriptor import *
-from bottypes.invalid_command import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from addons.syscalls.syscallinfo import *
-from util.util import *
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
 
 
 class AskCommand(Command):
@@ -19,7 +14,7 @@ class AskCommand(Command):
         """Execute the Ask command."""
         app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 
-        verbose = (args[0] if len(args) > 0 else "") == "-v"
+        verbose = (args[0] if args else "") == "-v"
 
         if app_id:
             try:
@@ -40,7 +35,7 @@ class AskCommand(Command):
                                 answer += "```\n"
                                 answer += subpod.plaintext[:512] + "\n"
                                 answer += "```\n"
-                                if (len(subpod.plaintext) > 512):
+                                if len(subpod.plaintext) > 512:
                                     answer += "*shortened*"
                 else:
                     answer = next(res.results, None)

@@ -1,8 +1,8 @@
 import json
 import pickle
+import re
 
-from util.loghandler import *
-from bottypes.invalid_command import *
+from bottypes.invalid_command import InvalidCommand
 
 #######
 # Helper functions
@@ -269,3 +269,9 @@ def get_display_name_from_user(user):
             return user['name']
 
     return user['id']
+
+
+def is_valid_name(name):
+    if re.match(r"^[\w\-_]+$", name):
+        return True
+    return False

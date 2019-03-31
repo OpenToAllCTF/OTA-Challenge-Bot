@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
-from bottypes.command import *
-from bottypes.invalid_command import *
+from bottypes.invalid_command import InvalidCommand
 
 
 class BaseHandler(ABC):
@@ -97,7 +96,7 @@ class BaseHandler(ABC):
                 if len(args) < len(cmd_descriptor.arguments):
                     raise InvalidCommand(self.command_usage(command, cmd_descriptor))
                 cmd_descriptor.command.execute(slack_wrapper, args, timestamp, channel, user, user_is_admin)
-        
+
     def process_reaction(self, slack_wrapper, reaction, channel, timestamp, user, user_is_admin):
         reaction_descriptor = self.reactions[reaction]
 

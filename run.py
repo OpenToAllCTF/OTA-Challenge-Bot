@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-from util.loghandler import *
-from server.botserver import *
-from server.consolethread import *
+from util.loghandler import log
+from server.botserver import BotServer
+from server.consolethread import ConsoleThread
 
 
 if __name__ == "__main__":
