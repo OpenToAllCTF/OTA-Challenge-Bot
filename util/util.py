@@ -253,13 +253,19 @@ def get_display_name(member):
 
 
 def get_display_name_from_user(user):
-    if user['profile']['display_name']:
-        return user['profile']['display_name']
+    if 'profile' in user:
+        if user['profile']['display_name']:
+            return user['profile']['display_name']
 
-    if user['real_name']:
-        return user['real_name']
+        if user['profile']['real_name']:
+            return user['profile']['real_name']
 
-    if user['name']:
-        return user['name']
+    if 'real_name' in user:
+        if user['real_name']:
+            return user['real_name']
+
+    if 'name' in user:
+        if user['name']:
+            return user['name']
 
     return user['id']
