@@ -26,7 +26,7 @@ class ShowAdminsCommand(Command):
                 user_object = slack_wrapper.get_member(admin_id)
 
                 if user_object['ok']:
-                    response += "*{}* ({})\n".format(user_object['user']['name'], admin_id)
+                    response += "*{}* ({})\n".format(get_display_name_from_user(user_object["user"]), admin_id)
 
             response += "==================================="
 
