@@ -371,8 +371,8 @@ class StatusCommand(Command):
         if not "members" in member_list:
             raise InvalidCommand("Status failed. Could not refresh member list...")
 
-        members = {m["id"]: get_display_name_from_user(m)
-                   for m in member_list['members']}
+        members = {m["id"]: m["profile"]["display_name"]
+                   for m in member_list['members'] if m.get("presence") == "active"}
 
         response = ""
         for ctf in ctf_list:
