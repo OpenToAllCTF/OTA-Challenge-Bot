@@ -365,14 +365,14 @@ class StatusCommand(Command):
     @classmethod
     def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish, category):
         """Build verbose status list."""
-        members = slack_wrapper.get_members()
+        member_list = slack_wrapper.get_members()
 
         # Bail out, if we couldn't read member list
-        if not "members" in members:
+        if not "members" in member_list:
             raise InvalidCommand("Status failed. Could not refresh member list...")
 
-        members = {m["id"]: m["profile"]["display_name"]
-                   for m in members['members'] if m.get("presence") == "active"}
+        members = {m["id"]: get_display_name_from_user(m)
+                   for m in member_list['members']}
 
         response = ""
         for ctf in ctf_list:

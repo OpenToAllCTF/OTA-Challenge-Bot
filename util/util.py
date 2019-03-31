@@ -249,13 +249,17 @@ def resolve_user_by_user_id(slack_wrapper, user_id):
 
 
 def get_display_name(member):
-    if member['user']['profile']['display_name']:
-        return member['user']['profile']['display_name']
+    return get_display_name_from_user(member["user"])
 
-    if member['user']['real_name']:
-        return member['user']['real_name']
 
-    if member['user']['name']:
-        return member['user']['name']
+def get_display_name_from_user(user):
+    if user['profile']['display_name']:
+        return user['profile']['display_name']
 
-    return member['user']['id']
+    if user['real_name']:
+        return user['real_name']
+
+    if user['name']:
+        return user['name']
+
+    return user['id']
