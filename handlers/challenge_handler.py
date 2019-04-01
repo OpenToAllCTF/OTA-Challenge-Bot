@@ -753,15 +753,19 @@ class AddCredsCommand(Command):
         def update_func(ctf):
             ctf.cred_user = args[0]
             ctf.cred_pw = args[1]
-            ctf.cred_url = args[2] if len(args) > 2 else ""
+            
 
         # Update database
         ctf = update_ctf(ChallengeHandler.DB, cur_ctf.channel_id, update_func)
 
         if ctf:
             ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
-            if ctf.cred_url:
-                slack_wrapper.set_topic(channel_id, ctf.cred_url)
+
+            ctf_cred_url = args[2] if len(args) > 2 else ""
+
+            if ctf_cred_url:
+                slack_wrapper.set_topic(channel_id, ctf_cred_url)
+
             message = "Credentials for CTF *{}* updated...".format(ctf.name)
             slack_wrapper.post_message(channel_id, message)
 
@@ -780,10 +784,6 @@ class ShowCredsCommand(Command):
         if cur_ctf.cred_user and cur_ctf.cred_pw:
             message = "Credentials for CTF *{}*\n".format(cur_ctf.name)
             message += "```"
-
-            if cur_ctf.cred_url:
-                message += "URL      : {}\n".format(cur_ctf.cred_url)
-
             message += "Username : {}\n".format(cur_ctf.cred_user)
             message += "Password : {}\n".format(cur_ctf.cred_pw)
             message += "```"
@@ -813,18 +813,17 @@ class ChallengeHandler(BaseHandler):
 
     DB = "databases/challenge_handler.bin"
     CTF_PURPOSE = {
-        "ota_bot": "DO_NOT_DELETE_THIS",
+        "ota_bot": "OTABOT",
         "name": "",
         "type": "CTF",
         "cred_user": "",
-        "cred_pw": "",
-        "cred_url": "",
+        "cred_pw": "",        
         "long_name": "",
         "finished": False
     }
 
     CHALL_PURPOSE = {
-        "ota_bot": "DO_NOT_DELETE_THIS",
+        "ota_bot": "OTABOT",
         "ctf_id": "",
         "name": "",
         "solved": "",
@@ -865,12 +864,11 @@ class ChallengeHandler(BaseHandler):
         Update the purpose for the ctf channel.
         """
         purpose = dict(ChallengeHandler.CTF_PURPOSE)
-        purpose["ota_bot"] = "DO_NOT_DELETE_THIS"
+        purpose["ota_bot"] = "OTABOT"
         purpose["name"] = ctf.name
         purpose["type"] = "CTF"
         purpose["cred_user"] = ctf.cred_user
-        purpose["cred_pw"] = ctf.cred_pw
-        purpose["cred_url"] = ctf.cred_url
+        purpose["cred_pw"] = ctf.cred_pw        
         purpose["long_name"] = ctf.long_name
         purpose["finished"] = ctf.finished
 
@@ -893,8 +891,7 @@ class ChallengeHandler(BaseHandler):
                 ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
                 ctf.cred_user = purpose.get("cred_user", "")
-                ctf.cred_pw = purpose.get("cred_pw", "")
-                ctf.cred_url = purpose.get("cred_url", "")
+                ctf.cred_pw = purpose.get("cred_pw", "")                
                 ctf.finished = purpose.get("finished", False)
 
                 database[ctf.channel_id] = ctf
