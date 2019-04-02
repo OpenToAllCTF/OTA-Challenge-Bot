@@ -6,23 +6,24 @@ The handler factory will then check if the handler can process a command,
 resolve it and execute it
 """
 import shlex
-from unidecode import unidecode
-from util.loghandler import *
-from bottypes.invalid_command import *
 
+from unidecode import unidecode
+
+from bottypes.invalid_command import InvalidCommand
+from util.loghandler import log
 
 handlers = {}
 botserver = None
 
 
 def register(handler_name, handler):
-    log.info("Registering new handler: {} ({})".format(handler_name, handler.__class__.__name__))
+    log.info("Registering new handler: %s (%s)", handler_name, handler.__class__.__name__)
 
     handlers[handler_name] = handler
     handler.handler_name = handler_name
 
 
-def initialize(slack_wrapper, bot_id, _botserver):
+def initialize(slack_wrapper, _botserver):
     """
     Initializes all handler with common information.
 
@@ -35,7 +36,7 @@ def initialize(slack_wrapper, bot_id, _botserver):
 
 
 def process(slack_wrapper, botserver, message, timestamp, channel_id, user_id):
-    log.debug("Processing message: {} from {} ({})".format(message, channel_id, user_id))
+    log.debug("Processing message: %s from %s (%s)", message, channel_id, user_id)
 
     try:  # Parse command and check for malformed input
         command_line = unidecode(message)
@@ -55,9 +56,7 @@ def process(slack_wrapper, botserver, message, timestamp, channel_id, user_id):
 
 def process_reaction(slack_wrapper, reaction, timestamp, channel_id, user_id):
     try:
-        log.debug("Processing reaction: {} from {} ({})".format(reaction, channel_id, timestamp))
-
-        processed = False
+        log.debug("Processing reaction: %s from %s (%s)", reaction, channel_id, timestamp)
 
         admin_users = botserver.get_config_option("admin_users")
         user_is_admin = admin_users and user_id in admin_users
@@ -65,7 +64,6 @@ def process_reaction(slack_wrapper, reaction, timestamp, channel_id, user_id):
         for handler_name, handler in handlers.items():
             if handler.can_handle_reaction(reaction):
                 handler.process_reaction(slack_wrapper, reaction, channel_id, timestamp, user_id, user_is_admin)
-                processed = True
     except InvalidCommand as e:
         slack_wrapper.post_message(channel_id, e.message, timestamp)
 

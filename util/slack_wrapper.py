@@ -1,5 +1,7 @@
+import json
+
 from slackclient import SlackClient
-from util.util import *
+from util.util import load_json
 
 
 class SlackWrapper:

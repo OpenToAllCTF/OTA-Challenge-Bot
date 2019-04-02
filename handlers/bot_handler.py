@@ -1,14 +1,8 @@
-import shlex
-import pickle
-import re
-import json
-
-from unidecode import unidecode
-
-from bottypes.command import *
-from bottypes.command_descriptor import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from bottypes.invalid_command import InvalidCommand
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
 from util.githandler import GitHandler
 from util.loghandler import log
 
@@ -75,6 +69,7 @@ class InviteCommand(Command):
         if failed_users:
             log.exception("BotHandler::InviteCommand")
             raise InvalidCommand("Sorry, couldn't invite the following members to the channel: " + ' '.join(failed_users))
+
 
 class BotHandler(BaseHandler):
     """Handler for generic bot commands."""

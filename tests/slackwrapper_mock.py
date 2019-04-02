@@ -1,7 +1,6 @@
-from slackclient import SlackClient
-from util.util import *
+import json
 from tests.slack_test_response import SlackResponse
-
+from util.util import load_json
 
 class SlackWrapperMock:
     """
