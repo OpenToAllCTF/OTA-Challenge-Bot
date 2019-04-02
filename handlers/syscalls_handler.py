@@ -40,18 +40,18 @@ class ShowSyscallCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the ShowSyscall command."""
-        arch_obj = SyscallsHandler.syscallInfo.get_arch(args[0].lower())
+        arch = SyscallsHandler.syscallInfo.get_arch(args[0].lower())
 
-        if arch_obj:
+        if arch:
             entry = None
 
             # convenience : Try to search syscall by id or by name, depending on what
             # the user has specified
             try:
                 syscall_id = int(args[1])
-                entry = arch_obj.get_entry_by_id(syscall_id)
+                entry = arch.get_entry_by_id(syscall_id)
             except:
-                entry = arch_obj.get_entry_by_name(args[1].lower())
+                entry = arch.get_entry_by_name(args[1].lower())
 
             if entry:
                 slack_wrapper.post_message(channel_id, cls.parse_syscall_info(entry))

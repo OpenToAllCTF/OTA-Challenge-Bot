@@ -44,10 +44,7 @@ class SyscallTable:
         return None
 
     def get_entry_by_name(self, name):
-        if name in self.entries:
-            return self.entries[name]
-
-        return None
+        return self.entries.get(name)
 
     def get_info_message(self, entry):
         if entry:
