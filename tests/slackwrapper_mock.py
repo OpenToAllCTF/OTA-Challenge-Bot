@@ -92,7 +92,7 @@ class SlackWrapperMock:
         channel_id can also be a user_id for private messages.
         Add timestamp for replying to a specific message.
         """
-        self.push_message(channel_id, text)
+        self.push_message(channel_id, str(text))
 
     def post_message_with_react(self, channel_id, text, reaction, parse="full"):
         """Post a message in a given channel and add the specified reaction to it."""
@@ -120,3 +120,8 @@ class SlackWrapperMock:
         """Archive a private channel"""
         # TODO: The git handler must be mocked before testing archive command to avoid uploading test cases
         pass
+
+    def set_topic(self, channel, topic, is_private=False):
+        """Set the topic of a given channel."""
+
+        return None
