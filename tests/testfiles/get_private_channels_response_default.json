@@ -19,7 +19,7 @@
                 "last_set": 0
             },
             "purpose": {
-                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn1\", \"solved\": [\"someone\"], \"category\": \"pwn\", \"type\": \"CHALLENGE\", \"solve_date\":1533056159}",
+                "value": "{\"ota_bot\": \"OTABOT\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn1\", \"solved\": [\"someone\"], \"category\": \"pwn\", \"type\": \"CHALLENGE\", \"solve_date\":1533056159}",
                 "creator": "UNITTEST_USER_ID1",
                 "last_set": 1533056159
             },
@@ -43,7 +43,7 @@
                 "last_set": 0
             },
             "purpose": {
-                "value": "{\"ota_bot\": \"DO_NOT_DELETE_THIS\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn2\", \"solved\": \"\", \"category\": \"pwn\", \"type\": \"CHALLENGE\"}",
+                "value": "{\"ota_bot\": \"OTABOT\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn2\", \"solved\": \"\", \"category\": \"pwn\", \"type\": \"CHALLENGE\"}",
                 "creator": "UNITTEST_USER_ID1",
                 "last_set": 1533056149
             },
