@@ -27,7 +27,7 @@ class IntroCommand(Command):
                 message = f.read()
 
             slack_wrapper.post_message(channel_id, message)
-        except:
+        except IOError:
             message = "Sorry, I forgot what I wanted to say (or the admins forgot to give me an intro message :wink:)"
 
             slack_wrapper.post_message(channel_id, message)
@@ -68,7 +68,7 @@ class InviteCommand(Command):
 
         if failed_users:
             log.exception("BotHandler::InviteCommand")
-            raise InvalidCommand("Sorry, couldn't invite the following members to the channel: " + ' '.join(failed_users))
+            raise InvalidCommand("Sorry, couldn't invite the following members: " + ' '.join(failed_users))
 
 
 class BotHandler(BaseHandler):
@@ -76,10 +76,10 @@ class BotHandler(BaseHandler):
 
     def __init__(self):
         self.commands = {
-            "ping": CommandDesc(PingCommand, "Ping the bot", None, None),
-            "intro": CommandDesc(IntroCommand, "Show an introduction message for new members", None, None),
-            "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot", None, None),
-            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel (smarter than /invite)", ["user_list"], None)
+            "ping": CommandDesc(PingCommand, "Ping the bot"),
+            "intro": CommandDesc(IntroCommand, "Show an introduction message for new members"),
+            "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot"),
+            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel", ["user_list"])
         }
 
 

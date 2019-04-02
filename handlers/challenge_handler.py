@@ -72,7 +72,7 @@ class AddCTFCommand(Command):
         # Invite everyone in the auto-invite list
         auto_invite_list = handler_factory.botserver.get_config_option("auto_invite")
 
-        if type(auto_invite_list) == list:
+        if isinstance(auto_invite_list, list):
             for invite_user_id in auto_invite_list:
                 slack_wrapper.invite_user(invite_user_id, ctf_channel_id)
 
@@ -302,10 +302,11 @@ class UpdateStatusCommand(Command):
         if result["ok"] and result["messages"]:
             if "==========" in result["messages"][0]["text"]:
                 # check if status contained a category and only update for category then
-                category_match = re.search("=== .*? \[(.*?)\] ====", result["messages"][0]["text"], re.S)
+                category_match = re.search(r"=== .*? \[(.*?)\] ====", result["messages"][0]["text"], re.S)
                 category = category_match.group(1) if category_match else ""
 
-                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True, category)
+                status, _ = StatusCommand().build_status_message(
+                    slack_wrapper, None, channel_id, user_id, user_is_admin, True, category)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -326,7 +327,8 @@ class UpdateShortStatusCommand(Command):
 
         if result["ok"] and result["messages"]:
             if "solved /" in result["messages"][0]["text"]:
-                status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
+                status, _ = StatusCommand().build_status_message(
+                    slack_wrapper, None, channel_id, user_id, user_is_admin, False)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
 
@@ -409,8 +411,9 @@ class StatusCommand(Command):
                         if player_id in members:
                             players.append(members[player_id])
 
-                    response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
-                                                                   if challenge.category else "", transliterate(", ".join(players)))
+                    response += "[{} active] *{}* {}: {}\n".format(
+                        len(players), challenge.name, "({})".format(challenge.category)
+                        if challenge.category else "", transliterate(", ".join(players)))
 
         response = response.strip()
 
@@ -584,12 +587,11 @@ class SolveCommand(Command):
                         help_members = ""
 
                         if additional_solver:
-                            help_members = "(together with {})".format(", ".join(additional_solver))
+                            help_members = " (together with {})".format(", ".join(additional_solver))
 
-                        message = "@here *{}* : {} has solved the \"{}\" challenge {}".format(
+                        message = "@here *{}* : {} has solved the \"{}\" challenge{}.".format(
                             challenge.name, get_display_name(member), challenge.name, help_members)
-                        message += "."
-
+                        
                         slack_wrapper.post_message(ctf.channel_id, message)
 
                     break
@@ -664,7 +666,7 @@ class ArchiveCTFCommand(Command):
                 if not no_post:
                     if not ctf.long_name:
                         raise InvalidCommand(
-                            "The CTF has no long name set. Please fix the ctf purpose and reload ctf data before archiving this ctf.")
+                            "CTF has no long name. Please fix the purpose and reload data before archiving this ctf.")
 
                     solve_tracker_url = post_ctf_data(ctf, ctf.long_name)
 
@@ -748,7 +750,6 @@ class AddCredsCommand(Command):
         def update_func(ctf):
             ctf.cred_user = args[0]
             ctf.cred_pw = args[1]
-            
 
         # Update database
         ctf = update_ctf(ChallengeHandler.DB, cur_ctf.channel_id, update_func)
@@ -812,7 +813,7 @@ class ChallengeHandler(BaseHandler):
         "name": "",
         "type": "CTF",
         "cred_user": "",
-        "cred_pw": "",        
+        "cred_pw": "",
         "long_name": "",
         "finished": False
     }
@@ -863,7 +864,7 @@ class ChallengeHandler(BaseHandler):
         purpose["name"] = ctf.name
         purpose["type"] = "CTF"
         purpose["cred_user"] = ctf.cred_user
-        purpose["cred_pw"] = ctf.cred_pw        
+        purpose["cred_pw"] = ctf.cred_pw
         purpose["long_name"] = ctf.long_name
         purpose["finished"] = ctf.finished
 
@@ -886,7 +887,7 @@ class ChallengeHandler(BaseHandler):
                 ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
                 ctf.cred_user = purpose.get("cred_user", "")
-                ctf.cred_pw = purpose.get("cred_pw", "")                
+                ctf.cred_pw = purpose.get("cred_pw", "")
                 ctf.finished = purpose.get("finished", False)
 
                 database[ctf.channel_id] = ctf
@@ -896,9 +897,7 @@ class ChallengeHandler(BaseHandler):
         for channel in response['groups']:
             purpose = load_json(channel['purpose']['value'])
 
-            if not channel['is_archived'] and \
-               purpose and "ota_bot" in purpose and \
-               purpose["type"] == "CHALLENGE":
+            if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
                 challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
                 ctf_channel_id = purpose["ctf_id"]
                 solvers = purpose["solved"]

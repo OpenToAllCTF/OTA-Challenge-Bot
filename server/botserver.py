@@ -85,7 +85,7 @@ class BotServer(threading.Thread):
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
                     return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
-                elif msg.get("text", "").startswith("!"):
+                if msg.get("text", "").startswith("!"):
                     # Return text after the !
                     return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
             # Check if user tampers with channel purpose

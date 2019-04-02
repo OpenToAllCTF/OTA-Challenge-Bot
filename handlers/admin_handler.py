@@ -105,7 +105,8 @@ class AsCommand(Command):
 
             # Redirecting command execution to handler factory
             handler_factory.process_command(slack_wrapper, dest_command,
-                                            [dest_command] + dest_arguments, timestamp, channel_id, dest_user_id, user_is_admin)
+                                            [dest_command] + dest_arguments, timestamp, channel_id,
+                                            dest_user_id, user_is_admin)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 

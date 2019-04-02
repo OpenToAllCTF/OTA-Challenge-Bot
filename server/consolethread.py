@@ -14,7 +14,7 @@ class ConsoleThread(threading.Thread):
         try:
             self.botserver.set_config_option(option, value)
         except InvalidConsoleCommand as e:
-            log.error(e.message)
+            log.error(e)
 
     def show_set_usage(self):
         print("\nUsage: set <option> <value>")
