@@ -49,6 +49,11 @@ jobs:
           command: |
             . venv/bin/activate
             python runtests.py
+      - run:
+          name: lint
+          command: |
+            . venv/bin/activate
+            pylint **/*.py --exit-zero
 
       - store_artifacts:
           path: test-reports
