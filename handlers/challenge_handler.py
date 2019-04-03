@@ -302,7 +302,7 @@ class UpdateStatusCommand(Command):
         if result["ok"] and result["messages"]:
             if "==========" in result["messages"][0]["text"]:
                 # check if status contained a category and only update for category then
-                category_match = re.search("=== .*? \[(.*?)\] ====", result["messages"][0]["text"], re.S)
+                category_match = re.search(r"=== .*? \[(.*?)\] ====", result["messages"][0]["text"], re.S)
                 category = category_match.group(1) if category_match else ""
 
                 status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, True, category)
@@ -748,7 +748,6 @@ class AddCredsCommand(Command):
         def update_func(ctf):
             ctf.cred_user = args[0]
             ctf.cred_pw = args[1]
-            
 
         # Update database
         ctf = update_ctf(ChallengeHandler.DB, cur_ctf.channel_id, update_func)
@@ -812,7 +811,7 @@ class ChallengeHandler(BaseHandler):
         "name": "",
         "type": "CTF",
         "cred_user": "",
-        "cred_pw": "",        
+        "cred_pw": "",
         "long_name": "",
         "finished": False
     }
@@ -863,7 +862,7 @@ class ChallengeHandler(BaseHandler):
         purpose["name"] = ctf.name
         purpose["type"] = "CTF"
         purpose["cred_user"] = ctf.cred_user
-        purpose["cred_pw"] = ctf.cred_pw        
+        purpose["cred_pw"] = ctf.cred_pw
         purpose["long_name"] = ctf.long_name
         purpose["finished"] = ctf.finished
 
@@ -886,7 +885,7 @@ class ChallengeHandler(BaseHandler):
                 ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
                 ctf.cred_user = purpose.get("cred_user", "")
-                ctf.cred_pw = purpose.get("cred_pw", "")                
+                ctf.cred_pw = purpose.get("cred_pw", "")
                 ctf.finished = purpose.get("finished", False)
 
                 database[ctf.channel_id] = ctf

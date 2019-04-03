@@ -65,7 +65,7 @@ def process_reaction(slack_wrapper, reaction, timestamp, channel_id, user_id):
             if handler.can_handle_reaction(reaction):
                 handler.process_reaction(slack_wrapper, reaction, channel_id, timestamp, user_id, user_is_admin)
     except InvalidCommand as e:
-        slack_wrapper.post_message(channel_id, e.message, timestamp)
+        slack_wrapper.post_message(channel_id, e, timestamp)
 
     except Exception:
         log.exception("An error has occured while processing a command")
@@ -122,7 +122,7 @@ def process_command(slack_wrapper, message, args, timestamp, channel_id, user_id
             slack_wrapper.post_message(target_id, usage_msg)
 
     except InvalidCommand as e:
-        slack_wrapper.post_message(channel_id, e.message, timestamp)
+        slack_wrapper.post_message(channel_id, e, timestamp)
 
     except Exception:
         log.exception("An error has occured while processing a command")
