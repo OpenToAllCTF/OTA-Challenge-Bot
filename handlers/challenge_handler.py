@@ -785,7 +785,7 @@ class ShowCredsCommand(Command):
         else:
             message = "No credentials provided for CTF *{}*.".format(cur_ctf.name)
 
-        slack_wrapper.post_message(channel_id, message, "")
+        slack_wrapper.post_message(channel_id, message, "", parse=None)
 
 
 class ChallengeHandler(BaseHandler):
