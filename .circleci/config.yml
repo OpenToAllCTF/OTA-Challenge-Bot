@@ -53,6 +53,7 @@ jobs:
           name: lint
           command: |
             . venv/bin/activate
+            pylint **/*.py -E
             pylint **/*.py --exit-zero
 
       - store_artifacts:
