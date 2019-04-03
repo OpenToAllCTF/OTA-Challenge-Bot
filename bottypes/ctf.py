@@ -11,7 +11,7 @@ class CTF:
         self.name = name
         self.challenges = []
         self.cred_user = ""
-        self.cred_pw = ""        
+        self.cred_pw = ""
         self.long_name = long_name
         self.finished = False
 

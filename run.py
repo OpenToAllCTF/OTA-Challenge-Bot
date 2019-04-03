@@ -7,7 +7,7 @@ from server.consolethread import ConsoleThread
 if __name__ == "__main__":
     log.info("Initializing threads...")
 
-    server = BotServer()    
+    server = BotServer()
     console = ConsoleThread(server)
 
     console.start()
