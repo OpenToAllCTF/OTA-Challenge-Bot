@@ -10,7 +10,7 @@ from util.loghandler import log
 
 def get_title(soup: BeautifulSoup):
     title = soup.find("meta", property=re.compile("title", re.I)) or \
-        soup.find("meta", attrs={"name": re.compile("title", re.I)})
+            soup.find("meta", attrs={"name": re.compile("title", re.I)})
     if title:
         title = title["content"]
     else:
@@ -22,32 +22,30 @@ def get_title(soup: BeautifulSoup):
 
 def get_desc(soup: BeautifulSoup):
     desc = soup.find("meta", property=re.compile("desc", re.I)) or \
-        soup.find("meta", attrs={"name": re.compile("desc", re.I)})
+           soup.find("meta", attrs={"name": re.compile("desc", re.I)})
     if desc:
         return desc["content"].strip()
 
     return ""
 
 
-def get_content(url: str):
-    resp = requests.get("https://urlembed.com/json/url/{}".format(url))
-    if not resp.ok:
-        return "", ""
-    resp = resp.json()
-    content = BeautifulSoup(resp["content"], "html.parser").prettify()
-    return content, resp["url"]  # resp["url"] is image's URL
+def get_img(soup: BeautifulSoup):
+    img = soup.find("meta", property=re.compile("image", re.I)) or \
+          soup.find("meta", attrs={"name": re.compile("image", re.I)})
+    if img:
+        return img["content"].strip()
+
+    return ""
 
 
 def unfurl(url: str):
-    resp = requests.get(url).text
+    resp = requests.get(url, timeout=15).text
     soup = BeautifulSoup(resp, "html.parser")
-    content, img = get_content(url)
 
     details = {
         "title": get_title(soup),
         "desc": get_desc(soup),
-        "content": content,
-        "img": img
+        "img": get_img(soup)
     }
 
     return details
