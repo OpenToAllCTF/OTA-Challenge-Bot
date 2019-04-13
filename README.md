@@ -1,5 +1,7 @@
 # OTA Challenge Bot
 
+[![CircleCI (development)](https://circleci.com/gh/OpenToAllCTF/OTA-Challenge-Bot/tree/development.svg?style=svg)](https://circleci.com/gh/OpenToAllCTF/OTA-Challenge-Bot/tree/development)
+
 The OTA challenge bot is a helper tool to be used during CTF events
 through the Slack platform.
 
