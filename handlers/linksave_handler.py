@@ -36,7 +36,12 @@ class SaveLinkCommand(Command):
             slack_wrapper.post_message(channel_id, "Save Link failed: Unable to extract URL", timestamp)
             return
 
-        url_data = unfurl(url.group())
+        try:
+            url_data = unfurl(url.group())
+        except requests.exceptions.Timeout as e:
+            slack_wrapper.post_message(channel_id, "Save Link failed: Request timed out", timestamp)
+            log.error(e)
+            return
 
         data = {
             "options[staticman-token]": LINKSAVE_CONFIG["staticman-token"],
@@ -44,7 +49,6 @@ class SaveLinkCommand(Command):
             "fields[link]": url.group(),
             "fields[excerpt]": url_data["desc"],
             "fields[category]": args[0],
-            "fields[content]": url_data["content"],
             "fields[header][overlay_image]": url_data["img"],
             "fields[user]": profile_details["display_name"] or profile_details["real_name"]
         }
