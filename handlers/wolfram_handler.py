@@ -41,7 +41,10 @@ class AskCommand(Command):
                     answer = next(res.results, None)
 
                     if answer:
-                        answer = answer.text
+                        if len(answer.text) > 2048:
+                            answer = answer.text[:2048] + "*shortened*"
+                        else:
+                            answer = answer.text
 
                 slack_wrapper.post_message(channel_id, answer)
             except Exception as ex:
