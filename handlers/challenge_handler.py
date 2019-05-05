@@ -39,6 +39,10 @@ class AddCTFCommand(Command):
         name = args[0].lower()
         long_name = " ".join(args[1:])
 
+        # Don't allow incorrectly parsed long names
+        if "<http" in long_name:
+            raise InvalidCommand("Add CTF failed: Long name interpreted as link, try avoid using `.` in it.")
+
         if len(name) > 10:
             raise InvalidCommand("Add CTF failed: CTF name must be <= 10 characters.")
 
