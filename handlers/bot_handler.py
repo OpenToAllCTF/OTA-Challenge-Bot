@@ -80,7 +80,7 @@ class SysInfoCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         result = b"```\n"
-        result += b'\n'.join(subprocess.check_output(['top', '-bn1']).split(b"\n")[:15])
+        result += b'\n'.join(subprocess.check_output(['top', '-bn1']).split(b"\n")[:20])
         result += b"\n\n"
         result += subprocess.check_output(['df', '-h'])
         result += b"```\n"

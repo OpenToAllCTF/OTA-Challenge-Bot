@@ -160,7 +160,7 @@ class BotServer(threading.Thread):
                         if message:
                             self.handle_message(message)
 
-                            time.sleep(self.read_websocket_delay)
+                        time.sleep(self.read_websocket_delay)
 
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
