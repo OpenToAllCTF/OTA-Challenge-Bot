@@ -46,8 +46,7 @@ class VersionCommand(Command):
             slack_wrapper.post_message(channel_id, message)
         except:
             log.exception("BotHandler::VersionCommand")
-            raise InvalidCommand(
-                "Sorry, couldn't retrieve the git information for the bot...")
+            raise InvalidCommand("Sorry, couldn't retrieve the git information for the bot...")
 
 
 class InviteCommand(Command):
@@ -62,8 +61,7 @@ class InviteCommand(Command):
         # strip uid formatting
         invited_users = [user.strip("<>@") for user in args]
         # remove already present members
-        invited_users = [
-            user for user in invited_users if user not in current_members]
+        invited_users = [user for user in invited_users if user not in current_members]
         failed_users = []
         for member in invited_users:
             if not slack_wrapper.invite_user(member, channel_id)["ok"]:
@@ -71,8 +69,7 @@ class InviteCommand(Command):
 
         if failed_users:
             log.exception("BotHandler::InviteCommand")
-            raise InvalidCommand(
-                "Sorry, couldn't invite the following members to the channel: " + ' '.join(failed_users))
+            raise InvalidCommand("Sorry, couldn't invite the following members to the channel: " + ' '.join(failed_users))
 
 
 class SysInfoCommand(Command):
