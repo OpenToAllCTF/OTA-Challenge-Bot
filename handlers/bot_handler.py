@@ -5,6 +5,7 @@ from handlers import handler_factory
 from handlers.base_handler import BaseHandler
 from util.githandler import GitHandler
 from util.loghandler import log
+import subprocess
 
 
 class PingCommand(Command):
@@ -71,6 +72,22 @@ class InviteCommand(Command):
             raise InvalidCommand("Sorry, couldn't invite the following members to the channel: " + ' '.join(failed_users))
 
 
+class SysInfoCommand(Command):
+    """
+    Show information about system resources on the machine, otabot is running on.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        result = b"```\n"
+        result += b'\n'.join(subprocess.check_output(['top', '-bn1']).split(b"\n")[:15])
+        result += b"\n\n"
+        result += subprocess.check_output(['df', '-h'])
+        result += b"```\n"
+
+        slack_wrapper.post_message(user_id, result)
+
+
 class BotHandler(BaseHandler):
     """Handler for generic bot commands."""
 
@@ -79,7 +96,8 @@ class BotHandler(BaseHandler):
             "ping": CommandDesc(PingCommand, "Ping the bot", None, None),
             "intro": CommandDesc(IntroCommand, "Show an introduction message for new members", None, None),
             "version": CommandDesc(VersionCommand, "Show git information about the running version of the bot", None, None),
-            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel (smarter than /invite)", ["user_list"], None)
+            "invite": CommandDesc(InviteCommand, "Invite a list of members (using @username) to the current channel (smarter than /invite)", ["user_list"], None),
+            "sysinfo": CommandDesc(SysInfoCommand, "Show system information", None, None, True)
         }
 
 
