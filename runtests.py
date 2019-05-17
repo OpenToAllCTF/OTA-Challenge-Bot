@@ -23,7 +23,7 @@ class BotBaseTest(TestCase):
         }
 
         self.botserver.slack_wrapper = SlackWrapperMock("testapikey")
-        self.botserver.init_bot_data()
+        self.botserver.init_bot_data(self.botserver.slack_wrapper, "testbot", "testid")
 
         # replace set_config_option to avoid overwriting original bot configuration.
         self.botserver.set_config_option = self.set_config_option_mock
@@ -39,16 +39,16 @@ class BotBaseTest(TestCase):
 
     def exec_command(self, msg, exec_user="normal_user"):
         """Simulate execution of the specified message as the specified user in the test environment."""
-        testmsg = [{'type': 'message', 'user': exec_user, 'text': msg, 'client_msg_id': '738e4beb-d50e-42a4-a60e-3fafd4bd71da',
-                    'team': 'UNITTESTTEAMID', 'channel': 'UNITTESTCHANNELID', 'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}]
-        self.botserver.handle_message(testmsg)
+        testmsg = {'type': 'message', 'user': exec_user, 'text': msg, 'client_msg_id': '738e4beb-d50e-42a4-a60e-3fafd4bd71da',
+                   'team': 'UNITTESTTEAMID', 'channel': 'UNITTESTCHANNELID', 'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}
+        self.botserver.handle_message(testmsg, self.botserver.slack_wrapper)
 
     def exec_reaction(self, reaction, exec_user="normal_user"):
         """Simulate execution of the specified reaction as the specified user in the test environment."""
         testmsg = [{'type': 'reaction_added', 'user': exec_user, 'item': {'type': 'message', 'channel': 'UNITTESTCHANNELID', 'ts': '1549117537.000500'},
                     'reaction': reaction, 'item_user': 'UNITTESTUSERID', 'event_ts': '1549715822.000800', 'ts': '1549715822.000800'}]
 
-        self.botserver.handle_message(testmsg)
+        self.botserver.handle_message(testmsg, self.botserver.slack_wrapper)
 
     def check_for_response_available(self):
         return len(self.botserver.slack_wrapper.message_list) > 0

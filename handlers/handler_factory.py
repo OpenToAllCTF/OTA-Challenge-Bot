@@ -122,7 +122,7 @@ def process_command(slack_wrapper, message, args, timestamp, channel_id, user_id
             slack_wrapper.post_message(target_id, usage_msg)
 
     except InvalidCommand as e:
-        slack_wrapper.post_message(channel_id, e, timestamp)
+        slack_wrapper.post_message(channel_id, str(e), timestamp)
 
     except Exception:
         log.exception("An error has occured while processing a command")

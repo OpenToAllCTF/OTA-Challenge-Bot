@@ -866,7 +866,7 @@ class ChallengeHandler(BaseHandler):
         purpose["long_name"] = ctf.long_name
         purpose["finished"] = ctf.finished
 
-        slack_wrapper.set_purpose(ctf.channel_id, purpose)
+        slack_wrapper.set_purpose(ctf.channel_id, json.dumps(purpose))
 
     @staticmethod
     def update_database_from_slack(slack_wrapper):
@@ -881,38 +881,42 @@ class ChallengeHandler(BaseHandler):
         for channel in [*privchans, *pubchans]:
             purpose = load_json(channel['purpose']['value'])
 
-            if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
-                ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
+            try:         
+                if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CTF":
+                    ctf = CTF(channel['id'], purpose['name'], purpose['long_name'])
 
-                ctf.cred_user = purpose.get("cred_user", "")
-                ctf.cred_pw = purpose.get("cred_pw", "")
-                ctf.finished = purpose.get("finished", False)
+                    ctf.cred_user = purpose.get("cred_user", "")
+                    ctf.cred_pw = purpose.get("cred_pw", "")
+                    ctf.finished = purpose.get("finished", False)
 
-                database[ctf.channel_id] = ctf
+                    database[ctf.channel_id] = ctf
+            except:
+                pass
 
         # Find active challenge channels
         response = slack_wrapper.get_private_channels()
         for channel in response['groups']:
             purpose = load_json(channel['purpose']['value'])
 
-            if not channel['is_archived'] and \
-               purpose and "ota_bot" in purpose and \
-               purpose["type"] == "CHALLENGE":
-                challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
-                ctf_channel_id = purpose["ctf_id"]
-                solvers = purpose["solved"]
-                ctf = database.get(ctf_channel_id)
+            try:
+                if not channel['is_archived'] and purpose and "ota_bot" in purpose and purpose["type"] == "CHALLENGE":
+                    challenge = Challenge(purpose["ctf_id"], channel['id'], purpose["name"], purpose.get("category"))
+                    ctf_channel_id = purpose["ctf_id"]
+                    solvers = purpose["solved"]
+                    ctf = database.get(ctf_channel_id)
 
-                # Mark solved challenges
-                if solvers:
-                    challenge.mark_as_solved(solvers, purpose.get("solve_date"))
+                    # Mark solved challenges
+                    if solvers:
+                        challenge.mark_as_solved(solvers, purpose.get("solve_date"))
 
-                if ctf:
-                    for member_id in channel['members']:
-                        if member_id != slack_wrapper.user_id:
-                            challenge.add_player(Player(member_id))
+                    if ctf:
+                        for member_id in channel['members']:
+                            if member_id != slack_wrapper.user_id:
+                                challenge.add_player(Player(member_id))
 
-                    ctf.add_challenge(challenge)
+                        ctf.add_challenge(challenge)
+            except:
+                pass
 
         # Create the database accordingly
         pickle.dump(database, open(ChallengeHandler.DB, "wb+"))
