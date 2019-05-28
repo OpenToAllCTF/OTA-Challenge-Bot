@@ -221,7 +221,7 @@ class TestChallengeHandler(BotBaseTest):
                          msg="RenameCTF didn't execute properly.")
 
     def test_reload(self):
-        self.exec_command("!ctf reload")
+        self.exec_command("!ctf reload", "admin_user")
 
         self.assertTrue(self.check_for_response_available(),
                         msg="Bot didn't react on unit test. Check for possible exceptions.")
