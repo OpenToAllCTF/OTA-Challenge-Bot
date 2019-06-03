@@ -129,13 +129,13 @@ class BotServer(threading.Thread):
     def handle_message(self, message):
         reaction, channel, time_stamp, reaction_user = self.parse_slack_reaction(message)
 
-        if reaction:
+        if reaction and not self.bot_id == reaction_user:
             log.debug("Received reaction : %s (%s)", reaction, channel)
             handler_factory.process_reaction(self.slack_wrapper, reaction, time_stamp, channel, reaction_user)
 
         command, channel, time_stamp, user = self.parse_slack_message(message)
 
-        if command:
+        if command and not self.bot_id == user:
             log.debug("Received bot command : %s (%s)", command, channel)
             handler_factory.process(self.slack_wrapper, self, command, time_stamp, channel, user)
 
