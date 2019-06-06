@@ -29,7 +29,8 @@ class SaveLinkCommand(Command):
 
         message = slack_wrapper.get_message(channel_id, timestamp)["messages"][0]["text"]
         profile_details = slack_wrapper.get_member(user_id)["user"]["profile"]
-        url_regex = "((https?):\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?"
+        # http://www.noah.org/wiki/RegEx_Python#URL_regex_pattern
+        url_regex = "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
         url = re.search(url_regex, message)
 
         if not url:
