@@ -352,7 +352,7 @@ class StatusCommand(Command):
             solved = [c for c in ctf.challenges if c.is_solved]
 
             def get_finish_info(ctf):
-                return "(finished since {})".format(cls.get_finished_string(ctf)) if ctf.finished_on else "(finished)"
+                return "(finished {} ago)".format(cls.get_finished_string(ctf)) if ctf.finished_on else "(finished)"
 
             response += "*#{} : _{}_ [{} solved / {} total] {}*\n".format(
                 ctf.name, ctf.long_name, len(solved), len(ctf.challenges), get_finish_info(ctf) if ctf.finished else "")
@@ -366,12 +366,17 @@ class StatusCommand(Command):
 
     @classmethod
     def get_finished_string(cls, ctf):
+        timespan = time.time()-ctf.finished_on
+
+        if timespan < 3600:
+            return "less than an hour"
+
         # https://stackoverflow.com/a/11157649
-        attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+        attrs = ['years', 'months', 'days', 'hours']
         def human_readable(delta): return ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
                                            for attr in attrs if getattr(delta, attr)]
 
-        return ', '.join(human_readable(relativedelta(seconds=time.time()-ctf.finished_on)))
+        return ', '.join(human_readable(relativedelta(seconds=timespan)))
 
     @classmethod
     def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish, category):
@@ -400,7 +405,7 @@ class StatusCommand(Command):
                 ctf.name, "(finished)" if ctf.finished else "", "[{}] ".format(category) if category else "")
 
             if ctf.finished and ctf.finished_on:
-                response += "* > Finished since {}*\n".format(cls.get_finished_string(ctf))
+                response += "* > Finished {} ago*\n".format(cls.get_finished_string(ctf))
 
             # Check if the CTF has any challenges
             if check_for_finish and ctf.finished and not solved:
