@@ -1,5 +1,7 @@
 import pickle
+import time
 from random import randint
+from dateutil.relativedelta import relativedelta
 
 from bottypes.challenge import Challenge
 from bottypes.command import Command
@@ -349,8 +351,11 @@ class StatusCommand(Command):
             # Build short status list
             solved = [c for c in ctf.challenges if c.is_solved]
 
-            response += "*#{} : _{}_ {} [{} solved / {} total]*\n".format(
-                ctf.name, ctf.long_name, "(finished)" if ctf.finished else "", len(solved), len(ctf.challenges))
+            def get_finish_info(ctf):
+                return "(finished since {})".format(cls.get_finished_string(ctf)) if ctf.finished_on else "(finished)"
+
+            response += "*#{} : _{}_ [{} solved / {} total] {}*\n".format(
+                ctf.name, ctf.long_name, len(solved), len(ctf.challenges), get_finish_info(ctf) if ctf.finished else "")
 
         response = response.strip()
 
@@ -358,6 +363,15 @@ class StatusCommand(Command):
             response += "*There are currently no running CTFs*"
 
         return response
+
+    @classmethod
+    def get_finished_string(cls, ctf):
+        # https://stackoverflow.com/a/11157649
+        attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+        def human_readable(delta): return ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1])
+                                           for attr in attrs if getattr(delta, attr)]
+
+        return ', '.join(human_readable(relativedelta(seconds=time.time()-ctf.finished_on)))
 
     @classmethod
     def build_verbose_status(cls, slack_wrapper, ctf_list, check_for_finish, category):
@@ -384,6 +398,9 @@ class StatusCommand(Command):
 
             response += "*============= #{} {} {}=============*\n".format(
                 ctf.name, "(finished)" if ctf.finished else "", "[{}] ".format(category) if category else "")
+
+            if ctf.finished and ctf.finished_on:
+                response += "* > Finished since {}*\n".format(cls.get_finished_string(ctf))
 
             # Check if the CTF has any challenges
             if check_for_finish and ctf.finished and not solved:
@@ -717,6 +734,7 @@ class EndCTFCommand(Command):
 
         def update_func(ctf):
             ctf.finished = True
+            ctf.finished_on = time.time()
 
         # Update database
         ctf = update_ctf(ChallengeHandler.DB, ctf.channel_id, update_func)
@@ -869,6 +887,7 @@ class ChallengeHandler(BaseHandler):
         purpose["cred_pw"] = ctf.cred_pw
         purpose["long_name"] = ctf.long_name
         purpose["finished"] = ctf.finished
+        purpose["finished_on"] = ctf.finished_on
 
         slack_wrapper.set_purpose(ctf.channel_id, purpose)
 
@@ -892,6 +911,7 @@ class ChallengeHandler(BaseHandler):
                     ctf.cred_user = purpose.get("cred_user", "")
                     ctf.cred_pw = purpose.get("cred_pw", "")
                     ctf.finished = purpose.get("finished", False)
+                    ctf.finished_on = purpose.get("finished_on", 0)
 
                     database[ctf.channel_id] = ctf
             except:

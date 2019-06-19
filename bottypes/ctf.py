@@ -14,6 +14,7 @@ class CTF:
         self.cred_pw = ""
         self.long_name = long_name
         self.finished = False
+        self.finished_on = 0
 
     def add_challenge(self, challenge):
         """

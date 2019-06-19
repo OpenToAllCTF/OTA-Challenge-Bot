@@ -20,3 +20,4 @@ websocket-client==0.53.0
 wolframalpha==3.0.1
 wrapt==1.10.11
 xmltodict==0.11.0
+python-dateutil==2.8.0
