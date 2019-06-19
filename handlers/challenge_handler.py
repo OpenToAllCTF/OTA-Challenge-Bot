@@ -709,6 +709,9 @@ class ArchiveCTFCommand(Command):
             slack_wrapper.archive_private_channel(challenge.channel_id)
             remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
+        # Remove possible configured reminders for this ctf
+        cleanup_reminders(slack_wrapper, handler_factory, ctf)
+
         # Stop tracking the main CTF channel
         slack_wrapper.set_purpose(channel_id, "")
         remove_ctf_by_channel_id(ChallengeHandler.DB, ctf.channel_id)
@@ -725,6 +728,24 @@ class EndCTFCommand(Command):
     Mark the ctf as finished, not allowing new challenges to be added, and don't show the ctf anymore
     in the status list.
     """
+
+    @classmethod
+    def handle_archive_reminder(cls, slack_wrapper, ctf):
+        """Sets a reminder for admins to archive this ctf in a set time."""
+        reminder_offset = handler_factory.botserver.get_config_option("archive_ctf_reminder_offset")
+
+        if not reminder_offset:
+            return
+
+        admin_users = handler_factory.botserver.get_config_option("admin_users")
+
+        if not admin_users:
+            return
+
+        msg = "CTF {} - {} (#{}) should be archived.".format(ctf.name, ctf.long_name, ctf.name)
+
+        for admin in admin_users:
+            slack_wrapper.add_reminder_hours(admin, msg, reminder_offset)
 
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
@@ -746,6 +767,7 @@ class EndCTFCommand(Command):
 
         if ctf:
             ChallengeHandler.update_ctf_purpose(slack_wrapper, ctf)
+            cls.handle_archive_reminder(slack_wrapper, ctf)
             slack_wrapper.post_message(channel_id, "CTF *{}* finished...".format(ctf.name))
 
 

@@ -1,4 +1,5 @@
 import json
+import time
 
 from slackclient import SlackClient
 from util.util import load_json
@@ -148,3 +149,23 @@ class SlackWrapper:
     def archive_public_channel(self, channel_id):
         """Archive a public channel"""
         return self.client.api_call("channels.archive", channel=channel_id)
+
+    def add_reminder_hours(self, user, msg, offset):
+        """Add a reminder with a given text for the specified user."""
+        return self.client.api_call("reminders.add", text=msg, time="in {} hours".format(offset), user=user)
+
+    def get_reminders(self):
+        """Retrieve all reminders created by the bot."""
+        return self.client.api_call("reminders.list")
+
+    def remove_reminder(self, reminder_id):
+        return self.client.api_call("reminders.delete", reminder=reminder_id)
+
+    def remove_reminders_by_text(self, text):
+        """Remove all reminders that contain the specified text."""
+        reminders = self.get_reminders()
+
+        if reminders and "reminders" in reminders:
+            for reminder in reminders["reminders"]:
+                if text in reminder["text"]:
+                    self.remove_reminder(reminder["id"])

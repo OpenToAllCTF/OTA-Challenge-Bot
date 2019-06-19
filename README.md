@@ -126,3 +126,17 @@ Example:
     "repo_link_url": "https://reponame.github.io/links/"
 }
 ```
+
+## Archive reminder
+
+To enable archive reminders set an offset (in hours) in `config.json` for `archive_ctf_reminder_offset`. Clear or remove the setting to disable reminder handling.
+
+If active, the bot will create a reminder for every bot admin on `!endctf` to inform him, when the ctf was finished for the specified time and it should be archived.
+
+Example (for being reminded one week after the ctf has finished):
+```
+{
+    ...
+    "archive_ctf_reminder_offset" : "168"
+}
+```

@@ -231,6 +231,18 @@ def remove_ctf_by_channel_id(database, ctf_channel_id):
     pickle.dump(ctfs, open(database, "wb"))
 
 
+def cleanup_reminders(slack_wrapper, handler_factory, ctf):
+    """Remove existing reminders for this ctf, if reminder handling is configured."""
+    reminder_offset = handler_factory.botserver.get_config_option("archive_ctf_reminder_offset")
+
+    if not reminder_offset:
+        # no reminder handling configured, bail out
+        return
+
+    # To save space in channel purpose, we'll just search the reminders by creation text
+    slack_wrapper.remove_reminders_by_text("CTF {} - ".format(ctf.name))
+
+
 def parse_user_id(user_id):
     """
     Parse a user_id, removing possible @-notation and make sure it's uppercase.
