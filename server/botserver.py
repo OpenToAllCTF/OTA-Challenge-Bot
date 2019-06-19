@@ -93,6 +93,19 @@ class BotServer(threading.Thread):
                 source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg['user']))
                 warning = "*User '{}' changed the channel purpose ```{}```*".format(source_user, msg['text'])
                 self.slack_wrapper.post_message(msg['channel'], warning)
+            # Check for deletion of messages containing keywords
+            elif "subtype" in msg and msg["subtype"] == "message_deleted":
+                log_deletions = self.get_config_option("delete_watch_keywords")
+
+                if log_deletions:
+                    previous_msg = msg['previous_message']['text']              
+                    delete_keywords = log_deletions.split(",")
+
+                    if any(keyword.strip() in previous_msg for keyword in delete_keywords):
+                        user_name = self.slack_wrapper.get_member(msg['previous_message']['user'])
+                        display_name = get_display_name(user_name)
+                        self.slack_wrapper.post_message(msg['channel'], "*{}* deleted : `{}`".format(display_name, previous_msg))
+
 
         return None, None, None, None
 

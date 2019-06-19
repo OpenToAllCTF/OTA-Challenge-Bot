@@ -140,3 +140,14 @@ Example (for being reminded one week after the ctf has finished):
     "archive_ctf_reminder_offset" : "168"
 }
 ```
+
+## Log command deletion
+
+To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in `config.json` to a comma separated list of keywords. 
+Clear or remove the setting to disable deletion logging.
+
+Example
+```
+{
+    "delete_watch_keywords" : "workon, reload, endctf"
+}
