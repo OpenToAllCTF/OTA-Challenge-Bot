@@ -31,6 +31,8 @@ class RollCommand(Command):
 
         slack_wrapper.post_message(channel_id, message)
 
+MAX_CHANNEL_NAME_LENGTH = 80
+MAX_CTF_NAME_LENGTH = 40
 
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
@@ -45,8 +47,8 @@ class AddCTFCommand(Command):
         if "<http" in long_name:
             raise InvalidCommand("Add CTF failed: Long name interpreted as link, try avoid using `.` in it.")
 
-        if len(name) > 10:
-            raise InvalidCommand("Add CTF failed: CTF name must be <= 10 characters.")
+        if len(name) > MAX_CTF_NAME_LENGTH:
+            raise InvalidCommand("Add CTF failed: CTF name must be <= {} characters.".format(MAX_CTF_NAME_LENGTH))
 
         # Check for invalid characters
         if not is_valid_name(name):
@@ -101,9 +103,10 @@ class RenameChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand("Rename challenge failed: You are not in a CTF channel.")
 
-        if len(new_name) > (20 - len(ctf.name)):
+        if len(new_name) > (MAX_CHANNEL_NAME_LENGTH - len(ctf.name) - 1):
             raise InvalidCommand(
-                "Rename challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
+                "Rename challenge failed: Challenge name must be <= {} characters.".format(
+                    MAX_CHANNEL_NAME_LENGTH - len(ctf.name) - 1))
 
         # Check for invalid characters
         if not is_valid_name(new_name):
@@ -152,13 +155,13 @@ class RenameCTFCommand(Command):
 
         # pre-check challenges, if renaming would break channel name length
         for chall in ctf.challenges:
-            if len(chall.name) + ctflen > 20:
+            if len(chall.name) + ctflen > MAX_CHANNEL_NAME_LENGTH - 1:
                 raise InvalidCommand(
                     "Rename CTF failed: Challenge {} would break channel name length restriction.".format(chall.name))
 
         # still ctf name shouldn't be longer than 10 characters for allowing reasonable challenge names
-        if len(new_name) > 10:
-            raise InvalidCommand("Rename CTF failed: CTF name must be <= 10 characters.")
+        if len(new_name) > MAX_CTF_NAME_LENGTH:
+            raise InvalidCommand("Rename CTF failed: CTF name must be <= {} characters.".format(MAX_CTF_NAME_LENGTH))
 
         # Check for invalid characters
         if not is_valid_name(new_name):
@@ -205,9 +208,10 @@ class AddChallengeCommand(Command):
         if not ctf:
             raise InvalidCommand("Add challenge failed: You are not in a CTF channel.")
 
-        if len(name) > (20 - len(ctf.name)):
+        if len(name) > (MAX_CHANNEL_NAME_LENGTH - len(ctf.name) - 1):
             raise InvalidCommand(
-                "Add challenge failed: Challenge name must be <= {} characters.".format(20 - len(ctf.name)))
+                "Add challenge failed: Challenge name must be <= {} characters."
+                .format(MAX_CHANNEL_NAME_LENGTH - len(ctf.name) - 1))
 
         # Check for invalid characters
         if not is_valid_name(name):
@@ -792,7 +796,7 @@ class AddCredsCommand(Command):
 
         cur_ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
         if not cur_ctf:
-            raise InvalidCommand("Add Creds faile:. You are not in a CTF channel.")
+            raise InvalidCommand("Add Creds failed:. You are not in a CTF channel.")
 
         def update_func(ctf):
             ctf.cred_user = args[0]
