@@ -764,7 +764,7 @@ class EndCTFCommand(Command):
 
         def update_func(ctf):
             ctf.finished = True
-            ctf.finished_on = time.time()
+            ctf.finished_on = int(time.time())
 
         # Update database
         ctf = update_ctf(ChallengeHandler.DB, ctf.channel_id, update_func)
