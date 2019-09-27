@@ -763,7 +763,7 @@ class EndCTFCommand(Command):
             raise InvalidCommand("CTF is already marked as finished...")
 
         def update_func(ctf):
-            ctf.finished = True
+            ctf.finished = 1
             ctf.finished_on = int(time.time())
 
         # Update database
@@ -860,7 +860,7 @@ class ChallengeHandler(BaseHandler):
 
     DB = "databases/challenge_handler.bin"
     CTF_PURPOSE = {
-        "ota_bot": "OTABOT",
+        "ota_bot": 1,
         "name": "",
         "type": "CTF",
         "cred_user": "",
@@ -870,7 +870,7 @@ class ChallengeHandler(BaseHandler):
     }
 
     CHALL_PURPOSE = {
-        "ota_bot": "OTABOT",
+        "ota_bot": 1,
         "ctf_id": "",
         "name": "",
         "solved": "",
@@ -911,7 +911,7 @@ class ChallengeHandler(BaseHandler):
         Update the purpose for the ctf channel.
         """
         purpose = dict(ChallengeHandler.CTF_PURPOSE)
-        purpose["ota_bot"] = "OTABOT"
+        purpose["ota_bot"] = 1
         purpose["name"] = ctf.name
         purpose["type"] = "CTF"
         purpose["cred_user"] = ctf.cred_user
@@ -941,7 +941,7 @@ class ChallengeHandler(BaseHandler):
 
                     ctf.cred_user = purpose.get("cred_user", "")
                     ctf.cred_pw = purpose.get("cred_pw", "")
-                    ctf.finished = purpose.get("finished", False)
+                    ctf.finished = purpose.get("finished", 0)
                     ctf.finished_on = purpose.get("finished_on", 0)
 
                     database[ctf.channel_id] = ctf
