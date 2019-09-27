@@ -1,13 +1,13 @@
 """GitHandler module - Provides GitHandler with shortcuts for handling git repository access."""
 import os
-import dulwich
 import re
-
 from io import StringIO
 
+import dulwich
 from dulwich import porcelain
-from util.loghandler import log
+
 from bottypes.invalid_command import InvalidCommand
+from util.loghandler import log
 
 
 class GitHandler():

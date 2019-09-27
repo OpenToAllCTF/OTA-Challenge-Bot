@@ -108,3 +108,48 @@ Example:
 3. Update the templates in `templates` according to your preferences (or go with the default ones).
 4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
 4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
+
+
+## Using Link saver
+
+1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links).
+2. Copy `config_savelink.json.template` to `config_savelink.json`.
+3. Configure the git repo and branch to be used.
+4. Add the decrypted staticman-token used in `staticman.yml` in the config.
+5. Add a link to your repo, so people can look it up via `showlinkurl`
+
+Example:
+```
+{
+    "git_repo": "reponame/links",
+    "git_branch": "gh-pages",
+    "staticman-token": "9d837771-945a-489d-cd80-13abcdefa112",
+    "allowed_users": [],
+    "repo_link_url": "https://reponame.github.io/links/"
+}
+```
+
+## Archive reminder
+
+To enable archive reminders set an offset (in hours) in `config.json` for `archive_ctf_reminder_offset`. Clear or remove the setting to disable reminder handling.
+
+If active, the bot will create a reminder for every bot admin on `!endctf` to inform him, when the ctf was finished for the specified time and it should be archived.
+
+Example (for being reminded one week after the ctf has finished):
+```
+{
+    ...
+    "archive_ctf_reminder_offset" : "168"
+}
+```
+
+## Log command deletion
+
+To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in `config.json` to a comma separated list of keywords. 
+Clear or remove the setting to disable deletion logging.
+
+Example
+```
+{
+    "delete_watch_keywords" : "workon, reload, endctf"
+}

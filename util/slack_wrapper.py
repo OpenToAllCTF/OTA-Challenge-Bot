@@ -1,5 +1,8 @@
+import json
+import time
+
 from slackclient import SlackClient
-from util.util import *
+from util.util import load_json
 
 
 class SlackWrapper:
@@ -45,6 +48,12 @@ class SlackWrapper:
         api_call = "groups.setPurpose" if is_private else "channels.setPurpose"
         return self.client.api_call(api_call, purpose=purpose, channel=channel)
 
+    def set_topic(self, channel, topic, is_private=False):
+        """Set the topic of a given channel."""
+
+        api_call = "groups.setTopic" if is_private else "channels.setTopic"
+        return self.client.api_call(api_call, topic=topic, channel=channel)
+
     def get_members(self):
         """
         Return a list of all members.
@@ -80,6 +89,11 @@ class SlackWrapper:
         api_call = "groups.info" if is_private else "channels.info"
         return self.client.api_call(api_call, channel=channel_id)
 
+    def get_channel_members(self, channel_id, is_private=False):
+        """ Return list of member ids in a given channel ID. """
+
+        return self.get_channel_info(channel_id, is_private)['channel']['members']
+
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
         Updates the channel purpose 'name' field for a given channel ID.
@@ -95,13 +109,14 @@ class SlackWrapper:
 
             self.set_purpose(channel_id, json.dumps(purpose), is_private)
 
-    def post_message(self, channel_id, text, parse="full"):
+    def post_message(self, channel_id, text, timestamp="", parse="full"):
         """
         Post a message in a given channel.
         channel_id can also be a user_id for private messages.
+        Add timestamp for replying to a specific message.
         """
         self.client.api_call("chat.postMessage", channel=channel_id,
-                             text=text, as_user=True, parse=parse)
+                             text=text, as_user=True, parse=parse, thread_ts=timestamp)
 
     def post_message_with_react(self, channel_id, text, reaction, parse="full"):
         """Post a message in a given channel and add the specified reaction to it."""
@@ -130,3 +145,27 @@ class SlackWrapper:
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""
         return self.client.api_call("groups.archive", channel=channel_id)
+
+    def archive_public_channel(self, channel_id):
+        """Archive a public channel"""
+        return self.client.api_call("channels.archive", channel=channel_id)
+
+    def add_reminder_hours(self, user, msg, offset):
+        """Add a reminder with a given text for the specified user."""
+        return self.client.api_call("reminders.add", text=msg, time="in {} hours".format(offset), user=user)
+
+    def get_reminders(self):
+        """Retrieve all reminders created by the bot."""
+        return self.client.api_call("reminders.list")
+
+    def remove_reminder(self, reminder_id):
+        return self.client.api_call("reminders.delete", reminder=reminder_id)
+
+    def remove_reminders_by_text(self, text):
+        """Remove all reminders that contain the specified text."""
+        reminders = self.get_reminders()
+
+        if reminders and "reminders" in reminders:
+            for reminder in reminders["reminders"]:
+                if text in reminder["text"]:
+                    self.remove_reminder(reminder["id"])

@@ -1,5 +1,6 @@
 *.pyc
 config.json
+config_savelink.json
 config_solvetracker.json
 *.bin
 *.log

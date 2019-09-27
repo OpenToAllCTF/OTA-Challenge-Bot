@@ -1,0 +1,53 @@
+{
+    "ok": true,
+    "groups": [
+        {
+            "id": "UNITTEST_GROUP_ID1",
+            "name": "testctf1-testchall1",
+            "is_group": true,
+            "created": 1533056140,
+            "creator": "UNITTEST_USER_ID1",
+            "is_archived": true,
+            "name_normalized": "testctf1-testchall1",
+            "is_mpim": false,
+            "members": [
+                "UNITTEST_USER_ID1"
+            ],
+            "topic": {
+                "value": "",
+                "creator": "",
+                "last_set": 0
+            },
+            "purpose": {
+                "value": "{\"ota_bot\": \"OTABOT\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn1\", \"solved\": [\"someone\"], \"category\": \"pwn\", \"type\": \"CHALLENGE\", \"solve_date\":1533056159}",
+                "creator": "UNITTEST_USER_ID1",
+                "last_set": 1533056159
+            },
+            "priority": 0
+        },
+        {
+            "id": "UNITTEST_CHANNEL_ID1",
+            "name": "testctf1-testchall2",
+            "is_group": true,
+            "created": 1533056148,
+            "creator": "UNITTEST_USER_ID1",
+            "is_archived": true,
+            "name_normalized": "testctf1-testchall2",
+            "is_mpim": false,
+            "members": [
+                "UNITTEST_USER_ID1"
+            ],
+            "topic": {
+                "value": "",
+                "creator": "",
+                "last_set": 0
+            },
+            "purpose": {
+                "value": "{\"ota_bot\": \"OTABOT\", \"ctf_id\": \"UNITTEST_CHANNEL_ID1\", \"name\": \"pwn2\", \"solved\": \"\", \"category\": \"pwn\", \"type\": \"CHALLENGE\"}",
+                "creator": "UNITTEST_USER_ID1",
+                "last_set": 1533056149
+            },
+            "priority": 0
+        }
+    ]
+}

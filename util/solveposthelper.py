@@ -52,7 +52,7 @@ def init_solvetracker_config():
         with open("./config_solvetracker.json") as f:
             return json.load(f), True
     except (IOError, FileNotFoundError) as e:
-        log.info("Solvetracker configuration couldn't be loaded: {}. Deactivating SolveTracker...".format(e))
+        log.info("Solvetracker configuration couldn't be loaded: %s. Deactivating SolveTracker...", e)
         return None, False
 
 

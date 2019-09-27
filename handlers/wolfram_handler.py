@@ -1,25 +1,20 @@
-import re
-
 import wolframalpha
 
-from bottypes.command import *
-from bottypes.command_descriptor import *
-from bottypes.invalid_command import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from addons.syscalls.syscallinfo import *
-from util.util import *
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
 
 
 class AskCommand(Command):
     """Asks wolfram alpha a question and shows the answer."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Ask command."""
         app_id = handler_factory.botserver.get_config_option("wolfram_app_id")
 
-        verbose = (args[0] if len(args) > 0 else "") == "-v"
+        verbose = (args[0] if args else "") == "-v"
 
         if app_id:
             try:
@@ -40,13 +35,16 @@ class AskCommand(Command):
                                 answer += "```\n"
                                 answer += subpod.plaintext[:512] + "\n"
                                 answer += "```\n"
-                                if (len(subpod.plaintext) > 512):
+                                if len(subpod.plaintext) > 512:
                                     answer += "*shortened*"
                 else:
                     answer = next(res.results, None)
 
                     if answer:
-                        answer = answer.text
+                        if len(answer.text) > 2048:
+                            answer = answer.text[:2048] + "*shortened*"
+                        else:
+                            answer = answer.text
 
                 slack_wrapper.post_message(channel_id, answer)
             except Exception as ex:

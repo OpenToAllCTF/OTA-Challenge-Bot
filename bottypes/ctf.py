@@ -12,9 +12,9 @@ class CTF:
         self.challenges = []
         self.cred_user = ""
         self.cred_pw = ""
-        self.cred_url = ""
         self.long_name = long_name
         self.finished = False
+        self.finished_on = 0
 
     def add_challenge(self, challenge):
         """

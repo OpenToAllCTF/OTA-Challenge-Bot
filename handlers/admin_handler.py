@@ -1,19 +1,17 @@
-import re
-
-from bottypes.command import *
-from bottypes.command_descriptor import *
-from bottypes.invalid_command import *
-import handlers.handler_factory as handler_factory
-from handlers.base_handler import *
-from addons.syscalls.syscallinfo import *
-from util.util import *
+from bottypes.command import Command
+from bottypes.command_descriptor import CommandDesc
+from bottypes.invalid_command import InvalidCommand
+from handlers import handler_factory
+from handlers.base_handler import BaseHandler
+from util.util import (get_display_name_from_user, parse_user_id,
+                       resolve_user_by_user_id)
 
 
 class ShowAdminsCommand(Command):
     """Shows list of users in the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the ShowAdmins command."""
 
         admin_users = handler_factory.botserver.get_config_option("admin_users")
@@ -26,7 +24,7 @@ class ShowAdminsCommand(Command):
                 user_object = slack_wrapper.get_member(admin_id)
 
                 if user_object['ok']:
-                    response += "*{}* ({})\n".format(user_object['user']['name'], admin_id)
+                    response += "*{}* ({})\n".format(get_display_name_from_user(user_object["user"]), admin_id)
 
             response += "==================================="
 
@@ -46,7 +44,7 @@ class AddAdminCommand(Command):
     """Add a user to the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the AddAdmin command."""
         user_object = resolve_user_by_user_id(slack_wrapper, args[0])
 
@@ -72,7 +70,7 @@ class RemoveAdminCommand(Command):
     """Remove a user from the admin user group."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the RemoveAdmin command."""
         user = parse_user_id(args[0])
 
@@ -93,7 +91,7 @@ class AsCommand(Command):
     """Execute a command as another user."""
 
     @classmethod
-    def execute(cls, slack_wrapper, args, channel_id, user_id, user_is_admin):
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the As command."""
         dest_user = args[0].lower()
         dest_command = args[1].lower().lstrip("!")
@@ -106,8 +104,8 @@ class AsCommand(Command):
             dest_user_id = user_obj['user']['id']
 
             # Redirecting command execution to handler factory
-            handler_factory.process_command(slack_wrapper, dest_command, [
-                                            dest_command] + dest_arguments, channel_id, dest_user_id, user_is_admin)
+            handler_factory.process_command(slack_wrapper, dest_command,
+                                            [dest_command] + dest_arguments, timestamp, channel_id, dest_user_id, user_is_admin)
         else:
             raise InvalidCommand("You have to specify a valid user (use @-notation).")
 

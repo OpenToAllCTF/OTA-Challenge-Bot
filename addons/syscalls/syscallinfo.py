@@ -11,7 +11,7 @@ class SyscallTable:
 
         self.parse_table(filename)
 
-    def getEntryDict(self, parts, identifiers):
+    def get_entry_dict(self, parts, identifiers):
         entry = collections.OrderedDict()
 
         for i in range(len(parts)):
@@ -33,23 +33,20 @@ class SyscallTable:
 
         for line in lines[1:]:
             parts = line.split("\t")
-            self.entries[parts[1]] = self.getEntryDict(
+            self.entries[parts[1]] = self.get_entry_dict(
                 line.split("\t"), identifiers)
 
-    def getEntryByID(self, idx):
+    def get_entry_by_id(self, idx):
         for entry in self.entries:
             if self.entries[entry]["#"] == str(idx):
                 return self.entries[entry]
 
         return None
 
-    def getEntryByName(self, name):
-        if name in self.entries:
-            return self.entries[name]
+    def get_entry_by_name(self, name):
+        return self.entries.get(name)
 
-        return None
-
-    def getInfoMessage(self, entry):
+    def get_info_message(self, entry):
         if entry:
             msg = ""
 
@@ -60,13 +57,13 @@ class SyscallTable:
 
         return None
 
-    def getInfoMessageByID(self, idx):
-        entry = self.getEntryByID(idx)
-        return self.getInfoMessage(entry)
+    def get_info_message_by_id(self, idx):
+        entry = self.get_entry_by_id(idx)
+        return self.get_info_message(entry)
 
-    def getInfoMessageByName(self, name):
-        entry = self.getEntryByName(name)
-        return self.getInfoMessage(entry)
+    def get_info_message_by_name(self, name):
+        entry = self.get_entry_by_name(name)
+        return self.get_info_message(entry)
 
 
 class SyscallInfo:
@@ -79,10 +76,10 @@ class SyscallInfo:
 
             self.tables[table] = SyscallTable(filename)
 
-    def getAvailableArchitectures(self):
+    def get_available_architectures(self):
         return self.tables.keys()
 
-    def getArch(self, arch):
+    def get_arch(self, arch):
         if arch in self.tables:
             return self.tables[arch]
 
