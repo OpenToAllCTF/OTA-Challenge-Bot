@@ -6,15 +6,18 @@ import websocket
 from slackclient.server import SlackConnectionError
 
 from bottypes.invalid_console_command import InvalidConsoleCommand
-from handlers import *
 from handlers import handler_factory
 from util.loghandler import log
 from util.slack_wrapper import SlackWrapper
 from util.util import get_display_name, resolve_user_by_user_id
+from services.enabled_services import enabled_services
+
+# Don't remove this pointless line, actually adds all the different handlers
+# noinspection PyUnresolvedReferences
+from handlers import *
 
 
 class BotServer(threading.Thread):
-
     # Global lock for locking global data in bot server
     thread_lock = threading.Lock()
     user_list = {}
@@ -29,6 +32,7 @@ class BotServer(threading.Thread):
         self.bot_at = ""
         self.slack_wrapper = None
         self.read_websocket_delay = 1
+        self.service_stack = []
 
     def lock(self):
         """Acquire global lock for working with global (not thread-safe) data."""
@@ -84,10 +88,12 @@ class BotServer(threading.Thread):
             if msg.get("type") == "message" and "subtype" not in msg:
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
+                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg[
+                        'thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
-                    return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
+                    return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg[
+                        'ts'], msg['user']
             # Check if user tampers with channel purpose
             elif msg.get("type") == "message" and msg["subtype"] == "channel_purpose" and msg["user"] != self.bot_id:
                 source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg['user']))
@@ -98,14 +104,14 @@ class BotServer(threading.Thread):
                 log_deletions = self.get_config_option("delete_watch_keywords")
 
                 if log_deletions:
-                    previous_msg = msg['previous_message']['text']              
+                    previous_msg = msg['previous_message']['text']
                     delete_keywords = log_deletions.split(",")
 
                     if any(keyword.strip() in previous_msg for keyword in delete_keywords):
                         user_name = self.slack_wrapper.get_member(msg['previous_message']['user'])
                         display_name = get_display_name(user_name)
-                        self.slack_wrapper.post_message(msg['channel'], "*{}* deleted : `{}`".format(display_name, previous_msg))
-
+                        self.slack_wrapper.post_message(msg['channel'],
+                                                        "*{}* deleted : `{}`".format(display_name, previous_msg))
 
         return None, None, None, None
 
@@ -113,7 +119,7 @@ class BotServer(threading.Thread):
         for msg in message_list:
             msgtype = msg.get("type")
 
-            if msgtype in("reaction_removed", "reaction_added"):
+            if msgtype in ("reaction_removed", "reaction_added"):
                 # Ignore reactions from the bot itself
                 if msg["user"] == self.bot_id:
                     continue
@@ -152,10 +158,22 @@ class BotServer(threading.Thread):
             log.debug("Received bot command : %s (%s)", command, channel)
             handler_factory.process(self.slack_wrapper, self, command, time_stamp, channel, user)
 
+    def start_services(self):
+        for service in enabled_services:
+            log.info("[Services] Enabling {}".format(service.__name__))
+            s = service(self, self.slack_wrapper)
+            self.service_stack.append(s)
+            s.start()
+
+    def stop_services(self):
+        for service in self.service_stack:
+            service.cancel()
+
     def run(self):
         log.info("Starting server thread...")
 
         self.running = True
+        self.start_services()
 
         while self.running:
             try:
