@@ -6,3 +6,4 @@ config_solvetracker.json
 *.log
 .venv
 intro_msg
+old-pos.txt

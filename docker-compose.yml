@@ -1,0 +1,10 @@
+version: '2'
+services:
+  mrctf:
+    build: .
+    restart: always
+    container_name: live-mrctf
+    volumes:
+      - ./databases/challenge_handler.bin:/src/databases/challenge_handler.bin
+      - ./config.json:/src/config.json
+      - ./old-pos.txt:/src/old-pos.txt # Used in rank_service
