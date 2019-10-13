@@ -20,6 +20,7 @@ class RankService(BaseService):
         return 60 * 60  # Hourly
 
     def __init__(self, botserver, slack_wrapper: SlackWrapper):
+        super().__init__(botserver, slack_wrapper)
         self.lookup_add = ""
         self.add_id = 1
 
@@ -28,13 +29,8 @@ class RankService(BaseService):
         self.position_filename = "old-pos.txt"
         self.post_channel_id = self.find_channel_id("general")
 
-        super().__init__(botserver, slack_wrapper)
-
     def find_channel_id(self, channel_name):
-        sc = SlackClient(self.slack_token)
-        x = sc.api_call(
-            "channels.list",
-        )
+        x = self.slack_wrapper.get_public_channels()
 
         channels = x["channels"]
         for channel in channels:
@@ -73,7 +69,8 @@ class RankService(BaseService):
                     position_found = int(l[0])
                     points_found = float(l[2])
 
-            self.add_id += 1
+            if not position_found:
+                self.add_id += 1
             self.lookup_add = "2019?page={}".format(self.add_id)
 
         if position_found is None:

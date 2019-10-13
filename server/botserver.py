@@ -173,12 +173,13 @@ class BotServer(threading.Thread):
         log.info("Starting server thread...")
 
         self.running = True
+        self.load_config()
+        self.slack_wrapper = SlackWrapper(self.get_config_option("api_key"))
         self.start_services()
 
         while self.running:
             try:
-                self.load_config()
-                self.slack_wrapper = SlackWrapper(self.get_config_option("api_key"))
+
 
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
