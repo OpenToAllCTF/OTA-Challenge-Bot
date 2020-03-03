@@ -105,6 +105,9 @@ class BotServer(threading.Thread):
                         user_name = self.slack_wrapper.get_member(msg['previous_message']['user'])
                         display_name = get_display_name(user_name)
                         self.slack_wrapper.post_message(msg['channel'], "*{}* deleted : `{}`".format(display_name, previous_msg))
+            # Greet new users
+            elif msg.get("type") == "im_created":
+                self.slack_wrapper.post_message(msg['user'], "Hey! Make sure you check out our channels! #pwn, #re, #crypto, #web, and many more! If you're looking for some fun challenges, check out our own #ota-university!")
 
 
         return None, None, None, None
