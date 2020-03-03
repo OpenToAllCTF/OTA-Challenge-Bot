@@ -98,7 +98,7 @@ class BotServer(threading.Thread):
                 log_deletions = self.get_config_option("delete_watch_keywords")
 
                 if log_deletions:
-                    previous_msg = msg['previous_message']['text']              
+                    previous_msg = msg['previous_message']['text']
                     delete_keywords = log_deletions.split(",")
 
                     if any(keyword.strip() in previous_msg for keyword in delete_keywords):
@@ -107,7 +107,7 @@ class BotServer(threading.Thread):
                         self.slack_wrapper.post_message(msg['channel'], "*{}* deleted : `{}`".format(display_name, previous_msg))
             # Greet new users
             elif msg.get("type") == "im_created":
-                self.slack_wrapper.post_message(msg['user'], "Hey! Make sure you check out our channels! #pwn, #re, #crypto, #web, and many more! If you're looking for some fun challenges, check out our own #ota-university!")
+                self.slack_wrapper.post_message(msg['user'], self.get_config_option("intro_message"))
 
 
         return None, None, None, None

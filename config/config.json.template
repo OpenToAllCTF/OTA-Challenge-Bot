@@ -6,5 +6,6 @@
   "auto_invite" : [],
   "wolfram_app_id" : "",
   "archive_ctf_reminder_offset" : "168",
-  "delete_watch_keywords" : ""
+  "delete_watch_keywords" : "",
+  "intro_message" : ""
 }
