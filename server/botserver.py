@@ -46,7 +46,7 @@ class BotServer(threading.Thread):
     def load_config(self):
         """Load configuration file."""
         self.lock()
-        with open("./config.json") as f:
+        with open("./config/config.json") as f:
             self.config = json.load(f)
         self.release()
 
@@ -67,7 +67,7 @@ class BotServer(threading.Thread):
                 self.config[option] = value
                 log.info("Updated configuration: %s => %s", option, value)
 
-                with open("./config.json", "w") as f:
+                with open("./config/config.json", "w") as f:
                     json.dump(self.config, f)
             else:
                 raise InvalidConsoleCommand("The specified configuration option doesn't exist: {}".format(option))

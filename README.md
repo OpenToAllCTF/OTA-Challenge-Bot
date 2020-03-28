@@ -68,10 +68,10 @@ After restarting the bot, the bot user should now show up in your slack workspac
 
 ## Installation
 
-1. Copy `config.json.template` to `config.json`
+1. Copy `config/config.json.template` to `config/config.json`
 2. Fill the API token and bot name in the config.json file.
-3. Add your user id (slack id, not the username) to `admin_users` group in `config.json`
-4. If you want to use the wolfram alpha api, register a valid app id on http://products.wolframalpha.com/api/ and set `wolfram_app_id` in `config.json`
+3. Add your user id (slack id, not the username) to `admin_users` group in `config/config.json`
+4. If you want to use the wolfram alpha api, register a valid app id on http://products.wolframalpha.com/api/ and set `wolfram_app_id` in `config/config.json`
 5. Copy `intro_msg.template` to `intro_msg` and set a proper introduction message, which can be shown with `!intro`
 6. `docker build -t ota-challenge-bot .`
 7. `docker run -it --rm --name live-ota-challenge-bot ota-challenge-bot`
@@ -79,7 +79,7 @@ After restarting the bot, the bot user should now show up in your slack workspac
 
 ## Development
 
-1. Copy `config.json.template` to `config.json`
+1. Copy `config/config.json.template` to `config/config.json`
 2. Fill the API token and bot name in the config.json file.
 3. Create a virtual env: `python3 -m venv .venv`
 4. Enter the virtual env: `source .venv/bin/activate`
@@ -88,7 +88,7 @@ After restarting the bot, the bot user should now show up in your slack workspac
 
 ## Using git support for uploading solve updates
 
-1. Copy `config_solvetracker.json.template` to `config_solvetracker.json`.
+1. Copy `config/config_solvetracker.json.template` to `config/config_solvetracker.json`.
 2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
 
 Example:
@@ -111,7 +111,7 @@ Example:
 ## Using Link saver
 
 1. Setup a github repo with jekyll and staticman (e.g. https://github.com/ujjwal96/links).
-2. Copy `config_savelink.json.template` to `config_savelink.json`.
+2. Copy `config/config_savelink.json.template` to `config/config_savelink.json`.
 3. Configure the git repo and branch to be used.
 4. Add the decrypted staticman-token used in `staticman.yml` in the config.
 5. Add a link to your repo, so people can look it up via `showlinkurl`
@@ -129,7 +129,7 @@ Example:
 
 ## Archive reminder
 
-To enable archive reminders set an offset (in hours) in `config.json` for `archive_ctf_reminder_offset`. Clear or remove the setting to disable reminder handling.
+To enable archive reminders set an offset (in hours) in `config/config.json` for `archive_ctf_reminder_offset`. Clear or remove the setting to disable reminder handling.
 
 If active, the bot will create a reminder for every bot admin on `!endctf` to inform him, when the ctf was finished for the specified time and it should be archived.
 
@@ -143,7 +143,7 @@ Example (for being reminded one week after the ctf has finished):
 
 ## Log command deletion
 
-To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in `config.json` to a comma separated list of keywords. 
+To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in `config/config.json` to a comma separated list of keywords. 
 Clear or remove the setting to disable deletion logging.
 
 Example

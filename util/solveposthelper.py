@@ -49,7 +49,7 @@ def post_ctf_data(ctf, title):
 def init_solvetracker_config():
     """Initialize the SolveTracker configuration or disable SolveTracker support if config file doesn't exist."""
     try:
-        with open("./config_solvetracker.json") as f:
+        with open("./config/config_solvetracker.json") as f:
             return json.load(f), True
     except (IOError, FileNotFoundError) as e:
         log.info("Solvetracker configuration couldn't be loaded: %s. Deactivating SolveTracker...", e)
