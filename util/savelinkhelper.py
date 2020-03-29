@@ -54,7 +54,7 @@ def unfurl(url: str):
 def init_savelink_config():
     """Initialize the Save handler configuration"""
     try:
-        with open("./config_savelink.json") as f:
+        with open("./config/config_savelink.json") as f:
             conf = json.load(f)
             return conf, True
     except (IOError, FileNotFoundError) as e:
