@@ -149,11 +149,13 @@ class TestAdminHandler(BotBaseTest):
 
 class TestChallengeHandler(BotBaseTest):
     def test_addctf_name_too_long(self):
-        self.exec_command("!ctf addctf unittest_ctf unittest_ctf")
+        ctf_name = "unittest_{}".format("A"*50)
+        
+        self.exec_command("!ctf addctf {} unittest_ctf".format(ctf_name))
 
         self.assertTrue(self.check_for_response_available(),
                         msg="Bot didn't react on unit test. Check for possible exceptions.")
-        self.assertTrue(self.check_for_response("CTF name must be <= 10 characters."),
+        self.assertTrue(self.check_for_response("CTF name must be <= {} characters.".format(40)),
                         msg="Challenge handler didn't respond with expected result for name_too_long.")
 
     def test_addctf_success(self):
