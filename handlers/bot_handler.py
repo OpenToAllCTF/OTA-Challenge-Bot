@@ -6,6 +6,7 @@ from handlers.base_handler import BaseHandler
 from util.githandler import GitHandler
 from util.loghandler import log
 import subprocess
+import json
 
 
 class PingCommand(Command):
@@ -24,8 +25,10 @@ class IntroCommand(Command):
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Intro command."""
         try:
-            with open("intro_msg") as f:
-                message = f.read()
+            with open("./config.json") as f:
+                message = json.load(f)["intro_message"]
+            if not message:
+                raise Exception("missing intro message")
 
             slack_wrapper.post_message(channel_id, message)
         except:
