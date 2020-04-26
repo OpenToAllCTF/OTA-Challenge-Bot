@@ -24,18 +24,10 @@ class IntroCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Intro command."""
-        try:
-            with open("./config.json") as f:
-                message = json.load(f)["intro_message"]
-            if not message:
-                raise Exception("missing intro message")
+        with open("./config.json") as f:
+            message = json.load(f).get("intro_message")
 
-            slack_wrapper.post_message(channel_id, message)
-        except:
-            message = "Sorry, I forgot what I wanted to say (or the admins forgot to give me an intro message :wink:)"
-
-            slack_wrapper.post_message(channel_id, message)
-
+        slack_wrapper.post_message(channel_id, message)
 
 class VersionCommand(Command):
     """Show git information about the current running version of the bot."""
