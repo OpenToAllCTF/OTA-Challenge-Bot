@@ -6,6 +6,7 @@ from handlers.base_handler import BaseHandler
 from util.githandler import GitHandler
 from util.loghandler import log
 import subprocess
+import json
 
 
 class PingCommand(Command):
@@ -23,16 +24,10 @@ class IntroCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Intro command."""
-        try:
-            with open("intro_msg") as f:
-                message = f.read()
+        with open("./config.json") as f:
+            message = json.load(f).get("intro_message")
 
-            slack_wrapper.post_message(channel_id, message)
-        except:
-            message = "Sorry, I forgot what I wanted to say (or the admins forgot to give me an intro message :wink:)"
-
-            slack_wrapper.post_message(channel_id, message)
-
+        slack_wrapper.post_message(channel_id, message)
 
 class VersionCommand(Command):
     """Show git information about the current running version of the bot."""
