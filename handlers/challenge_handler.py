@@ -499,7 +499,7 @@ class WorkonCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Workon command."""
-        challenge_name = args[0].lower() if args else None
+        challenge_name = args[0].lower().strip("*") if args else None
 
         # Validate that current channel is a CTF channel
         ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)

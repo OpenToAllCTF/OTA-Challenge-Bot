@@ -6,3 +6,4 @@ config/config_solvetracker.json
 *.log
 .venv
 intro_msg
+.vscode

@@ -121,7 +121,7 @@ def get_challenge_from_args(database, args, channel_id):
     Helper method for getting the channel either from arguments or current channel.
     """
     # Multiple arguments: Need to check if a challenge was specified or not
-    challenge_name = args[0].lower()
+    challenge_name = args[0].lower().strip("*")
 
     # Check if we're currently in a challenge channel
     current_chal = get_challenge_by_channel_id(
