@@ -174,6 +174,22 @@ class TestChallengeHandler(BotBaseTest):
         self.assertFalse(self.check_for_response("Unknown handler or command"),
                          msg="AddChallenge command didn't execute properly.")
 
+    def test_addtag(self):
+        self.exec_command("!ctf tag laff lawl lull")
+
+        self.assertTrue(self.check_for_response_available(),
+                        msg="Bot didn't react on unit test. Check for possible exceptions.")
+        self.assertFalse(self.check_for_response("Unknown handler or command"),
+                         msg="AddChallenge command didn't execute properly.")
+
+    def test_removetag(self):
+        self.exec_command("!ctf tag laff lawl lull")
+
+        self.assertTrue(self.check_for_response_available(),
+                        msg="Bot didn't react on unit test. Check for possible exceptions.")
+        self.assertFalse(self.check_for_response("Unknown handler or command"),
+                         msg="AddChallenge command didn't execute properly.")
+
     def test_workon(self):
         self.exec_command("!ctf workon test_challenge")
 
