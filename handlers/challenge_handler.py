@@ -948,10 +948,15 @@ class ChallengeHandler(BaseHandler):
             "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
             "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None, True),
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
+            "removetag": CommandDesc(RemoveChallengeTagCommand, "Remove tag(s) from a challenge", ["challenge_tag/name"], ["[..challenge_tag(s)]"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
+            "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None, True),
             "roll": CommandDesc(RollCommand, "Roll the dice", None, None),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
+            "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
+            "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, ["category"]),
+            "tag": CommandDesc(AddChallengeTagCommand, "Add tag(s) to a challenge", ["challenge_tag/name"], ["[..challenge_tag(s)]"]),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"])
         }

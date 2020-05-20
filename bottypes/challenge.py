@@ -39,6 +39,30 @@ class Challenge:
         self.is_solved = False
         self.solver = None
 
+    def add_tag(self, tag):
+        """
+        Update the list of tags for this challenge by adding the given tag.
+        Return True if a modification was made, False otherwise.
+        """
+        dirty = False
+        if tag not in self.tags and len(self.tags) < self.MAX_TAGS:
+            # The tag doesn't exist and there's room to add it, let's do so
+            self.tags.append(tag)
+            dirty = True
+        return dirty
+
+    def remove_tag(self, tag):
+        """
+        Update the list of tags for this challenge by removing the given tag.
+        Return True if a modification was made, False otherwise.
+        """
+        dirty = False
+        if tag in self.tags:
+            # The tag exists, let's remove it
+            self.tags.remove(tag)
+            dirty = True
+        return dirty
+
     def add_player(self, player):
         """
         Add a player to the list of working players.
