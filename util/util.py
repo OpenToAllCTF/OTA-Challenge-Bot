@@ -47,9 +47,11 @@ def transliterate(string):
 #######
 
 
-def get_ctf_by_channel_id(database, channel_id):
+def get_ctf_by_channel_id(database, channel_id, include_challenges=True):
     """
-    Fetch a CTF object in the database with a given channel ID.
+    Fetch a CTF object (CTF, Challenge) in the database with a given channel ID.
+    If `include_challenges` is False, match strictly on CTF objects and ignore
+    Challenge objects.
     Return the matching CTF object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
@@ -57,9 +59,10 @@ def get_ctf_by_channel_id(database, channel_id):
         if c_id == channel_id:
             return ctf
 
-        for challenge in ctf.challenges:
-            if challenge.channel_id == channel_id:
-                return ctf
+        if include_challenges:
+            for challenge in ctf.challenges:
+                if challenge.channel_id == channel_id:
+                    return ctf
 
     return None
 
@@ -118,25 +121,21 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
 
 def get_challenge_from_args(database, args, channel_id):
     """
-    Helper method for getting the channel either from arguments or current channel.
+    Helper method for getting a Challenge either from arguments or current channel.
     """
     # Multiple arguments: Need to check if a challenge was specified or not
     challenge_name = args[0].lower().strip("*")
 
     # Check if we're currently in a challenge channel
-    current_chal = get_challenge_by_channel_id(
-        database, channel_id)
+    current_chal = get_challenge_by_channel_id(database, channel_id)
 
     if current_chal:
-        # User is in a challenge channel => Check for challenge by name
-        # in parent ctf channel
-        challenge = get_challenge_by_name(
-            database, challenge_name, current_chal.ctf_channel_id)
+        # User is in the challenge channel
+        return current_chal
     else:
         # User is in the ctf channel => Check for challenge by name in
         # current challenge
-        challenge = get_challenge_by_name(
-            database, challenge_name, channel_id)
+        challenge = get_challenge_by_name(database, challenge_name, channel_id)
 
     return challenge
 
@@ -153,6 +152,18 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
                 return challenge
 
     return None
+
+
+def save_challenge(database, new_chall):
+    """
+    Save a Challenge object back to the database with a given channel ID.
+    """
+    ctfs = pickle.load(open(database, "rb"))
+    for old_chall in ctfs[new_chall.ctf_channel_id].challenges:
+        if old_chall.channel_id == new_chall.channel_id:
+            ctfs[old_chall.ctf_channel_id].challenges[0] = new_chall
+            break
+    pickle.dump(ctfs, open(database, "wb"))
 
 
 def get_challenges_for_user_id(database, user_id, ctf_channel_id):

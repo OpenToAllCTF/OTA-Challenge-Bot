@@ -1,6 +1,7 @@
 import time
 
 class Challenge:
+    MAX_TAGS = 5
 
     def __init__(self, ctf_channel_id, channel_id, name, category):
         """
@@ -19,6 +20,7 @@ class Challenge:
         self.is_solved = False
         self.solver = None
         self.solve_date = 0
+        self.tags = []
 
     def mark_as_solved(self, solver_list, solve_date=None):
         """
@@ -51,5 +53,5 @@ class Challenge:
         try:
             del self.players[user_id]
         except KeyError:
-            # TODO: Should we allow this to perculate up to the caller?
+            # TODO: Should we allow this to percolate up to the caller?
             pass

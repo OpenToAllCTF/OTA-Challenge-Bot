@@ -15,6 +15,63 @@ from util.loghandler import log
 from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
 from util.util import *
 
+class AddChallengeTagCommand(Command):
+    """Add a tag or tags to a challenge"""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+
+        tags = None
+        challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+
+        if challenge.channel_id == channel_id:
+            # We were called from the Challenge channel
+            tags = args if len(args) > 0 else None
+        elif challenge.ctf_channel_id == channel_id:
+            # We were called from the CTF channel
+            tags = args[1:] if len(args) > 1 else None
+        else:
+            # LOL
+            raise InvalidCommand("You must be in a CTF or Challenge channel to use this command.")
+
+        if tags is not None:
+            # There may be updates to apply
+            dirty = False
+            for tag in tags:
+                dirty |= challenge.add_tag(tag)
+
+            # Save challenge iff it was modified
+            if dirty:
+                save_challenge(ChallengeHandler.DB, challenge)
+
+class RemoveChallengeTagCommand(Command):
+    """Remove a tag or tags from a challenge"""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+
+        tags = None
+        challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+
+        if challenge.channel_id == channel_id:
+            # We were called from the Challenge channel
+            tags = args if len(args) > 0 else None
+        elif challenge.ctf_channel_id == channel_id:
+            # We were called from the CTF channel
+            tags = args[1:] if len(args) > 1 else None
+        else:
+            # LOL
+            raise InvalidCommand("You must be in a CTF or Challenge channel to use this command.")
+
+        if tags is not None:
+            # There may be updates to apply
+            dirty = False
+            for tag in tags:
+                dirty |= challenge.remove_tag(tag)
+
+            # Save challenge iff it was modified
+            if dirty:
+                save_challenge(ChallengeHandler.DB, challenge)
 
 class RollCommand(Command):
     """Roll the dice. ;)"""
@@ -439,9 +496,12 @@ class StatusCommand(Command):
                         if player_id in members:
                             players.append(members[player_id])
 
-                    response += "[{} active] *{}* {}: {}\n".format(len(players), challenge.name, "({})".format(challenge.category)
-                                                                   if challenge.category else "", transliterate(", ".join(players)))
-
+                    response += "[{} active] *{}* {}: {} {}\n".  format(
+                            len(players),
+                            challenge.name,
+                            "[{}]".format(", ".join(challenge.tags)) if len(challenge.tags) > 0 else "",
+                            "({})".format(challenge.category) if challenge.category else "",
+                            transliterate(", ".join(players)))
         response = response.strip()
 
         if response == "":  # Response is empty
@@ -876,25 +936,24 @@ class ChallengeHandler(BaseHandler):
         "solved": "",
         "category": "",
         "type": "CHALLENGE",
+        "tags": []
     }
 
     def __init__(self):
         self.commands = {
-            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name", "long_name"], None),
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
-            "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
-            "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, ["category"]),
-            "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
-            "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
-            "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
-            "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None, True),
+            "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
+            "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name", "long_name"], None),
             "archivectf": CommandDesc(ArchiveCTFCommand, "Archive the challenges of a ctf", None, ["nopost"], True),
             "endctf": CommandDesc(EndCTFCommand, "Mark a ctf as ended, but not archive it directly", None, None, True),
-            "addcreds": CommandDesc(AddCredsCommand, "Add credentials for current ctf", ["ctf_user", "ctf_pw"], ["ctf_url"]),
+            "reload": CommandDesc(ReloadCommand, "Reload ctf information from slack", None, None, True),
+            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
+            "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
+            "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
+            "roll": CommandDesc(RollCommand, "Roll the dice", None, None),
             "showcreds": CommandDesc(ShowCredsCommand, "Show credentials for current ctf", None, None),
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
-            "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
-            "roll": CommandDesc(RollCommand, "Roll the dice", None, None)
+            "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"])
         }
         self.reactions = {
             "arrows_clockwise": ReactionDesc(UpdateStatusCommand),
