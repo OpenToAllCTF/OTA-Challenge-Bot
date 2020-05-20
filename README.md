@@ -26,7 +26,7 @@ Secondary features :
 !ctf renamechallenge <old_challenge_name> <new_challenge_name>  (Renames a challenge)
 !ctf renamectf <old_ctf_name> <new_ctf_name>                    (Renames a ctf)
 !ctf reload                                                     (Reload ctf information from slack)
-!ctf removetag [<challenge_name] <tag> [..<tag]                 (Remove a tag from a challenge)
+!ctf removetag [<challenge_name] <tag> [..<tag>]                (Remove a tag from a challenge)
 !ctf archivectf                                                 (Archive the challenges of a ctf)
 !ctf addcreds <ctf_user> <ctf_pw> [ctf_url]                     (Add credentials for current ctf)
 !ctf showcreds                                                  (Show credentials for current ctf)
