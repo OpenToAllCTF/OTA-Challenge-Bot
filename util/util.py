@@ -154,14 +154,15 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
     return None
 
 
-def save_challenge(database, new_chall):
+def save_challenge(database, challenge):
     """
     Save a Challenge object back to the database with a given channel ID.
     """
     ctfs = pickle.load(open(database, "rb"))
-    for old_chall in ctfs[new_chall.ctf_channel_id].challenges:
-        if old_chall.channel_id == new_chall.channel_id:
-            ctfs[old_chall.ctf_channel_id].challenges[0] = new_chall
+    challenges = ctfs[challenge.ctf_channel_id].challenges
+    for i in range(0, len(challenges)):
+        if challenges[i].channel_id == challenge.channel_id:
+            challenges[i] = challenge
             break
     pickle.dump(ctfs, open(database, "wb"))
 
