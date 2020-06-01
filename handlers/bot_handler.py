@@ -24,7 +24,7 @@ class IntroCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute the Intro command."""
-        with open("./config.json") as f:
+        with open("./config/config.json") as f:
             message = json.load(f).get("intro_message")
 
         slack_wrapper.post_message(channel_id, message)
