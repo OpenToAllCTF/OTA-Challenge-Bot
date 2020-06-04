@@ -1,12 +1,29 @@
 import json
 import pickle
 import re
+from string import punctuation
 
 from bottypes.invalid_command import InvalidCommand
 
 #######
 # Helper functions
 #######
+
+def parse_opts(_args):
+    """
+    Filter an array of args and extract those beginning with a hyphen into a
+    new array called opts, removing any/all leading punctuation in the process.
+    Return a 2-tuple like ([opts], [args])
+    """
+    opts = []
+    args = []
+    for arg in _args:
+        if arg.startswith('-'):
+            arg = arg.strip(punctuation)
+            opts.append(arg)
+        else:
+            args.append(arg)
+    return (opts,args)
 
 
 def load_json(string):
