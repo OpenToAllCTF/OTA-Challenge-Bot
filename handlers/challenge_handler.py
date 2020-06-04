@@ -95,6 +95,10 @@ class AddCTFCommand(Command):
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
         """Execute AddCTF command."""
+
+        # Pull options out into its own array
+        opts, args = parse_opts(args)
+
         name = args[0].lower()
         long_name = " ".join(args[1:])
 
@@ -110,7 +114,8 @@ class AddCTFCommand(Command):
             raise InvalidCommand("Add CTF failed: Invalid characters for CTF name found.")
 
         # Create the channel
-        response = slack_wrapper.create_channel(name)
+        is_private = True if 'private' in opts else False
+        response = slack_wrapper.create_channel(name, is_private)
 
         # Validate that the channel was successfully created.
         if not response['ok']:

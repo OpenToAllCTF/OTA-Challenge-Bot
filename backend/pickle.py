@@ -1,0 +1,2 @@
+class Pickle(Backend):
+    pass

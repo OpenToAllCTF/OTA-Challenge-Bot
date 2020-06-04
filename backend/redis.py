@@ -1,0 +1,2 @@
+class Redis(Backend):
+    pass
