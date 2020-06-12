@@ -22,7 +22,7 @@ class AddChallengeTagCommand(Command):
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
 
         tags = None
-        challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+        challenge = get_challenge_from_args_or_channel(ChallengeHandler.DB, args, channel_id)
 
         if challenge.channel_id == channel_id:
             # We were called from the Challenge channel
@@ -50,7 +50,7 @@ class RemoveChallengeTagCommand(Command):
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
 
         tags = None
-        challenge = get_challenge_from_args(ChallengeHandler.DB, args, channel_id)
+        challenge = get_challenge_from_args_or_channel(ChallengeHandler.DB, args, channel_id)
 
         if challenge.channel_id == channel_id:
             # We were called from the Challenge channel
