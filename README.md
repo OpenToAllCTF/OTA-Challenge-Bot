@@ -105,9 +105,12 @@ Example:
 }
 ```
 
+Alternatively, you may decide to omit the "git_repopass" entry. In such an event (or if the entry is left blank) then the handler will attempt to push to the configured "git_remoteuri" using the `git` protocol, including using any SSH identities you may have configured.
+Note: If you configure the solvetracker this way, you need to make sure you are using an SSH identity without a passphrase.
+
 3. Update the templates in `templates` according to your preferences (or go with the default ones).
 4. Make sure that there's a `_posts` and `_stats` folder in your git repository.
-4. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
+5. You should be good to go now and git support should be active on the next startup. You can now use the `postsolves` command to push blog posts with the current solve status to git.
 
 
 ## Using Link saver

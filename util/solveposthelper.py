@@ -25,17 +25,17 @@ def post_ctf_data(ctf, title):
         stat_data = resolve_stats_template(ctf)
         stat_filename = "_stats/{}.json".format(ctf.name)
 
-        git = GitHandler(ST_GIT_CONFIG["git_repopath"])
+        git = GitHandler(ST_GIT_CONFIG.get("git_repopath"))
 
         git.add_file(post_data, post_filename)
         git.add_file(stat_data, stat_filename)
 
         git.commit("Solve post from {}".format(ctf.name))
 
-        git.push(ST_GIT_CONFIG["git_repouser"], ST_GIT_CONFIG["git_repopass"],
-                 ST_GIT_CONFIG["git_remoteuri"], ST_GIT_CONFIG["git_branch"])
+        git.push(ST_GIT_CONFIG.get("git_repouser"), ST_GIT_CONFIG.get("git_repopass"),
+                 ST_GIT_CONFIG.get("git_remoteuri"), ST_GIT_CONFIG.get("git_branch"))
 
-        return ST_GIT_CONFIG["git_baseurl"]
+        return ST_GIT_CONFIG.get("git_baseurl")
 
     except InvalidCommand as invalid_cmd:
         # Just pass invalid commands on
