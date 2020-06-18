@@ -48,8 +48,15 @@ class GitHandler():
     def push(self, repo_user, repo_pass, repo_remote, repo_branch):
         """Push the current commit to git."""
         try:
-            porcelain.push(self.repo, "https://{}:{}@{}".format(repo_user,
-                                                                repo_pass, repo_remote), bytes(repo_branch, "utf-8"))
+            if repo_pass:
+                porcelain.push(self.repo,
+                        "https://{}:{}@{}".format(repo_user, repo_pass, repo_remote),
+                        bytes(repo_branch, "utf-8"))
+            else:
+                porcelain.push(self.repo, 
+                        "git@{}".format(repo_remote), 
+                        bytes(repo_branch, "utf-8"))
+
         except dulwich.errors.GitProtocolError:
             raise InvalidCommand(
                 "Upload file failed: GitProtocolError - Check your username and password in the git configuration...")
