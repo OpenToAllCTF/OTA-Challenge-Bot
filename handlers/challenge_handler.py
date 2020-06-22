@@ -395,7 +395,8 @@ class UpdateShortStatusCommand(Command):
         result = slack_wrapper.get_message(channel_id, timestamp)
 
         if result["ok"] and result["messages"]:
-            if "solved /" in result["messages"][0]["text"]:
+            text = result["messages"][0]["text"]
+            if "solved /" in text or "no running CTFs" in text:
                 status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
@@ -434,7 +435,7 @@ class StatusCommand(Command):
         if finished_response != "":
             finished_response = "*Finished CTFs:*\n{}".format(finished_response)
 
-        response = "{}\n{}".format(running_response, finished_response)
+        response = "\n\n".join([resp for resp in [running_response, finished_response] if resp])
 
         if response == "":  # Response is empty
             response += "*There are currently no running CTFs*"
