@@ -15,6 +15,7 @@ from util.loghandler import log
 from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
 from util.util import *
 
+
 class AddChallengeTagCommand(Command):
     """Add a tag or tags to a challenge"""
 
@@ -42,6 +43,7 @@ class AddChallengeTagCommand(Command):
             # Save challenge iff it was modified
             if dirty:
                 save_challenge(ChallengeHandler.DB, challenge)
+
 
 class RemoveChallengeTagCommand(Command):
     """Remove a tag or tags from a challenge"""
@@ -71,6 +73,7 @@ class RemoveChallengeTagCommand(Command):
             if dirty:
                 save_challenge(ChallengeHandler.DB, challenge)
 
+
 class RollCommand(Command):
     """Roll the dice. ;)"""
 
@@ -86,8 +89,10 @@ class RollCommand(Command):
 
         slack_wrapper.post_message(channel_id, message)
 
+
 MAX_CHANNEL_NAME_LENGTH = 80
 MAX_CTF_NAME_LENGTH = 40
+
 
 class AddCTFCommand(Command):
     """Add and keep track of a new CTF."""
@@ -390,7 +395,8 @@ class UpdateShortStatusCommand(Command):
         result = slack_wrapper.get_message(channel_id, timestamp)
 
         if result["ok"] and result["messages"]:
-            if "solved /" in result["messages"][0]["text"]:
+            text = result["messages"][0]["text"]
+            if "solved /" in text or "no running CTFs" in text:
                 status, _ = StatusCommand().build_status_message(slack_wrapper, None, channel_id, user_id, user_is_admin, False)
 
                 slack_wrapper.update_message(channel_id, timestamp, status)
@@ -404,19 +410,32 @@ class StatusCommand(Command):
     @classmethod
     def build_short_status(cls, ctf_list):
         """Build short status list."""
-        response = ""
+        finished_response = ""
+        running_response = ""
 
-        for ctf in ctf_list:
+        def get_ctf_status(ctf, append=""):
             # Build short status list
             solved = [c for c in ctf.challenges if c.is_solved]
+            return "*#{} : _{}_ [{} solved / {} total] {}*\n".format(
+                ctf.name, ctf.long_name, len(solved), len(ctf.challenges), append)
 
-            def get_finish_info(ctf):
-                return "(finished {} ago)".format(cls.get_finished_string(ctf)) if ctf.finished_on else "(finished)"
+        for ctf in ctf_list:
+            if ctf.finished:
+                finish_info = "(finished {} ago)".format(cls.get_finished_string(ctf)) if ctf.finished_on else "(finished)"
+                finished_response += get_ctf_status(ctf, finish_info)
+            else:
+                running_response += get_ctf_status(ctf)
 
-            response += "*#{} : _{}_ [{} solved / {} total] {}*\n".format(
-                ctf.name, ctf.long_name, len(solved), len(ctf.challenges), get_finish_info(ctf) if ctf.finished else "")
+        running_response = running_response.strip()
+        finished_response = finished_response.strip()
 
-        response = response.strip()
+        if running_response != "":
+            running_response = "*Current CTFs:*\n{}".format(running_response)
+
+        if finished_response != "":
+            finished_response = "*Finished CTFs:*\n{}".format(finished_response)
+
+        response = "\n\n".join([resp for resp in [running_response, finished_response] if resp])
 
         if response == "":  # Response is empty
             response += "*There are currently no running CTFs*"
@@ -495,11 +514,11 @@ class StatusCommand(Command):
                             players.append(members[player_id])
 
                     response += "[{} active] *{}* {}: {} {}\n".  format(
-                            len(players),
-                            challenge.name,
-                            "[{}]".format(", ".join(challenge.tags)) if len(challenge.tags) > 0 else "",
-                            "({})".format(challenge.category) if challenge.category else "",
-                            transliterate(", ".join(players)))
+                        len(players),
+                        challenge.name,
+                        "[{}]".format(", ".join(challenge.tags)) if len(challenge.tags) > 0 else "",
+                        "({})".format(challenge.category) if challenge.category else "",
+                        transliterate(", ".join(players)))
         response = response.strip()
 
         if response == "":  # Response is empty
