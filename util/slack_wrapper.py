@@ -92,7 +92,9 @@ class SlackWrapper:
     def get_channel_members(self, channel_id, is_private=False):
         """ Return list of member ids in a given channel ID. """
 
-        return self.get_channel_info(channel_id, is_private)['channel']['members']
+        key = 'group' if is_private else 'channel'
+
+        return self.get_channel_info(channel_id, is_private)[key]['members']
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
