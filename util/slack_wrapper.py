@@ -136,13 +136,25 @@ class SlackWrapper:
         """Update a message, identified by the specified timestamp with a new text."""
         self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
 
+    def get_channels(self, types, next_cursor=None):
+        """Recursively fetch channels, until there are no more to be fetched."""
+        types = [types] if type(types) != list else types
+        response = self.client.api_call("conversations.list", types=types, cursor=next_cursor)
+        channels = response['channels']
+        next_cursor = response['response_metadata']['next_cursor']
+        if not next_cursor:
+            return channels
+        else:
+            return channels + self.get_channels(types, next_cursor)
+
+
     def get_public_channels(self):
         """Fetch all public channels."""
-        return self.client.api_call("channels.list")
+        return self.get_channels("public_channel")
 
     def get_private_channels(self):
         """Fetch all private channels in which the user participates."""
-        return self.client.api_call("groups.list")
+        return self.get_channels("private_channel")
 
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""

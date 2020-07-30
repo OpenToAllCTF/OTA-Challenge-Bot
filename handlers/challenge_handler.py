@@ -1013,8 +1013,8 @@ class ChallengeHandler(BaseHandler):
         Reload the ctf and challenge information from slack.
         """
         database = {}
-        privchans = slack_wrapper.get_private_channels()["groups"]
-        pubchans = slack_wrapper.get_public_channels()["channels"]
+        privchans = slack_wrapper.get_private_channels()
+        pubchans = slack_wrapper.get_public_channels()
 
         # Find active CTF channels
         for channel in [*privchans, *pubchans]:
@@ -1034,8 +1034,7 @@ class ChallengeHandler(BaseHandler):
                 pass
 
         # Find active challenge channels
-        response = slack_wrapper.get_private_channels()
-        for channel in response['groups']:
+        for channel in privchans:
             try:
                 purpose = load_json(channel['purpose']['value'])
 
@@ -1050,7 +1049,8 @@ class ChallengeHandler(BaseHandler):
                         challenge.mark_as_solved(solvers, purpose.get("solve_date"))
 
                     if ctf:
-                        for member_id in channel['members']:
+                        members = slack_wrapper.get_channel_members(channel['id'])
+                        for member_id in members:
                             if member_id != slack_wrapper.user_id:
                                 challenge.add_player(Player(member_id))
 
