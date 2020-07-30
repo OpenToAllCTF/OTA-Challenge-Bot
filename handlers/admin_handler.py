@@ -6,6 +6,18 @@ from handlers.base_handler import BaseHandler
 from util.util import (get_display_name_from_user, parse_user_id,
                        resolve_user_by_user_id)
 
+class ToggleMaintenanceModeCommand(Command):
+    """Update maintenance mode configuration."""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        """Execute the ToggleMaintenanceModeCommand command."""
+        mode = not bool(handler_factory.botserver.get_config_option("maintenance_mode"))
+        state = "enabled" if mode else "disabled"
+        handler_factory.botserver.set_config_option("maintenance_mode", mode)
+        text = "Maintenance mode " + state
+        slack_wrapper.post_message(channel_id, text)
+
 
 class ShowAdminsCommand(Command):
     """Shows list of users in the admin user group."""
@@ -123,6 +135,9 @@ class AdminHandler(BaseHandler):
 
     # Remove a user from the administrator group
     !admin remove_admin user_id
+
+    # Put the bot into maintenance mode
+    !maintenance
     """
 
     def __init__(self):
@@ -130,7 +145,8 @@ class AdminHandler(BaseHandler):
             "show_admins": CommandDesc(ShowAdminsCommand, "Show a list of current admin users", None, None, True),
             "add_admin": CommandDesc(AddAdminCommand, "Add a user to the admin user group", ["user_id"], None, True),
             "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True),
-            "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True)
+            "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
+            "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True)
         }
 
 

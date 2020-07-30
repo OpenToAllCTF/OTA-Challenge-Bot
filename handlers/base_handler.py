@@ -1,6 +1,7 @@
 from abc import ABC
 
 from bottypes.invalid_command import InvalidCommand
+from handlers import handler_factory
 
 
 class BaseHandler(ABC):
@@ -86,6 +87,9 @@ class BaseHandler(ABC):
         return msg
 
     def process(self, slack_wrapper, command, args, timestamp, channel, user, user_is_admin):
+        if handler_factory.botserver.get_config_option("maintenance_mode") and not user_is_admin:
+            raise InvalidCommand("Down for maintenance, back soon.")
+
         """Check if enough arguments were passed for this command."""
         if command in self.aliases:
             self.process(slack_wrapper, self.aliases[command], args, timestamp, channel, user, user_is_admin)
@@ -98,6 +102,9 @@ class BaseHandler(ABC):
                 cmd_descriptor.command.execute(slack_wrapper, args, timestamp, channel, user, user_is_admin)
 
     def process_reaction(self, slack_wrapper, reaction, channel, timestamp, user, user_is_admin):
+        if handler_factory.botserver.get_config_option("maintenance_mode") and not user_is_admin:
+            raise InvalidCommand("Down for maintenance, back soon.")
+
         reaction_descriptor = self.reactions[reaction]
 
         if reaction_descriptor:
