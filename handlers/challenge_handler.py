@@ -989,6 +989,7 @@ class ChallengeHandler(BaseHandler):
         self.aliases = {
             "finishctf": "endctf",
             "addchall": "addchallenge",
+            "add": "addchallenge"
         }
 
     @staticmethod
