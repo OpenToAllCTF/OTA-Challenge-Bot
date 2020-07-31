@@ -45,7 +45,7 @@ class SlackWrapper:
         Set the purpose of a given channel.
         """
 
-        api_call = "groups.setPurpose" if is_private else "channels.setPurpose"
+        api_call = "conversations.setPurpose"
         return self.client.api_call(api_call, purpose=purpose, channel=channel)
 
     def set_topic(self, channel, topic, is_private=False):
