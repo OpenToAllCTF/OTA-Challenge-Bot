@@ -148,6 +148,16 @@ class SlackWrapper:
         else:
             return channels + self.get_channels(types, next_cursor)
 
+    def get_all_channels(self):
+        """Fetch all channels."""
+        return self.get_channels(["public_channel", "private_channel"])
+
+    def get_channel_by_name(self, name):
+        """Fetch a channel with a given name."""
+        channels = self.get_all_channels()
+        for channel in channels:
+            if channel['name'] == name:
+                return channel
 
     def get_public_channels(self):
         """Fetch all public channels."""
