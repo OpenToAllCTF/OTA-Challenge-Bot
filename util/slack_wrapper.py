@@ -87,15 +87,18 @@ class SlackWrapper:
         Return the channel info of a given channel ID.
         """
 
-        api_call = "groups.info" if is_private else "channels.info"
+        api_call = "conversations.info"
         return self.client.api_call(api_call, channel=channel_id)
 
-    def get_channel_members(self, channel_id, is_private=False):
-        """ Return list of member ids in a given channel ID. """
-
-        key = 'group' if is_private else 'channel'
-
-        return self.get_channel_info(channel_id, is_private)[key]['members']
+    def get_channel_members(self, channel_id, next_cursor=None):
+        """Recursively fetch members of the given channel, until none remain to be fetched"""
+        response = self.client.api_call("conversations.members", channel=channel_id, cursor=next_cursor)
+        members = response['members']
+        next_cursor = response['response_metadata']['next_cursor']
+        if not next_cursor:
+            return members
+        else:
+            return members + self.get_members(channel_id, next_cursor)
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
@@ -104,10 +107,9 @@ class SlackWrapper:
 
         # Update channel purpose
         channel_info = self.get_channel_info(channel_id, is_private)
-        key = "group" if is_private else "channel"
 
         if channel_info:
-            purpose = load_json(channel_info[key]['purpose']['value'])
+            purpose = load_json(channel_info['channel']['purpose']['value'])
             purpose['name'] = new_name
 
             self.set_purpose(channel_id, json.dumps(purpose), is_private)
