@@ -1,3 +1,4 @@
+import json
 from bottypes.command import Command
 from bottypes.command_descriptor import CommandDesc
 from bottypes.invalid_command import InvalidCommand
@@ -5,6 +6,20 @@ from handlers import handler_factory
 from handlers.base_handler import BaseHandler
 from util.util import (get_display_name_from_user, parse_user_id,
                        resolve_user_by_user_id)
+
+class StartDebuggerCommand():
+    """
+        Break into pdb. Better have a tty open!
+        Must be in maintenance mode to use.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            if handler_factory.botserver.get_config_option("maintenance_mode"):
+                import pdb; pdb.set_trace()
+            else:
+                InvalidCommand("Must be in maintenance mode to open a shell")
 
 class ToggleMaintenanceModeCommand(Command):
     """Update maintenance mode configuration."""
@@ -138,6 +153,9 @@ class AdminHandler(BaseHandler):
 
     # Put the bot into maintenance mode
     !maintenance
+
+    # Break into a pdb shell
+    !debug
     """
 
     def __init__(self):
@@ -146,7 +164,8 @@ class AdminHandler(BaseHandler):
             "add_admin": CommandDesc(AddAdminCommand, "Add a user to the admin user group", ["user_id"], None, True),
             "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True),
             "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
-            "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True)
+            "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True),
+            "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True)
         }
 
 
