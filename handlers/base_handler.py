@@ -87,8 +87,12 @@ class BaseHandler(ABC):
         return msg
 
     def process(self, slack_wrapper, command, args, timestamp, channel, user, user_is_admin):
-        if handler_factory.botserver.get_config_option("maintenance_mode") and not user_is_admin:
-            raise InvalidCommand("Down for maintenance, back soon.")
+        if handler_factory.botserver.get_config_option("maintenance_mode"):
+            if user_is_admin:
+                slack_wrapper.post_message(channel, "Warning! Maintenance mode is enabled!", timestamp)
+            else:
+                slack_wrapper.post_message(channel, "Down for maintenance, back soon.", timestamp)
+                return
 
         """Check if enough arguments were passed for this command."""
         if command in self.aliases:
