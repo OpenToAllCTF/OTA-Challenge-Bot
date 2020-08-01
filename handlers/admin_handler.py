@@ -7,6 +7,25 @@ from handlers.base_handler import BaseHandler
 from util.util import (get_display_name_from_user, parse_user_id,
                        resolve_user_by_user_id)
 
+class MakeCTFCommand():
+    """
+        Update the channel purpose to be that of a CTF.
+    """
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            purpose = {}
+            purpose["ota_bot"] = "OTABOT"
+            purpose["name"] = args[0]
+            purpose["type"] = "CTF"
+            purpose["cred_user"] = ""
+            purpose["cred_pw"] = ""
+            purpose["long_name"] = args[0]
+            purpose["finished"] = False
+            purpose["finished_on"] = ""
+            slack_wrapper.set_purpose(channel_id, purpose)
+
+
 class PopulateCommand():
     """
         Only callable from a challenge channel.
@@ -179,7 +198,8 @@ class AdminHandler(BaseHandler):
             "populate": CommandDesc(PopulateCommand, "Invite all non-present members of the CTF challenge into the challenge channel", None, None, True),
             "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
             "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True),
-            "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True)
+            "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True),
+            "makectf": CommandDesc(MakeCTFCommand, "Turn the current channel into a CTF channel by setting the purpose. Requires reload to take effect", ["ctf_name"], None, True)
         }
 
         self.aliases = {
