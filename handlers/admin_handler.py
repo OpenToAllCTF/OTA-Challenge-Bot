@@ -35,6 +35,7 @@ class PopulateCommand():
             else:
                 slack_wrapper.post_message(user_id, f"!populate: Failed to retrieve channel information")
 
+
 class StartDebuggerCommand():
     """
         Break into pdb. Better have a tty open!
@@ -168,22 +169,6 @@ class AsCommand(Command):
 class AdminHandler(BaseHandler):
     """
     Handles configuration options for administrators.
-
-    Commands :
-    # Show administrator users
-    !admin show_admins
-
-    # Add a user to the administrator group
-    !admin add_admin user_id
-
-    # Remove a user from the administrator group
-    !admin remove_admin user_id
-
-    # Put the bot into maintenance mode
-    !maintenance
-
-    # Break into a pdb shell
-    !debug
     """
 
     def __init__(self):
