@@ -69,6 +69,22 @@ class StartDebuggerCommand():
             else:
                 InvalidCommand("Must be in maintenance mode to open a shell")
 
+
+class JoinChannelCommand():
+    """
+        Join the named channel.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            channel = slack_wrapper.get_channel_by_name(args[0])
+            if channel:
+                slack_wrapper.invite_user(user_id, channel['id'])
+            else:
+                slack_wrapper.post_message(user_id, "No such channel")
+
+
 class ToggleMaintenanceModeCommand(Command):
     """Update maintenance mode configuration."""
 
@@ -199,6 +215,7 @@ class AdminHandler(BaseHandler):
             "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
             "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True),
             "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True),
+            "join": CommandDesc(JoinChannelCommand, "Join a channel", ["channel_name"], None, True),
             "makectf": CommandDesc(MakeCTFCommand, "Turn the current channel into a CTF channel by setting the purpose. Requires reload to take effect", ["ctf_name"], None, True)
         }
 
