@@ -169,6 +169,10 @@ class SlackWrapper:
         """Fetch all private channels in which the user participates."""
         return self.get_channels("private_channel")
 
+    def archive_channel(self, channel_id):
+        """Archive a channel"""
+        return self.client.api_call("conversations.archive", channel=channel_id)
+
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""
         return self.client.api_call("groups.archive", channel=channel_id)

@@ -794,7 +794,7 @@ class ArchiveCTFCommand(Command):
         message = "Archived the following channels :\n"
         for challenge in challenges:
             message += "- #{}-{}\n".format(ctf.name, challenge.name)
-            slack_wrapper.archive_private_channel(challenge.channel_id)
+            slack_wrapper.archive_channel(challenge.channel_id)
             remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
         # Remove possible configured reminders for this ctf
@@ -808,7 +808,7 @@ class ArchiveCTFCommand(Command):
         slack_wrapper.post_message(channel_id, message)
 
         # Archive the main CTF channel also to cleanup
-        slack_wrapper.archive_public_channel(channel_id)
+        slack_wrapper.archive_channel(channel_id)
 
 
 class EndCTFCommand(Command):
@@ -989,7 +989,8 @@ class ChallengeHandler(BaseHandler):
         self.aliases = {
             "finishctf": "endctf",
             "addchall": "addchallenge",
-            "add": "addchallenge"
+            "add": "addchallenge",
+            "archive": "archivectf"
         }
 
     @staticmethod
