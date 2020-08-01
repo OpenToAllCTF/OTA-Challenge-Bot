@@ -949,7 +949,8 @@ class ChallengeHandler(BaseHandler):
         "cred_user": "",
         "cred_pw": "",
         "long_name": "",
-        "finished": False
+        "finished": False,
+        "finished_on": 0
     }
 
     CHALL_PURPOSE = {
