@@ -115,7 +115,8 @@ class AddCTFCommand(Command):
             raise InvalidCommand("Add CTF failed: Invalid characters for CTF name found.")
 
         # Create the channel
-        response = slack_wrapper.create_channel(name)
+        private_ctf = handler_factory.botserver.get_config_option("private_ctfs")
+        response = slack_wrapper.create_channel(name, is_private=private_ctf)
 
         # Validate that the channel was successfully created.
         if not response['ok']:
@@ -290,7 +291,7 @@ class AddChallengeCommand(Command):
             raise InvalidCommand("\"{}\" channel creation failed:\nError : {}".format(channel_name, response['error']))
 
         # Add purpose tag for persistence
-        challenge_channel_id = response['group']['id']
+        challenge_channel_id = response['channel']['id']
         purpose = dict(ChallengeHandler.CHALL_PURPOSE)
         purpose['name'] = name
         purpose['ctf_id'] = ctf.channel_id

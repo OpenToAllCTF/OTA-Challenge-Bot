@@ -8,5 +8,6 @@
   "archive_ctf_reminder_offset" : "168",
   "delete_watch_keywords" : "",
   "intro_message" : "",
+  "private_ctfs": false
   "maintenance_mode": false
 }

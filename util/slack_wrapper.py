@@ -32,13 +32,14 @@ class SlackWrapper:
         """Read from the real-time messaging API."""
         return self.client.rtm_read()
 
-    def invite_user(self, user, channel, is_private=False):
+    def invite_user(self, users, channel, is_private=False):
         """
-        Invite a user to a given channel.
+        Invite the given user(s) to the given channel.
         """
 
-        api_call = "groups.invite" if is_private else "channels.invite"
-        return self.client.api_call(api_call, channel=channel, user=user)
+        users = [users] if not type(users) == list else users
+        api_call = "conversations.invite"
+        return self.client.api_call(api_call, channel=channel, users=users)
 
     def set_purpose(self, channel, purpose, is_private=False):
         """
@@ -70,8 +71,8 @@ class SlackWrapper:
         """
         Create a channel with a given name.
         """
-        api_call = "groups.create" if is_private else "channels.create"
-        return self.client.api_call(api_call, name=name, validate=False)
+        api_call = "conversations.create"
+        return self.client.api_call(api_call, name=name, is_private=is_private)
 
     def rename_channel(self, channel_id, new_name, is_private=False):
         """
