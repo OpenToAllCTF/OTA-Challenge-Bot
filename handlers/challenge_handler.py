@@ -302,9 +302,8 @@ class AddChallengeCommand(Command):
 
         if handler_factory.botserver.get_config_option("auto_invite") == True:
             # Invite everyone in the ctf channel
-            members = slack_wrapper.get_channel_members(ctf.channel_id, is_private=True)
-            for member in members:
-                slack_wrapper.invite_user(member, challenge_channel_id, is_private=True)
+            members = slack_wrapper.get_channel_members(ctf.channel_id)
+            slack_wrapper.invite_user(members, challenge_channel_id)
         else:
             # Invite everyone in the auto-invite list
             for invite_user_id in handler_factory.botserver.get_config_option("auto_invite"):
