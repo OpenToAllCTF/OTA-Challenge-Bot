@@ -806,8 +806,16 @@ class ArchiveCTFCommand(Command):
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
 
-        # Archive the main CTF channel also to cleanup
-        slack_wrapper.archive_channel(channel_id)
+        # If configured to do so, archive the main CTF channel also to cleanup
+        if handler_factory.botserver.get_config_option('archive_everything'):
+            slack_wrapper.archive_channel(channel_id)
+        else:
+            # Otherwise, just set the ctf to finished
+            if not ctf.finished:
+                ctf.finished = True
+                ctf.finished_on = int(time.time())
+
+
 
 
 class EndCTFCommand(Command):
