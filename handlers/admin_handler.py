@@ -26,35 +26,6 @@ class MakeCTFCommand():
             slack_wrapper.set_purpose(channel_id, purpose)
 
 
-class PopulateCommand():
-    """
-        Only callable from a challenge channel.
-        Invite everyone in the CTF channel into the current channel.
-    """
-    @classmethod
-    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
-        if user_is_admin:
-            response = slack_wrapper.get_channel_info(channel_id)
-            if response['ok']:
-                try:
-                    purpose = json.loads(response['channel']['purpose']['value'])
-                    if purpose['ctf_id'] and purpose["type"] == 'CHALLENGE':
-                        members = slack_wrapper.get_channel_members(purpose['ctf_id'])
-                        present = slack_wrapper.get_channel_members(channel_id)
-                        invites = list(set(members)-set(present))
-                        if len(invites) > 0:
-                            slack_wrapper.post_message(user_id, f"Inviting {len(invites)} users", timestamp)
-                            slack_wrapper.invite_user(invites, channel_id)
-                        else:
-                            slack_wrapper.post_message(user_id, "Everyone's already here", timestamp)
-                    else:
-                        slack_wrapper.post_message(user_id, 'Invalid challenge channel - check the purpose is set correctly')
-                except:
-                    slack_wrapper.post_message(user_id, f"!populate: Failed in parsing the channel purpose")
-            else:
-                slack_wrapper.post_message(user_id, f"!populate: Failed to retrieve channel information")
-
-
 class StartDebuggerCommand():
     """
         Break into pdb. Better have a tty open!
@@ -211,17 +182,11 @@ class AdminHandler(BaseHandler):
             "show_admins": CommandDesc(ShowAdminsCommand, "Show a list of current admin users", None, None, True),
             "add_admin": CommandDesc(AddAdminCommand, "Add a user to the admin user group", ["user_id"], None, True),
             "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True),
-            "populate": CommandDesc(PopulateCommand, "Invite all non-present members of the CTF challenge into the challenge channel", None, None, True),
             "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
             "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True),
             "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True),
             "join": CommandDesc(JoinChannelCommand, "Join a channel", ["channel_name"], None, True),
             "makectf": CommandDesc(MakeCTFCommand, "Turn the current channel into a CTF channel by setting the purpose. Requires reload to take effect", ["ctf_name"], None, True)
-        }
-
-        self.aliases = {
-            "gather": "populate",
-            "summon": "populate"
         }
 
 handler_factory.register("admin", AdminHandler())

@@ -16,6 +16,34 @@ from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
 from util.util import *
 
 
+class PopulateCommand():
+    """
+        Only callable from a challenge channel.
+        Invite everyone in the CTF channel into the current channel.
+    """
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        response = slack_wrapper.get_channel_info(channel_id)
+        if response['ok']:
+            try:
+                purpose = json.loads(response['channel']['purpose']['value'])
+                if purpose['ctf_id'] and purpose["type"] == 'CHALLENGE':
+                    members = slack_wrapper.get_channel_members(purpose['ctf_id'])
+                    present = slack_wrapper.get_channel_members(channel_id)
+                    invites = list(set(members)-set(present))
+                    if len(invites) > 0:
+                        slack_wrapper.post_message(user_id, f"Inviting {len(invites)} users", timestamp)
+                        slack_wrapper.invite_user(invites, channel_id)
+                    else:
+                        slack_wrapper.post_message(user_id, "Everyone's already here", timestamp)
+                else:
+                    slack_wrapper.post_message(user_id, 'Invalid challenge channel - check the purpose is set correctly')
+            except:
+                slack_wrapper.post_message(user_id, f"!populate: Failed in parsing the channel purpose")
+        else:
+            slack_wrapper.post_message(user_id, f"!populate: Failed to retrieve channel information")
+
+
 class AddChallengeTagCommand(Command):
     """Add a tag or tags to a challenge"""
 
@@ -988,6 +1016,7 @@ class ChallengeHandler(BaseHandler):
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
             "removetag": CommandDesc(RemoveChallengeTagCommand, "Remove tag(s) from a challenge", ["challenge_tag/name"], ["[..challenge_tag(s)]"]),
+            "populate": CommandDesc(PopulateCommand, "Invite all non-present members of the CTF challenge into the challenge channel", None, None),
             "roll": CommandDesc(RollCommand, "Roll the dice", None, None)
         }
         self.reactions = {
@@ -998,7 +1027,9 @@ class ChallengeHandler(BaseHandler):
             "finishctf": "endctf",
             "addchall": "addchallenge",
             "add": "addchallenge",
-            "archive": "archivectf"
+            "archive": "archivectf",
+            "gather": "populate",
+            "summon": "populate"
         }
 
     @staticmethod
