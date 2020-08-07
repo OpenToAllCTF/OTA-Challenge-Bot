@@ -98,7 +98,7 @@ class SlackWrapper:
         if not next_cursor:
             return members
         else:
-            return members + self.get_members(channel_id, next_cursor)
+            return members + self.get_channel_members(channel_id, next_cursor)
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
