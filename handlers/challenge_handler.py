@@ -547,12 +547,11 @@ class StatusCommand(Command):
                         if player_id in members:
                             players.append(members[player_id])
 
-                    response += "[{} active] *{}* {}: {} {}\n".  format(
+                    response += "[{} active] *{}* {}: {}\n".  format(
                         len(players),
                         challenge.name,
                         "[{}]".format(", ".join(challenge.tags)) if len(challenge.tags) > 0 else "",
-                        "({})".format(challenge.category) if challenge.category else "",
-                        transliterate(", ".join(players)))
+                        "({})".format(challenge.category) if challenge.category else "")
         response = response.strip()
 
         if response == "":  # Response is empty
