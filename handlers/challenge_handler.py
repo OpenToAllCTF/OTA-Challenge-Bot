@@ -15,6 +15,34 @@ from util.loghandler import log
 from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
 from util.util import *
 
+class SignupCommand():
+    """
+    Invite the user into the specified CTF channel along with any existing challenge channels.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        enabled = handler_factory.botserver.get_config_option("allow_signup")
+        ctf = get_ctf_by_name(ChallengeHandler.DB, args[0])
+        if not enabled or not ctf:
+            raise InvalidCommand("No CTF by that name")
+
+        if ctf.finished:
+            raise InvalidCommand("That CTF has already concluded")
+
+        members = [user_id]
+        current = slack_wrapper.get_channel_members(ctf.channel_id)
+        invites = list(set(members)-set(current))
+
+        # Ignore responses, because errors here don't matter
+        if len(invites) > 0:
+            response = slack_wrapper.invite_user(invites, ctf.channel_id)
+        for chall in get_challenges_for_ctf_id(ChallengeHandler.DB, ctf.channel_id):
+            current = slack_wrapper.get_channel_members(chall.channel_id)
+            invites = list(set(members)-set(current))
+            if len(invites) > 0:
+                response = slack_wrapper.invite_user(invites, chall.channel_id)
+
 
 class PopulateCommand():
     """
@@ -1003,6 +1031,7 @@ class ChallengeHandler(BaseHandler):
             "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, ["category"]),
+            "signup": CommandDesc(SignupCommand, "Join a CTF", None, ["ctf_name"], None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),

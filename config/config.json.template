@@ -9,6 +9,7 @@
   "archive_everything": true,
   "delete_watch_keywords" : "",
   "intro_message" : "",
-  "private_ctfs": false
+  "private_ctfs": false,
+  "allow_signup": false,
   "maintenance_mode": false
 }
