@@ -18,30 +18,28 @@ from util.util import *
 
 class PopulateCommand():
     """
-        Only callable from a challenge channel.
-        Invite everyone in the CTF channel into the current channel.
+    Invite a list of members to the CTF channel and add them to any existing
+    challenge channels.
     """
+
     @classmethod
     def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
-        response = slack_wrapper.get_channel_info(channel_id)
-        if response['ok']:
-            try:
-                purpose = json.loads(response['channel']['purpose']['value'])
-                if purpose['ctf_id'] and purpose["type"] == 'CHALLENGE':
-                    members = slack_wrapper.get_channel_members(purpose['ctf_id'])
-                    present = slack_wrapper.get_channel_members(channel_id)
-                    invites = list(set(members)-set(present))
-                    if len(invites) > 0:
-                        slack_wrapper.post_message(user_id, f"Inviting {len(invites)} users", timestamp)
-                        slack_wrapper.invite_user(invites, channel_id)
-                    else:
-                        slack_wrapper.post_message(user_id, "Everyone's already here", timestamp)
-                else:
-                    slack_wrapper.post_message(user_id, 'Invalid challenge channel - check the purpose is set correctly')
-            except:
-                slack_wrapper.post_message(user_id, f"!populate: Failed in parsing the channel purpose")
-        else:
-            slack_wrapper.post_message(user_id, f"!populate: Failed to retrieve channel information")
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not ctf:
+            raise InvalidCommand("You must be in a CTF or Challenge channel to use this command.")
+
+        members = [user.strip("<>@") for user in args]
+        current = slack_wrapper.get_channel_members(ctf.channel_id)
+        invites = list(set(members)-set(current))
+
+        # Ignore responses, because errors here don't matter
+        if len(invites) > 0:
+            slack_wrapper.invite_user(invites, ctf.channel_id)
+        for chall in get_challenges_for_ctf_id(ChallengeHandler.DB, ctf.channel_id):
+            current = slack_wrapper.get_channel_members(chall.channel_id)
+            invites = list(set(members)-set(current))
+            if len(invites) > 0:
+                slack_wrapper.invite_user(invites, chall.channel_id)
 
 
 class AddChallengeTagCommand(Command):
