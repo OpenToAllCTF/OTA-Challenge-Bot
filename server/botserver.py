@@ -109,7 +109,6 @@ class BotServer(threading.Thread):
             elif msg.get("type") == "im_created":
                 self.slack_wrapper.post_message(msg['user'], self.get_config_option("intro_message"))
 
-
         return None, None, None, None
 
     def parse_slack_reaction(self, message_list):
