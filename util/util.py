@@ -47,9 +47,11 @@ def transliterate(string):
 #######
 
 
-def get_ctf_by_channel_id(database, channel_id):
+def get_ctf_by_channel_id(database, channel_id, include_challenges=True):
     """
-    Fetch a CTF object in the database with a given channel ID.
+    Fetch a CTF object (CTF, Challenge) in the database with a given channel ID.
+    If `include_challenges` is False, match strictly on CTF objects and ignore
+    Challenge objects.
     Return the matching CTF object if found, or None otherwise.
     """
     ctfs = pickle.load(open(database, "rb"))
@@ -57,9 +59,10 @@ def get_ctf_by_channel_id(database, channel_id):
         if c_id == channel_id:
             return ctf
 
-        for challenge in ctf.challenges:
-            if challenge.channel_id == channel_id:
-                return ctf
+        if include_challenges:
+            for challenge in ctf.challenges:
+                if challenge.channel_id == channel_id:
+                    return ctf
 
     return None
 
@@ -116,27 +119,51 @@ def get_challenge_by_name(database, challenge_name, ctf_channel_id):
     return None
 
 
-def get_challenge_from_args(database, args, channel_id):
+def get_challenge_from_args_or_channel(database, args, channel_id):
     """
-    Helper method for getting the channel either from arguments or current channel.
+    Helper method for getting a Challenge either from arguments or current channel.
+    Return the corresponding Challenge if called from a challenge channel.
+    Return the Challenge corresponding to the first argument if called from the
+    CTF channel.
+    Return None if no Challenge can be found.
     """
-    # Multiple arguments: Need to check if a challenge was specified or not
-    challenge_name = args[0].lower()
 
     # Check if we're currently in a challenge channel
-    current_chal = get_challenge_by_channel_id(
-        database, channel_id)
+    current_chal = get_challenge_by_channel_id(database, channel_id)
+
+    if current_chal:
+        # User is in the challenge channel
+        challenge = current_chal
+    else:
+        # Assume user is in the ctf channel
+        try:
+            challenge_name = args[0].lower().strip("*")
+            challenge = get_challenge_by_name(database, challenge_name, channel_id)
+        except IndexError:
+            challenge = None
+
+    return challenge
+
+
+def get_challenge_from_args(database, args, channel_id):
+    """
+    Helper method for getting a Challenge either from arguments or current channel.
+    Return None if called from a Challenge channel.
+    """
+    # Multiple arguments: Need to check if a challenge was specified or not
+    challenge_name = args[0].lower().strip("*")
+
+    # Check if we're currently in a challenge channel
+    current_chal = get_challenge_by_channel_id(database, channel_id)
 
     if current_chal:
         # User is in a challenge channel => Check for challenge by name
         # in parent ctf channel
-        challenge = get_challenge_by_name(
-            database, challenge_name, current_chal.ctf_channel_id)
+        challenge = get_challenge_by_name(database, challenge_name, current_chal.ctf_channel_id)
     else:
         # User is in the ctf channel => Check for challenge by name in
         # current challenge
-        challenge = get_challenge_by_name(
-            database, challenge_name, channel_id)
+        challenge = get_challenge_by_name(database, challenge_name, channel_id)
 
     return challenge
 
@@ -153,6 +180,19 @@ def get_challenge_by_channel_id(database, challenge_channel_id):
                 return challenge
 
     return None
+
+
+def save_challenge(database, challenge):
+    """
+    Save a Challenge object back to the database with a given channel ID.
+    """
+    ctfs = pickle.load(open(database, "rb"))
+    challenges = ctfs[challenge.ctf_channel_id].challenges
+    for i in range(0, len(challenges)):
+        if challenges[i].channel_id == challenge.channel_id:
+            challenges[i] = challenge
+            break
+    pickle.dump(ctfs, open(database, "wb"))
 
 
 def get_challenges_for_user_id(database, user_id, ctf_channel_id):

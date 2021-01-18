@@ -37,10 +37,10 @@ class BotBaseTest(TestCase):
     def create_slack_wrapper_mock(self, api_key):
         return SlackWrapperMock(api_key)
 
-    def exec_command(self, msg, exec_user="normal_user"):
+    def exec_command(self, msg, exec_user="normal_user", channel="UNITTESTCHANNELID"):
         """Simulate execution of the specified message as the specified user in the test environment."""
         testmsg = [{'type': 'message', 'user': exec_user, 'text': msg, 'client_msg_id': '738e4beb-d50e-42a4-a60e-3fafd4bd71da',
-                    'team': 'UNITTESTTEAMID', 'channel': 'UNITTESTCHANNELID', 'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}]
+                    'team': 'UNITTESTTEAMID', 'channel': channel, 'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}]
         self.botserver.handle_message(testmsg)
 
     def exec_reaction(self, reaction, exec_user="normal_user"):
@@ -56,6 +56,7 @@ class BotBaseTest(TestCase):
     def check_for_response(self, expected_result):
         """ Check if the simulated slack responses contain an expected result. """
         for msg in self.botserver.slack_wrapper.message_list:
+            print(msg.message)
             if expected_result in msg.message:
                 return True
 
@@ -149,11 +150,13 @@ class TestAdminHandler(BotBaseTest):
 
 class TestChallengeHandler(BotBaseTest):
     def test_addctf_name_too_long(self):
-        self.exec_command("!ctf addctf unittest_ctf unittest_ctf")
+        ctf_name = "unittest_{}".format("A"*50)
+
+        self.exec_command("!ctf addctf {} unittest_ctf".format(ctf_name))
 
         self.assertTrue(self.check_for_response_available(),
                         msg="Bot didn't react on unit test. Check for possible exceptions.")
-        self.assertTrue(self.check_for_response("CTF name must be <= 10 characters."),
+        self.assertTrue(self.check_for_response("CTF name must be <= {} characters.".format(40)),
                         msg="Challenge handler didn't respond with expected result for name_too_long.")
 
     def test_addctf_success(self):
@@ -166,6 +169,22 @@ class TestChallengeHandler(BotBaseTest):
 
     def test_addchallenge(self):
         self.exec_command("!ctf addchall testchall pwn")
+
+        self.assertTrue(self.check_for_response_available(),
+                        msg="Bot didn't react on unit test. Check for possible exceptions.")
+        self.assertFalse(self.check_for_response("Unknown handler or command"),
+                         msg="AddChallenge command didn't execute properly.")
+
+    def test_addtag(self):
+        self.exec_command("!ctf tag laff lawl lull")
+
+        self.assertTrue(self.check_for_response_available(),
+                        msg="Bot didn't react on unit test. Check for possible exceptions.")
+        self.assertFalse(self.check_for_response("Unknown handler or command"),
+                         msg="AddChallenge command didn't execute properly.")
+
+    def test_removetag(self):
+        self.exec_command("!ctf tag laff lawl lull")
 
         self.assertTrue(self.check_for_response_available(),
                         msg="Bot didn't react on unit test. Check for possible exceptions.")
@@ -185,6 +204,10 @@ class TestChallengeHandler(BotBaseTest):
 
         self.assertTrue(self.check_for_response_available(),
                         msg="Bot didn't react on unit test. Check for possible exceptions.")
+        self.assertTrue(self.check_for_response("Current CTFs"),
+                        msg="Staus command didn't return the correct response")
+        self.assertTrue(self.check_for_response("Finished CTFs"),
+                        msg="Staus command didn't return the correct response")
         self.assertFalse(self.check_for_response("Unknown handler or command"),
                          msg="Status command didn't execute properly.")
 

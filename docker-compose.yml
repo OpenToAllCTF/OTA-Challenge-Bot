@@ -1,0 +1,11 @@
+version: '3'
+services:
+  otabot:
+    build: .
+    volumes:
+      - .:/src
+  redis:
+    image: "redis:latest"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf

@@ -1,8 +1,9 @@
 *.pyc
-config.json
-config_savelink.json
-config_solvetracker.json
+config/config.json
+config/config_savelink.json
+config/config_solvetracker.json
 *.bin
 *.log
 .venv
 intro_msg
+.vscode
