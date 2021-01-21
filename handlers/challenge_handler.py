@@ -15,6 +15,60 @@ from util.loghandler import log
 from util.solveposthelper import ST_GIT_SUPPORT, post_ctf_data
 from util.util import *
 
+class SignupCommand():
+    """
+    Invite the user into the specified CTF channel along with any existing challenge channels.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        enabled = handler_factory.botserver.get_config_option("allow_signup")
+        ctf = get_ctf_by_name(ChallengeHandler.DB, args[0])
+        if not enabled or not ctf:
+            raise InvalidCommand("No CTF by that name")
+
+        if ctf.finished:
+            raise InvalidCommand("That CTF has already concluded")
+
+        members = [user_id]
+        current = slack_wrapper.get_channel_members(ctf.channel_id)
+        invites = list(set(members)-set(current))
+
+        # Ignore responses, because errors here don't matter
+        if len(invites) > 0:
+            response = slack_wrapper.invite_user(invites, ctf.channel_id)
+        for chall in get_challenges_for_ctf_id(ChallengeHandler.DB, ctf.channel_id):
+            current = slack_wrapper.get_channel_members(chall.channel_id)
+            invites = list(set(members)-set(current))
+            if len(invites) > 0:
+                response = slack_wrapper.invite_user(invites, chall.channel_id)
+
+
+class PopulateCommand():
+    """
+    Invite a list of members to the CTF channel and add them to any existing
+    challenge channels.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        ctf = get_ctf_by_channel_id(ChallengeHandler.DB, channel_id)
+        if not ctf:
+            raise InvalidCommand("You must be in a CTF or Challenge channel to use this command.")
+
+        members = [user.strip("<>@") for user in args]
+        current = slack_wrapper.get_channel_members(ctf.channel_id)
+        invites = list(set(members)-set(current))
+
+        # Ignore responses, because errors here don't matter
+        if len(invites) > 0:
+            slack_wrapper.invite_user(invites, ctf.channel_id)
+        for chall in get_challenges_for_ctf_id(ChallengeHandler.DB, ctf.channel_id):
+            current = slack_wrapper.get_channel_members(chall.channel_id)
+            invites = list(set(members)-set(current))
+            if len(invites) > 0:
+                slack_wrapper.invite_user(invites, chall.channel_id)
+
 
 class AddChallengeTagCommand(Command):
     """Add a tag or tags to a challenge"""
@@ -115,7 +169,8 @@ class AddCTFCommand(Command):
             raise InvalidCommand("Add CTF failed: Invalid characters for CTF name found.")
 
         # Create the channel
-        response = slack_wrapper.create_channel(name)
+        private_ctf = handler_factory.botserver.get_config_option("private_ctfs")
+        response = slack_wrapper.create_channel(name, is_private=private_ctf)
 
         # Validate that the channel was successfully created.
         if not response['ok']:
@@ -290,7 +345,7 @@ class AddChallengeCommand(Command):
             raise InvalidCommand("\"{}\" channel creation failed:\nError : {}".format(channel_name, response['error']))
 
         # Add purpose tag for persistence
-        challenge_channel_id = response['group']['id']
+        challenge_channel_id = response['channel']['id']
         purpose = dict(ChallengeHandler.CHALL_PURPOSE)
         purpose['name'] = name
         purpose['ctf_id'] = ctf.channel_id
@@ -299,9 +354,16 @@ class AddChallengeCommand(Command):
         purpose = json.dumps(purpose)
         slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
 
-        # Invite everyone in the auto-invite list
-        for invite_user_id in handler_factory.botserver.get_config_option("auto_invite"):
-            slack_wrapper.invite_user(invite_user_id, challenge_channel_id, is_private=True)
+        if handler_factory.botserver.get_config_option("auto_invite") == True:
+            # Invite everyone in the ctf channel
+            members = slack_wrapper.get_channel_members(ctf.channel_id)
+            present = slack_wrapper.get_channel_members(challenge_channel_id)
+            invites = list(set(members)-set(present))
+            slack_wrapper.invite_user(invites, challenge_channel_id)
+        else:
+            # Invite everyone in the auto-invite list
+            for invite_user_id in handler_factory.botserver.get_config_option("auto_invite"):
+                slack_wrapper.invite_user(invite_user_id, challenge_channel_id, is_private=True)
 
         # New Challenge
         challenge = Challenge(ctf.channel_id, challenge_channel_id, name, category)
@@ -513,12 +575,11 @@ class StatusCommand(Command):
                         if player_id in members:
                             players.append(members[player_id])
 
-                    response += "[{} active] *{}* {}: {} {}\n".  format(
+                    response += "[{} active] *{}* {}: {}\n".  format(
                         len(players),
                         challenge.name,
                         "[{}]".format(", ".join(challenge.tags)) if len(challenge.tags) > 0 else "",
-                        "({})".format(challenge.category) if challenge.category else "",
-                        transliterate(", ".join(players)))
+                        "({})".format(challenge.category) if challenge.category else "")
         response = response.strip()
 
         if response == "":  # Response is empty
@@ -787,7 +848,7 @@ class ArchiveCTFCommand(Command):
         message = "Archived the following channels :\n"
         for challenge in challenges:
             message += "- #{}-{}\n".format(ctf.name, challenge.name)
-            slack_wrapper.archive_private_channel(challenge.channel_id)
+            slack_wrapper.archive_channel(challenge.channel_id)
             remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
         # Remove possible configured reminders for this ctf
@@ -800,8 +861,16 @@ class ArchiveCTFCommand(Command):
         # Show confirmation message
         slack_wrapper.post_message(channel_id, message)
 
-        # Archive the main CTF channel also to cleanup
-        slack_wrapper.archive_public_channel(channel_id)
+        # If configured to do so, archive the main CTF channel also to cleanup
+        if handler_factory.botserver.get_config_option('archive_everything'):
+            slack_wrapper.archive_channel(channel_id)
+        else:
+            # Otherwise, just set the ctf to finished
+            if not ctf.finished:
+                ctf.finished = True
+                ctf.finished_on = int(time.time())
+
+
 
 
 class EndCTFCommand(Command):
@@ -943,7 +1012,8 @@ class ChallengeHandler(BaseHandler):
         "cred_user": "",
         "cred_pw": "",
         "long_name": "",
-        "finished": False
+        "finished": False,
+        "finished_on": 0
     }
 
     CHALL_PURPOSE = {
@@ -958,9 +1028,10 @@ class ChallengeHandler(BaseHandler):
     def __init__(self):
         self.commands = {
             "addctf": CommandDesc(AddCTFCommand, "Adds a new ctf", ["ctf_name", "long_name"], None),
-            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name", "challenge_category"], None),
+            "addchallenge": CommandDesc(AddChallengeCommand, "Adds a new challenge for current ctf", ["challenge_name"], ["challenge_category"]),
             "workon": CommandDesc(WorkonCommand, "Show that you're working on a challenge", None, ["challenge_name"]),
             "status": CommandDesc(StatusCommand, "Show the status for all ongoing ctf's", None, ["category"]),
+            "signup": CommandDesc(SignupCommand, "Join a CTF", None, ["ctf_name"], None),
             "solve": CommandDesc(SolveCommand, "Mark a challenge as solved", None, ["challenge_name", "support_member"]),
             "renamechallenge": CommandDesc(RenameChallengeCommand, "Renames a challenge", ["old_challenge_name", "new_challenge_name"], None),
             "renamectf": CommandDesc(RenameCTFCommand, "Renames a ctf", ["old_ctf_name", "new_ctf_name"], None),
@@ -973,6 +1044,7 @@ class ChallengeHandler(BaseHandler):
             "unsolve": CommandDesc(UnsolveCommand, "Remove solve of a challenge", None, ["challenge_name"]),
             "removechallenge": CommandDesc(RemoveChallengeCommand, "Remove challenge", None, ["challenge_name"], True),
             "removetag": CommandDesc(RemoveChallengeTagCommand, "Remove tag(s) from a challenge", ["challenge_tag/name"], ["[..challenge_tag(s)]"]),
+            "populate": CommandDesc(PopulateCommand, "Invite all non-present members of the CTF challenge into the challenge channel", None, None),
             "roll": CommandDesc(RollCommand, "Roll the dice", None, None)
         }
         self.reactions = {
@@ -982,6 +1054,10 @@ class ChallengeHandler(BaseHandler):
         self.aliases = {
             "finishctf": "endctf",
             "addchall": "addchallenge",
+            "add": "addchallenge",
+            "archive": "archivectf",
+            "gather": "populate",
+            "summon": "populate"
         }
 
     @staticmethod
@@ -1007,8 +1083,8 @@ class ChallengeHandler(BaseHandler):
         Reload the ctf and challenge information from slack.
         """
         database = {}
-        privchans = slack_wrapper.get_private_channels()["groups"]
-        pubchans = slack_wrapper.get_public_channels()["channels"]
+        privchans = slack_wrapper.get_private_channels()
+        pubchans = slack_wrapper.get_public_channels()
 
         # Find active CTF channels
         for channel in [*privchans, *pubchans]:
@@ -1028,8 +1104,7 @@ class ChallengeHandler(BaseHandler):
                 pass
 
         # Find active challenge channels
-        response = slack_wrapper.get_private_channels()
-        for channel in response['groups']:
+        for channel in privchans:
             try:
                 purpose = load_json(channel['purpose']['value'])
 
@@ -1044,7 +1119,8 @@ class ChallengeHandler(BaseHandler):
                         challenge.mark_as_solved(solvers, purpose.get("solve_date"))
 
                     if ctf:
-                        for member_id in channel['members']:
+                        members = slack_wrapper.get_channel_members(channel['id'])
+                        for member_id in members:
                             if member_id != slack_wrapper.user_id:
                                 challenge.add_player(Player(member_id))
 

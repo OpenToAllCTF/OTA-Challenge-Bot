@@ -32,20 +32,21 @@ class SlackWrapper:
         """Read from the real-time messaging API."""
         return self.client.rtm_read()
 
-    def invite_user(self, user, channel, is_private=False):
+    def invite_user(self, users, channel, is_private=False):
         """
-        Invite a user to a given channel.
+        Invite the given user(s) to the given channel.
         """
 
-        api_call = "groups.invite" if is_private else "channels.invite"
-        return self.client.api_call(api_call, channel=channel, user=user)
+        users = [users] if not type(users) == list else users
+        api_call = "conversations.invite"
+        return self.client.api_call(api_call, channel=channel, users=users)
 
     def set_purpose(self, channel, purpose, is_private=False):
         """
         Set the purpose of a given channel.
         """
 
-        api_call = "groups.setPurpose" if is_private else "channels.setPurpose"
+        api_call = "conversations.setPurpose"
         return self.client.api_call(api_call, purpose=purpose, channel=channel)
 
     def set_topic(self, channel, topic, is_private=False):
@@ -70,8 +71,8 @@ class SlackWrapper:
         """
         Create a channel with a given name.
         """
-        api_call = "groups.create" if is_private else "channels.create"
-        return self.client.api_call(api_call, name=name, validate=False)
+        api_call = "conversations.create"
+        return self.client.api_call(api_call, name=name, is_private=is_private)
 
     def rename_channel(self, channel_id, new_name, is_private=False):
         """
@@ -86,13 +87,18 @@ class SlackWrapper:
         Return the channel info of a given channel ID.
         """
 
-        api_call = "groups.info" if is_private else "channels.info"
+        api_call = "conversations.info"
         return self.client.api_call(api_call, channel=channel_id)
 
-    def get_channel_members(self, channel_id, is_private=False):
-        """ Return list of member ids in a given channel ID. """
-
-        return self.get_channel_info(channel_id, is_private)['channel']['members']
+    def get_channel_members(self, channel_id, next_cursor=None):
+        """Recursively fetch members of the given channel, until none remain to be fetched"""
+        response = self.client.api_call("conversations.members", channel=channel_id, cursor=next_cursor)
+        members = response['members']
+        next_cursor = response['response_metadata']['next_cursor']
+        if not next_cursor:
+            return members
+        else:
+            return members + self.get_channel_members(channel_id, next_cursor)
 
     def update_channel_purpose_name(self, channel_id, new_name, is_private=False):
         """
@@ -101,10 +107,9 @@ class SlackWrapper:
 
         # Update channel purpose
         channel_info = self.get_channel_info(channel_id, is_private)
-        key = "group" if is_private else "channel"
 
         if channel_info:
-            purpose = load_json(channel_info[key]['purpose']['value'])
+            purpose = load_json(channel_info['channel']['purpose']['value'])
             purpose['name'] = new_name
 
             self.set_purpose(channel_id, json.dumps(purpose), is_private)
@@ -134,13 +139,39 @@ class SlackWrapper:
         """Update a message, identified by the specified timestamp with a new text."""
         self.client.api_call("chat.update", channel=channel_id, text=text, ts=msg_timestamp, as_user=True, parse=parse)
 
+    def get_channels(self, types, next_cursor=None):
+        """Recursively fetch channels, until there are no more to be fetched."""
+        types = [types] if type(types) != list else types
+        response = self.client.api_call("conversations.list", types=types, cursor=next_cursor)
+        channels = response['channels']
+        next_cursor = response['response_metadata']['next_cursor']
+        if not next_cursor:
+            return channels
+        else:
+            return channels + self.get_channels(types, next_cursor)
+
+    def get_all_channels(self):
+        """Fetch all channels."""
+        return self.get_channels(["public_channel", "private_channel"])
+
+    def get_channel_by_name(self, name):
+        """Fetch a channel with a given name."""
+        channels = self.get_all_channels()
+        for channel in channels:
+            if channel['name'] == name:
+                return channel
+
     def get_public_channels(self):
         """Fetch all public channels."""
-        return self.client.api_call("channels.list")
+        return self.get_channels("public_channel")
 
     def get_private_channels(self):
         """Fetch all private channels in which the user participates."""
-        return self.client.api_call("groups.list")
+        return self.get_channels("private_channel")
+
+    def archive_channel(self, channel_id):
+        """Archive a channel"""
+        return self.client.api_call("conversations.archive", channel=channel_id)
 
     def archive_private_channel(self, channel_id):
         """Archive a private channel"""

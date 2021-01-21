@@ -68,7 +68,7 @@ class BotServer(threading.Thread):
                 log.info("Updated configuration: %s => %s", option, value)
 
                 with open("./config/config.json", "w") as f:
-                    json.dump(self.config, f)
+                    json.dump(self.config, f, indent=4)
             else:
                 raise InvalidConsoleCommand("The specified configuration option doesn't exist: {}".format(option))
         finally:
