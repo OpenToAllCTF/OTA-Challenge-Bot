@@ -1,3 +1,4 @@
+import json
 from bottypes.command import Command
 from bottypes.command_descriptor import CommandDesc
 from bottypes.invalid_command import InvalidCommand
@@ -5,6 +6,67 @@ from handlers import handler_factory
 from handlers.base_handler import BaseHandler
 from util.util import (get_display_name_from_user, parse_user_id,
                        resolve_user_by_user_id)
+
+class MakeCTFCommand():
+    """
+        Update the channel purpose to be that of a CTF.
+    """
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            purpose = {}
+            purpose["ota_bot"] = "OTABOT"
+            purpose["name"] = args[0]
+            purpose["type"] = "CTF"
+            purpose["cred_user"] = ""
+            purpose["cred_pw"] = ""
+            purpose["long_name"] = args[0]
+            purpose["finished"] = False
+            purpose["finished_on"] = ""
+            slack_wrapper.set_purpose(channel_id, purpose)
+
+
+class StartDebuggerCommand():
+    """
+        Break into pdb. Better have a tty open!
+        Must be in maintenance mode to use.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            if handler_factory.botserver.get_config_option("maintenance_mode"):
+                import pdb; pdb.set_trace()
+            else:
+                InvalidCommand("Must be in maintenance mode to open a shell")
+
+
+class JoinChannelCommand():
+    """
+        Join the named channel.
+    """
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        if user_is_admin:
+            channel = slack_wrapper.get_channel_by_name(args[0])
+            if channel:
+                slack_wrapper.invite_user(user_id, channel['id'])
+            else:
+                slack_wrapper.post_message(user_id, "No such channel")
+
+
+class ToggleMaintenanceModeCommand(Command):
+    """Update maintenance mode configuration."""
+
+    @classmethod
+    def execute(cls, slack_wrapper, args, timestamp, channel_id, user_id, user_is_admin):
+        """Execute the ToggleMaintenanceModeCommand command."""
+        mode = not bool(handler_factory.botserver.get_config_option("maintenance_mode"))
+        state = "enabled" if mode else "disabled"
+        handler_factory.botserver.set_config_option("maintenance_mode", mode)
+        text = "Maintenance mode " + state
+        slack_wrapper.post_message(channel_id, text)
 
 
 class ShowAdminsCommand(Command):
@@ -113,16 +175,6 @@ class AsCommand(Command):
 class AdminHandler(BaseHandler):
     """
     Handles configuration options for administrators.
-
-    Commands :
-    # Show administrator users
-    !admin show_admins
-
-    # Add a user to the administrator group
-    !admin add_admin user_id
-
-    # Remove a user from the administrator group
-    !admin remove_admin user_id
     """
 
     def __init__(self):
@@ -130,8 +182,11 @@ class AdminHandler(BaseHandler):
             "show_admins": CommandDesc(ShowAdminsCommand, "Show a list of current admin users", None, None, True),
             "add_admin": CommandDesc(AddAdminCommand, "Add a user to the admin user group", ["user_id"], None, True),
             "remove_admin": CommandDesc(RemoveAdminCommand, "Remove a user from the admin user group", ["user_id"], None, True),
-            "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True)
+            "as": CommandDesc(AsCommand, "Execute a command as another user", ["@user", "command"], None, True),
+            "maintenance": CommandDesc(ToggleMaintenanceModeCommand, "Toggle maintenance mode", None, None, True),
+            "debug": CommandDesc(StartDebuggerCommand, "Break into a debugger shell", None, None, True),
+            "join": CommandDesc(JoinChannelCommand, "Join a channel", ["channel_name"], None, True),
+            "makectf": CommandDesc(MakeCTFCommand, "Turn the current channel into a CTF channel by setting the purpose. Requires reload to take effect", ["ctf_name"], None, True)
         }
-
 
 handler_factory.register("admin", AdminHandler())
