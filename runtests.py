@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 from unittest import TestCase
+
+from slack_sdk.socket_mode.request import SocketModeRequest
+
 from tests.slackwrapper_mock import SlackWrapperMock
 import unittest
 from util.loghandler import log, logging
@@ -39,16 +42,22 @@ class BotBaseTest(TestCase):
 
     def exec_command(self, msg, exec_user="normal_user", channel="UNITTESTCHANNELID"):
         """Simulate execution of the specified message as the specified user in the test environment."""
-        testmsg = [{'type': 'message', 'user': exec_user, 'text': msg, 'client_msg_id': '738e4beb-d50e-42a4-a60e-3fafd4bd71da',
-                    'team': 'UNITTESTTEAMID', 'channel': channel, 'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}]
-        self.botserver.handle_message(testmsg)
+        testmsg = {'type': 'event_callback',
+                   'event': {'type': 'message', 'user': exec_user, 'text': msg,
+                             'client_msg_id': '738e4beb-d50e-42a4-a60e-3fafd4bd71da',
+                             'team': 'UNITTESTTEAMID', 'channel': channel,
+                             'event_ts': '1549715670.002000', 'ts': '1549715670.002000'}}
+        self.botserver.handle_message(SocketModeRequest(type='events_api', envelope_id='', payload=testmsg))
 
     def exec_reaction(self, reaction, exec_user="normal_user"):
         """Simulate execution of the specified reaction as the specified user in the test environment."""
-        testmsg = [{'type': 'reaction_added', 'user': exec_user, 'item': {'type': 'message', 'channel': 'UNITTESTCHANNELID', 'ts': '1549117537.000500'},
-                    'reaction': reaction, 'item_user': 'UNITTESTUSERID', 'event_ts': '1549715822.000800', 'ts': '1549715822.000800'}]
+        testmsg = {'type': 'event_callback',
+                   'event': {'type': 'reaction_added', 'user': exec_user,
+                             'item': {'type': 'message', 'channel': 'UNITTESTCHANNELID', 'ts': '1549117537.000500'},
+                             'reaction': reaction, 'item_user': 'UNITTESTUSERID',
+                             'event_ts': '1549715822.000800', 'ts': '1549715822.000800'}}
 
-        self.botserver.handle_message(testmsg)
+        self.botserver.handle_message(SocketModeRequest(type='events_api', envelope_id='', payload=testmsg))
 
     def check_for_response_available(self):
         return len(self.botserver.slack_wrapper.message_list) > 0
