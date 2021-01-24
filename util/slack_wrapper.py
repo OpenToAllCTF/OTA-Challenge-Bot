@@ -1,5 +1,6 @@
 import json
-from typing import Any, List, Dict, Union
+import traceback
+from typing import Any, List, Dict, Union, Sequence
 
 from slack_sdk import WebClient
 from slack_sdk.socket_mode.request import SocketModeRequest
@@ -8,6 +9,7 @@ from slack_sdk.web import SlackResponse
 from slack_sdk.socket_mode import SocketModeClient
 
 from util.util import load_json
+from util.loghandler import log
 
 
 class SlackWrapper:
@@ -21,18 +23,17 @@ class SlackWrapper:
         """
         SlackWrapper constructor.
         Connect to the real-time messaging API and
-        load the bot's login data.
+        load the bot"s login data.
         """
         self.client = WebClient(slack_token)
 
         identity = self.client.auth_test()
         identity.validate()
 
-        self.user_id = identity['user_id']
-        self.username = identity['user']
+        self.user_id = identity["user_id"]
+        self.username = identity["user"]
 
         self.on_message_handlers = [handler]
-        self.seen_messages = []
 
         self.socket = SocketModeClient(socket_mode_token)
         self.socket.connect()
@@ -46,23 +47,12 @@ class SlackWrapper:
         # send the response immediately so we don't get retransmissions
         client.send_socket_mode_response(SocketModeResponse(message.envelope_id))
 
-        # slack is super eager to retransmit so here's a free memory leak
-        id = message.payload['event']['client_msg_id']
-        if id in self.seen_messages:
-            return
-
-        self.seen_messages.append(id)
-
         for handler in self.on_message_handlers:
             try:
                 handler(message)
             except Exception as e:
-                import traceback
                 traceback.print_exc()
                 print("error handling message", e)
-
-    def on_message(self, handler):
-        self.on_message_handlers.append(handler)
 
     def invite_user(self, user: Union[str, Sequence[str]], channel: str) -> Dict:
         """
@@ -90,7 +80,7 @@ class SlackWrapper:
 
         members = []
         for page in self.client.users_list():
-            members.extend(page['members'])
+            members.extend(page["members"])
 
         return members
 
@@ -127,7 +117,7 @@ class SlackWrapper:
 
         members = []
         for page in self.client.conversations_members(channel=channel_id):
-            members.extend(page['members'])
+            members.extend(page["members"])
 
         return members
 
@@ -138,8 +128,8 @@ class SlackWrapper:
 
         channel_info = self.get_channel_info(channel_id)
 
-        purpose = load_json(channel_info['channel']['purpose']['value'])
-        purpose['name'] = new_name
+        purpose = load_json(channel_info["channel"]["purpose"]["value"])
+        purpose["name"] = new_name
 
         return self.set_purpose(channel_id, json.dumps(purpose))
 
@@ -149,6 +139,9 @@ class SlackWrapper:
         channel_id can also be a user_id for private messages.
         Add timestamp for replying to a specific message.
         """
+        if not isinstance(text, str):
+            log.warning("trying to send a non-string message!")
+            text = str(text)
 
         return self.client.chat_postMessage(channel=channel_id, text=text, as_user=True, parse=parse,
                                             thread_ts=timestamp).data
@@ -176,7 +169,7 @@ class SlackWrapper:
         channels = []
 
         for page in self.client.conversations_list(types=types):
-            channels.extend(page['channels'])
+            channels.extend(page["channels"])
 
         return channels
 

@@ -143,9 +143,11 @@ class BotServer(threading.Thread):
         handler_factory.initialize(self.slack_wrapper, self)
 
     def handle_message(self, message: SocketModeRequest):
-        assert(message.payload['type'] == 'event_callback')
+        if message.payload["type"] != "event_callback":
+            log.warning("unexpected payload type %s", message.payload["type"])
+            return
 
-        message_list = [message.payload['event']]
+        message_list = [message.payload["event"]]
 
         reaction, channel, time_stamp, reaction_user = self.parse_slack_reaction(message_list)
 
