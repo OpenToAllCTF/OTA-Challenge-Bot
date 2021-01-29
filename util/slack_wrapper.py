@@ -23,7 +23,7 @@ class SlackWrapper:
         """
         SlackWrapper constructor.
         Connect to the real-time messaging API and
-        load the bot"s login data.
+        load the bot's login data.
         """
         self.client = WebClient(slack_token)
 
