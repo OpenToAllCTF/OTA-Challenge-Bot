@@ -3,6 +3,7 @@ import threading
 import time
 
 import websocket
+from slack_sdk.socket_mode.request import SocketModeRequest
 from slackclient.server import SlackConnectionError
 
 from bottypes.invalid_console_command import InvalidConsoleCommand
@@ -141,14 +142,20 @@ class BotServer(threading.Thread):
         log.info("Initializing handlers...")
         handler_factory.initialize(self.slack_wrapper, self)
 
-    def handle_message(self, message):
-        reaction, channel, time_stamp, reaction_user = self.parse_slack_reaction(message)
+    def handle_message(self, message: SocketModeRequest):
+        if message.payload["type"] != "event_callback":
+            log.warning("unexpected payload type %s", message.payload["type"])
+            return
+
+        message_list = [message.payload["event"]]
+
+        reaction, channel, time_stamp, reaction_user = self.parse_slack_reaction(message_list)
 
         if reaction and not self.bot_id == reaction_user:
             log.debug("Received reaction : %s (%s)", reaction, channel)
             handler_factory.process_reaction(self.slack_wrapper, reaction, time_stamp, channel, reaction_user)
 
-        command, channel, time_stamp, user = self.parse_slack_message(message)
+        command, channel, time_stamp, user = self.parse_slack_message(message_list)
 
         if command and not self.bot_id == user:
             log.debug("Received bot command : %s (%s)", command, channel)
@@ -162,7 +169,11 @@ class BotServer(threading.Thread):
         while self.running:
             try:
                 self.load_config()
-                self.slack_wrapper = SlackWrapper(self.get_config_option("api_key"))
+                self.slack_wrapper = SlackWrapper(
+                    self.get_config_option("api_key"),
+                    self.get_config_option("app_key"),
+                    self.handle_message,
+                )
 
                 if self.slack_wrapper.connected:
                     log.info("Connection successful...")
@@ -170,13 +181,7 @@ class BotServer(threading.Thread):
 
                     # Main loop
                     log.info("Bot is running...")
-                    while self.running:
-                        message = self.slack_wrapper.read()
-                        if message:
-                            self.handle_message(message)
-
-                        time.sleep(self.read_websocket_delay)
-
+                    threading.Event().wait()
                 else:
                     log.error("Connection failed. Invalid slack token or bot id?")
                     self.running = False

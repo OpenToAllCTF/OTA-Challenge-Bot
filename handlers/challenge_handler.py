@@ -237,13 +237,13 @@ class RenameChallengeCommand(Command):
             raise InvalidCommand("Rename challenge failed: Challenge '{}' not found.".format(old_name))
 
         log.debug("Renaming channel %s to %s", channel_id, new_name)
-        response = slack_wrapper.rename_channel(challenge.channel_id, new_channel_name, is_private=True)
+        response = slack_wrapper.rename_channel(challenge.channel_id, new_channel_name)
 
         if not response['ok']:
             raise InvalidCommand("\"{}\" channel rename failed:\nError: {}".format(old_channel_name, response['error']))
 
         # Update channel purpose
-        slack_wrapper.update_channel_purpose_name(challenge.channel_id, new_name, is_private=True)
+        slack_wrapper.update_channel_purpose_name(challenge.channel_id, new_name)
 
         # Update database
         update_challenge_name(ChallengeHandler.DB,
@@ -352,7 +352,7 @@ class AddChallengeCommand(Command):
         purpose['category'] = category
 
         purpose = json.dumps(purpose)
-        slack_wrapper.set_purpose(challenge_channel_id, purpose, is_private=True)
+        slack_wrapper.set_purpose(challenge_channel_id, purpose)
 
         if handler_factory.botserver.get_config_option("auto_invite") == True:
             # Invite everyone in the ctf channel
@@ -363,7 +363,7 @@ class AddChallengeCommand(Command):
         else:
             # Invite everyone in the auto-invite list
             for invite_user_id in handler_factory.botserver.get_config_option("auto_invite"):
-                slack_wrapper.invite_user(invite_user_id, challenge_channel_id, is_private=True)
+                slack_wrapper.invite_user(invite_user_id, challenge_channel_id)
 
         # New Challenge
         challenge = Challenge(ctf.channel_id, challenge_channel_id, name, category)
@@ -523,12 +523,7 @@ class StatusCommand(Command):
         """Build verbose status list."""
         member_list = slack_wrapper.get_members()
 
-        # Bail out, if we couldn't read member list
-        if not "members" in member_list:
-            raise InvalidCommand("Status failed. Could not refresh member list...")
-
-        members = {m["id"]: get_display_name_from_user(m)
-                   for m in member_list['members']}
+        members = {m["id"]: get_display_name_from_user(m) for m in member_list}
 
         response = ""
         for ctf in ctf_list:
@@ -662,7 +657,7 @@ class WorkonCommand(Command):
             raise InvalidCommand("This challenge is already solved.")
 
         # Invite user to challenge channel
-        slack_wrapper.invite_user(user_id, challenge.channel_id, is_private=True)
+        slack_wrapper.invite_user(user_id, challenge.channel_id)
 
         # Update database
         ctfs = pickle.load(open(ChallengeHandler.DB, "rb"))
@@ -746,7 +741,7 @@ class SolveCommand(Command):
                         purpose['category'] = chal.category
 
                         purpose = json.dumps(purpose)
-                        slack_wrapper.set_purpose(challenge.channel_id, purpose, is_private=True)
+                        slack_wrapper.set_purpose(challenge.channel_id, purpose)
 
                         # Announce the CTF channel
                         help_members = ""
@@ -802,7 +797,7 @@ class UnsolveCommand(Command):
                         purpose['category'] = challenge.category
 
                         purpose = json.dumps(purpose)
-                        slack_wrapper.set_purpose(challenge.channel_id, purpose, is_private=True)
+                        slack_wrapper.set_purpose(challenge.channel_id, purpose)
 
                         # Announce the CTF channel
                         message = "@here *{}* : {} has reset the solve on the \"{}\" challenge.".format(
