@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+import unittest
 from unittest import TestCase
 
 from slack_sdk.socket_mode.request import SocketModeRequest
 
 from tests.slackwrapper_mock import SlackWrapperMock
-import unittest
 from util.loghandler import log, logging
 from server.botserver import BotServer
 from bottypes.invalid_command import InvalidCommand

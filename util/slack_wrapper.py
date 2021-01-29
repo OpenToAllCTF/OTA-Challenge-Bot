@@ -5,7 +5,6 @@ from typing import Any, List, Dict, Union, Sequence
 from slack_sdk import WebClient
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
-from slack_sdk.web import SlackResponse
 from slack_sdk.socket_mode import SocketModeClient
 
 from util.util import load_json
