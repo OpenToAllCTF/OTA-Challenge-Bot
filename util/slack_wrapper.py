@@ -182,13 +182,8 @@ class SlackWrapper:
 
         return self.get_channels(types="private_channel")
 
-    def archive_private_channel(self, channel_id: str) -> Dict:
-        """Archive a private channel"""
-
-        return self.client.conversations_archive(channel=channel_id).data
-
-    def archive_public_channel(self, channel_id: str) -> Dict:
-        """Archive a public channel"""
+    def archive_channel(self, channel_id: str) -> Dict:
+        """Archive a public or private channel."""
 
         return self.client.conversations_archive(channel=channel_id).data
 

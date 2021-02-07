@@ -116,8 +116,8 @@ class SlackWrapperMock:
         """Fetch all private channels in which the user participates."""
         return json.loads(self.get_private_channels_response)
 
-    def archive_private_channel(self, channel_id):
-        """Archive a private channel"""
+    def archive_channel(self, channel_id):
+        """Archive a public or private channel."""
         # TODO: The git handler must be mocked before testing archive command to avoid uploading test cases
         pass
 

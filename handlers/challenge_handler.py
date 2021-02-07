@@ -406,7 +406,7 @@ class RemoveChallengeCommand(Command):
             raise InvalidCommand("This challenge does not exist.")
 
         # Remove the challenge channel and ctf challenge entry
-        slack_wrapper.archive_private_channel(challenge.channel_id)
+        slack_wrapper.archive_channel(challenge.channel_id)
         remove_challenge_by_channel_id(ChallengeHandler.DB, challenge.channel_id, ctf.channel_id)
 
         # Show confirmation message
