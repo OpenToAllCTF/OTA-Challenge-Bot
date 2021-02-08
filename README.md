@@ -50,31 +50,46 @@ Secondary features :
 !wolfram ask <question>                                         (Ask wolfram alpha a question)
 ```
 
-## Retrieving the API token
+## Retrieving the API tokens
 
 Bot applications are not allowed to access all api methods from Slack. Thus, if
 you create a bot integration on slack, the bot won't be able to create new
 channels for example. To get around this restriction you must create a new
-slack integration ("Slack App"), assign it to your workspace, and generate both
-a "Bot User Token" and an "App Level Token" (`xoxb` and `xapp1`, respectively).
+slack integration ("Slack App"), assign it to your workspace, enable the Socket
+Mode event feed, generate an "App Level Token" (`xapp1`), assign scopes to your
+bot user and subsequently create a "Bot User Token" (`xoxb`), and then finally
+install it to your workspace. 
+
 Once generated, the tokens must be scoped to the appropriate privilege levels
 required for the bot to function. Finally, you must ensure that you have
 subscribed the bot users to the list of events it will need to receive in order
 to operate.
 
-1) App Level Token
+1) First, navigate to `api.slack.com/apps` and create a new slack app. Give it
+a name and select the workspace that it will serve, and then click create.
+
+2) Enable socket mode by clicking on the menu of the same name and then
+clicking on the toggle labelled "Enable Socket Mode". You'll be prompted to
+create an App Level Token which you must do next.
+
+2) App Level Token
 
 This token is used by the bot to access the websocket event feed in version 3
-of the Slack API. It comes with the `connections:write` scope and that's all
-you should need for this particular token. Place this token into the config
-file under the entry `app_key`.
+of the Slack API. The toggle you enabled in the previous step, "Enable Socket
+Mode", is what turns on the event feed. Assuming you've not already created an
+App Level Token you'll now be prompted to do so. Place it into the config file
+under the entry `app_key`.
 
-2) Bot User Token
+3) Bot User Token
 
 This token is used by the bot to interact with the workspace and users via
-Slack's conversations API. Once you've created it you will need to authorize it
-for the following scopes. Then you will need to put the token into the config
-file under the entry `api_key`.
+Slack's conversations API. In order to create this token you must first
+navigate to the OAuth & Permissions section of the Slack API control panel.
+
+Once there, take note of the greyed out "Install to Workspace" button. You need
+to add scopes to the bot user's token before you can install the bot. Scroll
+down to the bottom of this page and in the section labelled "Bot Token Scopes"
+add the following scopes.
 
 ```
 app_mentions:read
@@ -107,6 +122,46 @@ reminders:write
 team:read
 users:read
 users:write
+```
+
+Next, return to the top of the page and install the bot user using the button
+from before which should no longer be greyed out. Now copy the "Bot User OAuth
+Access Token" (begins with `xoxb`) into the config file under the entry
+`api_key`. The bot should show up inside the workspace now. You can change its
+display name using the menu on the left labelled "Basic Information", if you
+want.
+
+4) Event subscription
+
+NOTE: Make sure you toggle "Enable Socket" (step 2) before attempting this!
+
+Once the tokens have been configured you will need to navigate to the Event
+Subscriptions panel of the slack API control panel and register the bot to
+receive the events it needs to operate. 
+
+First toggle the switch labelled "Enable Events", then use the picker to select
+at least the events below. They are probably all that you will need, but it's
+fine to select all of the event subscriptions here just to be on the safe side. 
+
+```
+app_mention
+app_mentions:read
+emoji_changed
+emoji:read
+link_shared
+links:read
+message.channels
+channels:history
+message.groups
+groups:history
+message.im
+im:history
+message.mpim
+mpim:history
+reaction_added
+reactions:read
+reaction_removed
+reactions:read
 ```
 
 
