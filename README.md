@@ -54,26 +54,66 @@ Secondary features :
 
 Bot applications are not allowed to access all api methods from Slack. Thus, if
 you create a bot integration on slack, the bot won't be able to create new
-channels for example. To get around this restriction, you have to create a real
-slack user and generate an authentication token for it, which can then be used
-instead of a bot token.
+channels for example. To get around this restriction you must create a new
+slack integration ("Slack App"), assign it to your workspace, and generate both
+a "Bot User Token" and an "App Level Token" (`xoxb` and `xapp1`, respectively).
+Once generated, the tokens must be scoped to the appropriate privilege levels
+required for the bot to function. Finally, you must ensure that you have
+subscribed the bot users to the list of events it will need to receive in order
+to operate.
 
-1. Create a new user in slack (this will be the bot user, so give it an appropriate username)
-2. Log into slack with this newly created user
-3. Navigate to https://api.slack.com/custom-integrations/legacy-tokens
-  * The user should show up there together with your slack workspace
-5. Press "Create token"
-  * This should create a token starting with "xoxp-"
-7. Use this token as the `api_key` for the bot
-8. Logout and login with your regular user again.
+1) App Level Token
 
-After restarting the bot, the bot user should now show up in your slack workspace.
+This token is used by the bot to access the websocket event feed in version 3
+of the Slack API. It comes with the `connections:write` scope and that's all
+you should need for this particular token. Place this token into the config
+file under the entry `app_key`.
+
+2) Bot User Token
+
+This token is used by the bot to interact with the workspace and users via
+Slack's conversations API. Once you've created it you will need to authorize it
+for the following scopes. Then you will need to put the token into the config
+file under the entry `api_key`.
+
+```
+app_mentions:read
+channels:history
+channels:join
+channels:manage
+channels:read
+chat:write
+chat:write.customize
+chat:write.public
+dnd:read
+emoji:read
+groups:history
+groups:read
+groups:write
+im:history
+im:read
+im:write
+links:read
+links:write
+mpim:history
+mpim:read
+mpim:write
+pins:read
+pins:write
+reactions:read
+reactions:write
+reminders:list
+reminders:write
+team:read
+users:read
+users:write
+```
 
 
 ## Installation
 
 1. Copy `config/config.json.template` to `config/config.json`
-2. Fill the API token and bot name in the config.json file.
+2. Fill the APP and API token names in the config.json file.
 3. Add your user id (slack id, not the username) to `admin_users` group in `config/config.json`
 4. If you want to use the wolfram alpha api, register a valid app id on http://products.wolframalpha.com/api/ and set `wolfram_app_id` in `config/config.json`
 5. Copy `intro_msg.template` to `intro_msg` and set a proper introduction message, which can be shown with `!intro`
