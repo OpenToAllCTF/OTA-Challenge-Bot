@@ -141,7 +141,7 @@ receive the events it needs to operate.
 
 First toggle the switch labelled "Enable Events", then use the picker to select
 at least the events below. They are probably all that you will need, but it's
-fine to select all of the event subscriptions here just to be on the safe side. 
+fine to select all of the event subscriptions here if you want to be on the simple side. 
 
 ```
 app_mention
