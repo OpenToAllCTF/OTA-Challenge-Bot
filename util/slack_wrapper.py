@@ -208,3 +208,10 @@ class SlackWrapper:
         for reminder in reminders.get("reminders", []):
             if text in reminder["text"]:
                 self.remove_reminder(reminder["id"])
+
+    def get_channel_by_name(self, name):
+        """Fetch a channel with a given name."""
+        channels = self.get_channels(types="public_channel,private_channel")
+        for channel in channels:
+            if channel['name'] == name:
+                return channel
