@@ -187,7 +187,7 @@ reaction_removed
 2. Configure the git account, the local repo and the remote path, which should be used to access your git repository.
 
 Example:
-```
+```json
 {
     "git_repopath" : "/home/ota_bot/OTA_Upload",
     "git_repouser" : "otabot",
@@ -215,7 +215,7 @@ Note: If you configure the solvetracker this way, you need to make sure you are 
 5. Add a link to your repo, so people can look it up via `showlinkurl`
 
 Example:
-```
+```json
 {
     "git_repo": "reponame/links",
     "git_branch": "gh-pages",
@@ -232,7 +232,7 @@ To enable archive reminders set an offset (in hours) in _config/config.json_ for
 If active, the bot will create a reminder for every bot admin on `!endctf` to inform him, when the ctf was finished for the specified time and it should be archived.
 
 Example (for being reminded one week after the ctf has finished):
-```
+```json
 {
     ...
     "archive_ctf_reminder_offset" : "168"
@@ -241,11 +241,10 @@ Example (for being reminded one week after the ctf has finished):
 
 ## Log command deletion
 
-To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in _config/config.json_ to a comma separated list of keywords. 
-Clear or remove the setting to disable deletion logging.
+To enable logging of deleting messages containing specific keywords, set `delete_watch_keywords` in _config/config.json_ to an array of strings to watch for.
 
 Example
-```
+```json
 {
-    "delete_watch_keywords" : "workon, reload, endctf"
+    "delete_watch_keywords" : ["workon", "reload", "endctf"]
 }
