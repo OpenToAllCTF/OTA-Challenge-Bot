@@ -85,30 +85,28 @@ class BotServer(threading.Thread):
             if msg.get("type") == "message" and "subtype" not in msg:
                 if self.bot_at in msg.get("text", ""):
                     # Return text after the @ mention, whitespace removed
-                    return msg['text'].split(self.bot_at)[1].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
+                    return msg["text"].split(self.bot_at)[1].strip(), msg["channel"], msg["thread_ts"] if "thread_ts" in msg else msg["ts"], msg["user"]
                 elif msg.get("text", "").startswith("!"):
                     # Return text after the !
-                    return msg['text'][1:].strip(), msg['channel'], msg['thread_ts'] if 'thread_ts' in msg else msg['ts'], msg['user']
+                    return msg["text"][1:].strip(), msg["channel"], msg["thread_ts"] if "thread_ts" in msg else msg["ts"], msg["user"]
             # Check if user tampers with channel purpose
             elif msg.get("type") == "message" and msg["subtype"] == "channel_purpose" and msg["user"] != self.bot_id:
-                source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg['user']))
-                warning = "*User '{}' changed the channel purpose ```{}```*".format(source_user, msg['text'])
-                self.slack_wrapper.post_message(msg['channel'], warning)
+                source_user = get_display_name(resolve_user_by_user_id(self.slack_wrapper, msg["user"]))
+                warning = "*User "{}" changed the channel purpose ```{}```*".format(source_user, msg["text"])
+                self.slack_wrapper.post_message(msg["channel"], warning)
             # Check for deletion of messages containing keywords
             elif "subtype" in msg and msg["subtype"] == "message_deleted":
-                log_deletions = self.get_config_option("delete_watch_keywords")
+                delete_keywords = self.get_config_option("delete_watch_keywords")
 
-                if log_deletions:
-                    previous_msg = msg['previous_message']['text']
-                    delete_keywords = log_deletions.split(",")
+                previous_msg = msg["previous_message"]["text"]
 
-                    if any(keyword.strip() in previous_msg for keyword in delete_keywords):
-                        user_name = self.slack_wrapper.get_member(msg['previous_message']['user'])
-                        display_name = get_display_name(user_name)
-                        self.slack_wrapper.post_message(msg['channel'], "*{}* deleted : `{}`".format(display_name, previous_msg))
+                if any(keyword in previous_msg for keyword in delete_keywords):
+                    user_name = self.slack_wrapper.get_member(msg["previous_message"]["user"])
+                    display_name = get_display_name(user_name)
+                    self.slack_wrapper.post_message(msg["channel"], "*{}* deleted : `{}`".format(display_name, previous_msg))
             # Greet new users
             elif msg.get("type") == "im_created":
-                self.slack_wrapper.post_message(msg['user'], self.get_config_option("intro_message"))
+                self.slack_wrapper.post_message(msg["user"], self.get_config_option("intro_message"))
 
         return None, None, None, None
 
