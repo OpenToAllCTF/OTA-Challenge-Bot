@@ -1,6 +1,6 @@
 astroid==2.0.4
 beautifulsoup4==4.7.1
-certifi==2018.10.15
+certifi==2022.12.7
 chardet==3.0.4
 dulwich==0.19.6
 idna==2.7
